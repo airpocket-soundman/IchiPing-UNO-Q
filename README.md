@@ -16,6 +16,7 @@ IchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の
 - 2026-08-21実機smoke test PASS（Bridge往復、Matrix API、GPIO読取、I²C未接続処理）
 
 音響推論はまだloopbackです。既存INMP441/MAX98357AのI²S信号はUNO Qの標準UNOヘッダに公式割り当てがないため、未検証配線をせず、USB Audioを第一候補として次段で評価します。
+Debian上ではALSAデバイスが列挙されますが、外部音響機器なしの16 kHzモノラル録音プローブは`EINVAL`となるため、音響経路は未合格です。
 
 ## 設計資料
 

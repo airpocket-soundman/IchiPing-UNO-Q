@@ -140,6 +140,7 @@
         <tr><th>Bridge</th><td><code>get_hardware_status</code>、<code>get_physical_state</code>、<code>show_prediction</code>、Matrix self-testが完走</td></tr>
         <tr><th>読み取り</th><td>hardware status <code>0x01</code>、physical state <code>0b00000</code></td></tr>
         <tr><th>外部機器</th><td>PCA9685未接続（bit 1 = 0）、雨入力非アクティブ。サーボPWMは未出力。</td></tr>
+        <tr><th>音響プローブ</th><td>ALSA card <code>Arduino-Imola-HPH-LOUT</code>は列挙されたが、未接続状態で16 kHz / mono録音を開くと<code>EINVAL</code>。外部オーディオ接続またはALSA route設定後に再試験する。</td></tr>
         <tr><th>判定</th><td><b>Phase 0 software smoke test PASS</b>。実LEDの見た目と外部スイッチ操作は目視確認項目。</td></tr>
       </tbody>
     </table>
