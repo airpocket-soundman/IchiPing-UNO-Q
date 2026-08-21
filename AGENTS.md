@@ -22,7 +22,10 @@
 - PCA9685: `Wire`、D20/SDA、D21/SCL、アドレス0x40。
 - GPIO: D3–D7状態入力、D8 EXEC、D9雨入力。すべて3.3 V系で扱う。
 - サーボ電源は外部5 V、UNO QとGND共通。UNO Qの3.3 V端子から給電しない。
-- 音響I/Oは未確定。標準UNOヘッダに公式I²S割り当てがないため、INMP441/MAX98357Aの未検証直結は禁止。USB Audioを第一候補として検証する。
+- 音響I/OはQRB2210の1.8 V MI2S0を第一候補、USB Audioをフォールバックとして検証する。MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由であり、Device Tree・ALSA route確定前の直結は禁止。
+- 推論はQRB2210 / Debian上の精度優先。既存MCU用モデルサイズに縛られず、FP32・大型モデル・2〜3モデルensembleを候補にする。
+- 運用目安は推論アプリpeak RSS 1.5 GiB以下、warm推論p95 1,000 ms以下、配布モデル一式500 MiB以下。swap依存は禁止。
+- モデルは未知の収録日・雑音・設置差に対するmacro-F1を最優先し、大型化で外部評価が改善した候補だけを採用する。量子化は精度低下がない場合だけ行う。
 
 ## 移植の進め方
 

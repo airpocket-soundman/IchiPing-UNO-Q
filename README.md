@@ -15,12 +15,15 @@ IchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の
 - Router BridgeでLinux PythonとMCUスケッチを接続
 - 2026-08-21実機smoke test PASS（Bridge往復、Matrix API、GPIO読取、I²C未接続処理）
 
-音響推論はまだloopbackです。既存INMP441/MAX98357AのI²S信号はUNO Qの標準UNOヘッダに公式割り当てがないため、未検証配線をせず、USB Audioを第一候補として次段で評価します。
+音響推論はまだloopbackです。既存INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。信号は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。
 Debian上ではALSAデバイスが列挙されますが、外部音響機器なしの16 kHzモノラル録音プローブは`EINVAL`となるため、音響経路は未合格です。
+
+推論はQRB2210 / Debian側で精度を最優先します。現行XL（約0.7 MiB）に縛られず、FP32の大型モデルや2〜3モデルensembleも比較し、未知の収録条件で精度が上がった候補を採用します。
 
 ## 設計資料
 
 - [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
+- [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
 - [UNO Q bring-upアプリ](uno_q/README.md)
 - [元IchiPing仕様のコピー](docs/spec.html)
 - [既存NN設計](docs/nn_design.html)
@@ -51,8 +54,8 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 
 1. Matrix・Bridge・GPIO・PCA9685検出のbring-up
 2. PCA9685 + SG90 ×5と既存サーボ座標の移植
-3. USB Audioによる16 kHzモノラル録音とping再生
-4. 既存特徴量・モデルのLinux側移植と同値性検証
+3. MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生
+4. 既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較
 5. 起動時実行、ログ、ネットワーク通知の統合
 
 ## リポジトリ構成
@@ -60,7 +63,9 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 | パス | 内容 |
 |---|---|
 | `uno_q/app/` | UNO Q用Arduino App Labアプリ |
+| `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
 | `docs/uno_q_port.html` | 開発方針、配線、GPIO、Matrix表示規約 |
+| `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
 | `firmware/` | 元FRDM-MCXN947実装（移植参照） |
 | `pc/` | データ採取、学習、評価、既存モデル資産 |
 | `hardware/` | 元ハードウェア資料（UNO Q版は上記HTMLを正とする） |

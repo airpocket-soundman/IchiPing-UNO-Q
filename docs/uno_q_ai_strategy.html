@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IchiPing UNO Q — 精度優先AI方針</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    main{max-width:1060px;margin:0 auto;padding:32px 24px 80px}table{width:100%;border-collapse:collapse;margin:16px 0 28px}th,td{border:1px solid var(--border,#39414f);padding:9px 11px;text-align:left;vertical-align:top}th{background:rgba(89,189,255,.1)}.ok{border-left:4px solid var(--accent-2,#7ee787);padding:10px 14px}.warn{border-left:4px solid var(--warn,#f2cc60);padding:10px 14px}code{color:var(--accent-2,#7ee787)}
+  </style>
+</head>
+<body><main>
+  <p><a href="../index.html">← IchiPing UNO Q</a></p>
+  <h1>精度優先AI方針</h1>
+  <p>UNO Q版はMCU向けの小型化を主目的にせず、QRB2210 / Debian上で推論する。モデル容量、演算量、FP32利用を許容し、未知の収録条件に対する精度を最優先する。</p>
+
+  <h2>1. 実機資源と運用上限</h2>
+  <table><thead><tr><th>項目</th><th>2026-08-21実測</th><th>候補モデルの基準</th></tr></thead><tbody>
+    <tr><td>CPU</td><td>ARM64 4コア、最大2.016 GHz</td><td>特徴量生成後のwarm推論 p95を1,000 ms以下</td></tr>
+    <tr><td>RAM</td><td>3.6 GiB搭載、通常時約3.0 GiB available、1.8 GiB swap</td><td>推論アプリ全体のpeak RSSを1.5 GiB以下。swap依存は禁止</td></tr>
+    <tr><td>ストレージ</td><td>ルート約2.9 GiB空き</td><td>配布モデル一式500 MiB以下</td></tr>
+    <tr><td>現行XL</td><td>約0.7 MiB、約10万パラメータ級</td><td>UNO Qに対して小さすぎるため比較用baselineとする</td></tr>
+  </tbody></table>
+  <p class="warn">上限までモデルを大きくすること自体は合格条件ではない。学習データ量に対して過大なモデルは過学習し得るため、外部評価が改善しない候補は小さいモデルより優先しない。</p>
+
+  <h2>2. モデル探索</h2>
+  <ol>
+    <li>既存32-class XLをbaselineとして、同一データ・同一splitで再現する。</li>
+    <li>約100万、500万、1,000万〜3,000万パラメータ級へ段階的に拡張する。</li>
+    <li>既存の1D spectrum枝に加え、時間情報を残すlog-mel / multi-resolution STFT枝を比較する。</li>
+    <li>単一モデルの拡張が飽和したら、異なるseedまたは特徴量の2〜3モデルensembleと複数ping投票を比較する。</li>
+    <li>FP32 ONNX Runtimeを基準に選定し、FP16・INT8は評価精度が統計的に同等な場合だけ採用する。</li>
+  </ol>
+
+  <h2>3. 精度の合格基準</h2>
+  <p>ランダム分割の最高値だけで選ばない。収録日、背景雑音、マイク／スピーカ位置をgroupとして分離し、未知条件を模擬する。</p>
+  <table><thead><tr><th>指標</th><th>選定での扱い</th></tr></thead><tbody>
+    <tr><td>32-state accuracy / macro-F1</td><td>主要指標。複数seedの平均とばらつきを記録</td></tr>
+    <tr><td>worst-class recall</td><td>一部状態だけを犠牲にするモデルを排除</td></tr>
+    <tr><td>環境別accuracy</td><td>収録日、雑音、位置ごとの最低値を比較</td></tr>
+    <tr><td>confidence calibration</td><td>Matrixの信頼度表示と再試行判定に使用</td></tr>
+    <tr><td>実機資源</td><td>p95 latency、peak RSS、モデル容量を精度表と併記</td></tr>
+  </tbody></table>
+  <div class="ok"><b>採用規則:</b> 制約内の候補から未知条件のmacro-F1を最優先し、差が評価ばらつき以内ならworst-class recall、次に小さいRSSと短いlatencyで決める。</div>
+
+  <h2>4. UNO Q実機ベンチ</h2>
+  <p><code>uno_q/tools/benchmark_onnx.py</code>はONNXのload時間、warm推論p50/p95/p99、peak RSS、モデル容量をJSONで出力する。</p>
+  <pre><code>python3 uno_q/tools/benchmark_onnx.py model.onnx --shape 1,1,1024
+</code></pre>
+  <p>音響経路確定後は合成入力だけでなく、保存した実pingを使うend-to-endベンチを追加する。</p>
+</main></body></html>

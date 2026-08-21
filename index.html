@@ -32,6 +32,7 @@
       <article class="card"><h3>LED Matrix</h3><p>内蔵8×13 Matrixで5状態、信頼度、pingアニメーションを表現。</p></article>
       <article class="card"><h3>GPIO / I²C</h3><p>D3–D9の入力と、D20/D21上のPCA9685（0x40）検出を実装。</p></article>
       <article class="card"><h3>MCU–Linux</h3><p>Arduino Router Bridgeで推論要求と結果表示を往復。現在の結果は明示的なloopback。</p></article>
+      <article class="card"><h3>精度優先AI</h3><p>QRB2210側ではFP32の大型モデルやensembleを許容し、未知条件の精度で選定。</p></article>
     </div>
   </section>
 
@@ -39,12 +40,14 @@
     <h2>実機テスト</h2>
     <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>UNO Qへ23,680 bytesのスケッチを書き込み、Bridge往復、Matrix API、GPIO読取、PCA9685未接続時の継続動作を確認しました。サーボPWMは未出力です。</p>
     <p>ALSAデバイスは列挙されますが、外部音響機器なしの16 kHzモノラル録音は<code>EINVAL</code>で、音響経路は未合格です。</p>
+    <p>実機は通常時約3.0 GiBのavailable RAMを持ち、現行XLモデルは約0.7 MiBです。精度優先でモデルを段階拡張し、実機資源と外部評価を同時に測定します。</p>
   </section>
 
   <section>
     <h2>設計資料</h2>
     <ul>
       <li><a href="docs/uno_q_port.html">UNO Q移植方針・センサ接続・GPIO</a></li>
+      <li><a href="docs/uno_q_ai_strategy.html">UNO Q精度優先AI方針</a></li>
       <li><a href="uno_q/README.md">UNO Q bring-upアプリ</a></li>
       <li><a href="docs/spec.html">元IchiPing仕様のコピー</a></li>
       <li><a href="docs/nn_design.html">既存NN設計</a></li>
@@ -69,11 +72,11 @@
     <ol>
       <li>Matrix・Bridge・GPIO・PCA9685検出のbring-up</li>
       <li>PCA9685 + SG90 ×5と既存サーボ座標の移植</li>
-      <li>USB Audioによる16 kHzモノラル録音とping再生</li>
-      <li>既存特徴量・モデルのLinux側移植と同値性検証</li>
+      <li>MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生</li>
+      <li>既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較</li>
       <li>起動時実行、ログ、ネットワーク通知の統合</li>
     </ol>
-    <p>INMP441/MAX98357Aは、UNO Qの標準UNOヘッダに公式I²S割り当てがないため直結を保留しています。未検証配線を採用せず、USB Audioを第一候補として評価します。</p>
+    <p>INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。</p>
   </section>
 </main>
 </body>

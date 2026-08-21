@@ -54,8 +54,8 @@
     <ol>
       <li><b>Phase 0 — bring-up:</b> Matrix、Bridge、GPIO、PCA9685検出を実機確認する。</li>
       <li><b>Phase 1 — actuator:</b> PCA9685の校正値と5台のSG90制御を移植する。</li>
-      <li><b>Phase 2 — acoustic:</b> USB Audioを第一候補として16 kHzモノラル録音・ping再生を確立する。</li>
-      <li><b>Phase 3 — inference:</b>既存モデルと特徴量処理をLinux側へ移し、実測データで同値性を検証する。</li>
+      <li><b>Phase 2 — acoustic:</b> QRB2210 MI2S0を第一候補、USB Audioをフォールバックとして16 kHzモノラル録音・ping再生を確立する。</li>
+      <li><b>Phase 3 — inference:</b>既存モデルをbaselineとしてLinux側へ移し、<a href="uno_q_ai_strategy.html">精度優先の大型モデルとensemble</a>を外部評価で比較する。</li>
       <li><b>Phase 4 — standalone:</b>起動時実行、ログ、ネットワーク通知を統合する。</li>
     </ol>
   </section>
@@ -92,11 +92,11 @@
         <tr><td>状態スイッチ ×5</td><td>D3–D7とGNDの間</td><td>既存の5-bitラベル順を維持。</td></tr>
         <tr><td>EXEC</td><td>D8とGNDの間</td><td>Matrixのpingアニメーション後、Linux側へ推論要求。</td></tr>
         <tr><td>降雨入力</td><td>D9、GND、3V3</td><td>入力が5 Vになるモジュールは分圧またはレベル変換を追加。</td></tr>
-        <tr><td>INMP441</td><td>未割り当て</td><td>UNOスタイルヘッダに公式I²S割り当て/APIがないため直結を保留。</td></tr>
-        <tr><td>MAX98357A</td><td>未割り当て</td><td>同上。未検証の下部コネクタ配線は採用しない。</td></tr>
+        <tr><td>INMP441</td><td>JMISC MI2S0（1.8 V）候補</td><td>1.8 V動作可能。Device Tree・ALSA capture routeとWS／DATA割当を実機検証後に確定。</td></tr>
+        <tr><td>MAX98357A</td><td>JMISC MI2S0（1.8 V）候補</td><td>1.8 Vロジック入力に適合。Device Tree・ALSA playback route検証後に確定。</td></tr>
       </tbody>
     </table>
-    <div class="ok"><b>音響の第一候補:</b> 給電対応USB-Cハブ + Linux互換USB Audioデバイスを使い、Debian側で16 kHz / mono / PCMの同時再生・録音を行う。IchiPingの既存INMP441/MAX98357Aを必ず継続する場合は、JMISC/高速コネクタのSAI信号とZephyrドライバ対応を別途検証してから配線を確定する。</div>
+    <div class="ok"><b>音響の第一候補:</b> QRB2210のMI2S0をJMISCまたはUNO Breakout Carrierから取り出し、Debian ALSAでINMP441とMAX98357Aを扱う。raw JMISCはCLK=46、WS=48、DATA0=50、DATA1=52、すべて1.8 V。標準UNOヘッダには出ていない。Device Tree・codec DAI・ALSA routeを確定するまでは接続せず、成立しない場合は給電対応USB-Cハブ + Linux互換USB Audioへ切り替える。</div>
   </section>
 
   <section>
