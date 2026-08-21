@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NN 詳細設計 — IchiPing v1</title>
+<link rel="stylesheet" href="style.css">
+<script src="embed.js"></script>
+</head>
+<body>
+
+<aside class="sidenav">
+  <div class="sidenav-brand"><a href="../index.html">IchiPing</a>
+    <div class="sidenav-tag">v0.1 シリアル疎通フェーズ</div>
+  </div>
+  <nav>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ナビゲーション</div>
+      <a href="../index.html">トップ</a>
+      <a href="../tasks.html">タスクボード</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">設計 / 仕様</div>
+      <a href="../docs/spec.html">仕様書 (spec)</a>
+      <a href="../hardware/wiring.html">配線図</a>
+      <a href="../docs/nn_design.html" class="current">NN 設計</a>
+      <a href="../docs/mcu_deployment.html">MCU デプロイ</a>
+      <a href="../docs/bringup.html">実機ブリングアップ</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">NN 検討</div>
+      <a href="../docs/probe_sound.html">走査音考察</a>
+      <a href="../docs/nn_review.html">NN 考察</a>
+      <a href="../docs/nn_methods_compare.html">head 設計比較</a>
+      <a href="../docs/v12345_report.html">v12345 検証レポート</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ハードウェア</div>
+      <a href="../hardware/wiring.html">配線テーブル</a>
+      <a href="../hardware/bom.html">BOM (部品表)</a>
+      <a href="../hardware/display_options.html">ディスプレイ候補</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">実装コード</div>
+      <a href="../firmware/README.html">firmware ガイド</a>
+      <a href="../pc/README.html">PC ガイド</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">対外発信</div>
+      <a href="../docs/protopedia_preview.html">ProtoPedia プレビュー</a>
+      <a href="../docs/protopedia.md">ProtoPedia 投稿原稿 (md)</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">メタ</div>
+      <a href="../docs/vscode_setup.html">VS Code セットアップ</a>
+      <a href="../CLAUDE.html">Claude 作業ガイド</a>
+    </div>
+  </nav>
+  <div class="sidenav-foot">
+    <a href="https://github.com/airpocket-soundman/IchiPing">GitHub: IchiPing</a><br>
+    <a href="https://github.com/airpocket-soundman/digikey_project">正本 digikey_project</a>
+  </div>
+</aside>
+
+<header class="page">
+  <div class="crumb">
+    <a href="../index.html">← IchiPing トップ</a>
+    ／ <a href="../tasks.html">タスクボード</a>
+    ／ <a href="spec.html">仕様書</a>
+    ／ <a href="mcu_deployment.html">MCU デプロイ手順 →</a>
+  </div>
+  <h1>NN 詳細設計 — IchiPing v1 (DigiKey)</h1>
+  <div class="sub">
+    <b>14-class / 32-class 両ヘッド共存の 1D/2D CNN</b>（実機 MCU で両方とも 100% 達成）。
+    詳細な検証結果は <a href="v12345_report.html">v12345 検証レポート</a>。
+    本ページは設計上の構造とパラメータ規模を記す。
+  </div>
+  <div class="meta">
+    <span class="meta-stat"><span class="num">104 K</span> params (XL / 本番)</span>
+    <span class="meta-stat"><span class="num">108 KB</span> INT8</span>
+    <span class="meta-stat"><span class="num">14 + 32</span> クラス両 head</span>
+    <span class="meta-stat"><span class="num">1.89 ms</span> NPU 推論 (7/7 op = 100%)</span>
+  </div>
+</header>
+
+<main>
+
+<div class="callout">
+  <strong>2026-05-25 更新</strong>:
+  以前このページに書いていた「観測可能性により 32cls は ~0.44 で頭打ち」「14-class が情報理論的に唯一最適」
+  という主張は <b>v12345 検証 (8 モデル × 32-state 実機 sweep) で経験的に否定された</b>。
+  扉が完全遮音ではなく -20〜-30 dB 減衰程度であるため、真の観測情報量は $\log_2 14 \approx 3.81$ bit ではなく
+  $\log_2 32 = 5$ bit に近い（<a href="nn_methods_compare.html">nn_methods_compare §1</a>）。
+  現在は <b>14-class と 32-class の両 head を共存運用</b>し、用途に応じて使い分けている。
+</div>
+
+<h2>アーキテクチャ全体</h2>
+<img src="img/nn_architecture.svg" alt="IchiPing v1 NN アーキテクチャ: 1024-bin 入力 → Conv1D 16/32/64 ch → Global Average Pool → 14-class softmax" style="width: 100%; max-width: 820px; display: block; margin: 16px 0;">
+
+<p>
+  3 層の Conv backbone + Global Average Pool + 2 つの softmax head（14-class と 32-class）。
+  本番モデル <code>v12345_BLJIT_XL</code> は backbone を厚くした 104K params の Neutron 互換アーキ
+  （Conv2D + AvgPool + 1×1 Conv head）で、MCXN947 NPU 上で 1.89 ms / NPU 比率 100% (7/7 op) を達成。
+</p>
+
+<h3>14-class と 32-class の使い分け</h3>
+
+<p>
+  v12345 検証で両 head とも MCU 実機 100% accuracy を達成。14-class は等価クラス
+  (A1, A2, B1..B4, C1..C8) を、32-class は 5-bit 真状態 (s00000..s11111) をそれぞれ直接予測する。
+  どちらを採用するかは「校正手間」と「必要な解像度」で決まる：
+</p>
+
+<table>
+  <thead><tr><th>用途</th><th>推奨 head</th><th>校正</th><th>起動時間</th><th>実機 accuracy</th></tr></thead>
+  <tbody>
+    <tr><td>「窓・扉が開いてるか」だけ知りたい</td><td><b>14-class softmax</b></td><td>不要（factory baseline）</td><td>即時</td><td><b>100%</b></td></tr>
+    <tr><td>サブ状態（どの窓・どのドア）まで識別</td><td><b>32-class softmax</b></td><td>不要（BLJIT factory）</td><td>即時</td><td>88%</td></tr>
+    <tr><td>サブ状態を完璧に</td><td><b>32-class softmax</b></td><td>LIVE 校正</td><td>25 秒</td><td><b>100%</b></td></tr>
+    <tr><td>騒音環境 (TV / 空調等) で運用</td><td>32-class softmax</td><td>LIVE 校正（騒音下）</td><td>25 秒</td><td><b>100%</b>（静粛時と同等）</td></tr>
+  </tbody>
+</table>
+
+<p>
+  14-class は <b>校正不要で常に 100%</b> なので「ON / OFF 監視用」として最強。
+  32-class は校正手間と引き換えにサブ状態識別能力を提供する。
+  どちらの head も同じ backbone + 同じ ONNX グラフから派生し、firmware ではどちらも同時に推論結果を返す
+  （cls32 / cls14 / second32 候補を併記、<a href="../firmware/projects/10_inference/README.html">10_inference README</a>）。
+</p>
+
+<h4>退避: 6-head 混合（連続サーボ角度時代の遺物）</h4>
+<div class="callout warn">
+  <strong>過去案: sigmoid (binary / [0,1] 連続) + 3-class softmax の 6-head 混合</strong>。
+  当初はサーボ角を連続値で扱う想定だったため設計されたが、現ラベルは binary 開閉のみのため不要となり、
+  2026-05-22 に正式廃止。レガシー実装は <code>pc/training/model.py</code> に残るが、
+  本番経路では使用しない（最新は <code>model_32cls_neutron.py</code> 系）。
+</div>
+
+<h2>各層の設計理由</h2>
+
+<h3>入力 — 1024-bin log-magnitude スペクトル</h3>
+<table>
+  <thead><tr><th>項目</th><th>値</th><th>選定理由</th></tr></thead>
+  <tbody>
+    <tr><td>サンプリングレート</td><td>16 kHz</td><td>chirp 8 kHz 上限の 2 倍。INMP441 でも十分解像</td></tr>
+    <tr><td>FFT 長</td><td>2048</td><td>PowerQuad-FFT の効率ポイント（power-of-2）、128 ms 窓 ≈ RT60 範囲</td></tr>
+    <tr><td>入力長</td><td>1024 bin</td><td>2048-pt rFFT は 1025 bin、DC を捨てて kernel 計算で割り切れる 1024 に</td></tr>
+    <tr><td>振幅表現</td><td>log10 + 平均ゼロ正規化</td><td>音圧レベルの環境依存をキャンセル、INT8 ダイナミックレンジに収める</td></tr>
+  </tbody>
+</table>
+
+<h3>Conv1D × 3 — 共有 backbone</h3>
+<table>
+  <thead><tr><th>層</th><th>ch</th><th>kernel</th><th>stride</th><th>出力長</th><th>役割</th></tr></thead>
+  <tbody>
+    <tr><td>conv1</td><td>16</td><td>16</td><td>4</td><td>256</td><td>粗い周波数構造（モード位置、RT60 帯域）</td></tr>
+    <tr><td>conv2</td><td>32</td><td>8</td><td>4</td><td>64</td><td>中レンジ（DRR、初期反射の位置・強度）</td></tr>
+    <tr><td>conv3</td><td>64</td><td>4</td><td>2</td><td>32</td><td>高次（部屋トポロジへの寄与）</td></tr>
+  </tbody>
+</table>
+<p>
+  各 Conv の後に <code>BatchNorm1d</code> + <code>ReLU</code>。BN は INT8 量子化時に Conv に畳み込めるため
+  推論時は実質ゼロコスト。padding は kernel/2、stride で空間方向を段階的に圧縮し、
+  最後に <code>AdaptiveAvgPool1d(1)</code> で時間軸を畳む（→ 64-d shared embedding）。
+</p>
+
+<h3>出力ヘッド <span class="pill">FC 64→14 + softmax</span></h3>
+
+<p>
+  共有 backbone から 64-d embedding を受け、<b>単一の全結合層</b> (weights 64×14 = 896, bias 14) で
+  14 等価クラスのロジットに射影し、softmax で確率分布を得る。損失は標準的な cross-entropy 1 本。
+</p>
+
+<table>
+  <thead><tr><th>項目</th><th>値</th></tr></thead>
+  <tbody>
+    <tr><td>出力次元</td><td>14（A1, A2, B1..B4, C1..C8）</td></tr>
+    <tr><td>活性化</td><td>softmax（訓練時は cross-entropy with logits）</td></tr>
+    <tr><td>損失</td><td>F.cross_entropy（class weight オプションあり）</td></tr>
+    <tr><td>正解信号</td><td>5-bit state → equiv_class index (0..13) への決定論的マッピング</td></tr>
+    <tr><td>推論出力</td><td>argmax → equiv_class index、または softmax 確率全 14 次元</td></tr>
+  </tbody>
+</table>
+
+<h4>5-bit state → 14 equiv_class マッピング</h4>
+
+<p>
+  データ収集時のラベルは 5-bit (a, b, c, AB, BC) だが、訓練前に等価クラス index に変換する。
+  この変換は <code>pc/training/dataset.py</code> の <code>STATE_TO_EQUIV</code> table で行う。
+</p>
+
+<table>
+  <thead><tr><th>equiv_class</th><th>意味</th><th>5-bit state メンバー</th><th>個数</th></tr></thead>
+  <tbody>
+    <tr><td>A1</td><td>全閉</td><td>s00000, s00010, s00100, s00110, s01000, s01010, s01100, s01110, s10000, s10010, s10100, s10110, s11000, s11010, s11100, s11110</td><td>16</td></tr>
+    <tr><td>A2</td><td>AB 閉, 窓 a のみ開</td><td>s10001, s10011, s10101, s10111, s11001, s11011, s11101, s11111</td><td>8</td></tr>
+    <tr><td>B1..B4</td><td>AB 開, BC 閉</td><td>(各 1 つ)</td><td>4</td></tr>
+    <tr><td>C1..C8</td><td>AB 開, BC 開</td><td>(各 1 つ)</td><td>8</td></tr>
+  </tbody>
+</table>
+
+<p>
+  完全な等価クラス定義表は <a href="full32_initial_test.html">Full 32 初期計測 §等価クラス一覧</a>。
+  16 + 8 + 4 + 8 = 36 ≠ 32 に見えるが、A1/A2 は重複なく分割される (16 + 8 = 24)
+  ので最終的に 24 + 4 + 8 = <b>32 真状態が 14 クラスに分割</b>される。
+</p>
+
+<h4>32-class softmax head の根拠</h4>
+<p>
+  当初は「観測等価性で 4 状態が縮退するため 32-class は 0.44 で頭打ち」と予想したが、
+  実扉が完全遮音でない (-20〜-30 dB 減衰程度) ため<b>同一等価クラス内のサブ状態にも SNR 16-90 で
+  分離可能なシグナル</b>が残っていた（<a href="nn_methods_compare.html">nn_methods_compare §1</a>）。
+  これにより 32-class softmax は v12345 検証で <b>MCU 実機 100% accuracy</b> を達成。実装は
+  <a href="../pc/training/model_32cls_neutron.py">model_32cls_neutron.py</a>（Neutron 互換アーキ）。
+</p>
+
+<h2>特徴抽出パイプライン（PC と MCU で共通設計）</h2>
+<img src="img/feature_pipeline.svg" alt="WAV → 整合フィルタ → RIR 窓 → rFFT → log-magnitude → 1024 bin 入力" style="width: 100%; max-width: 820px; display: block; margin: 16px 0;">
+
+<p>
+  PC 側は <a href="../pc/training/features.py">features.py</a> で同じ手順を踏む。
+  MCU 側は同じ流れを <b>PowerQuad-FFT で実装</b>する（DSP コプロセッサで 2048-pt rFFT を ms オーダーで完了）。
+  訓練と推論で <b>入力の生成手順が完全に一致する</b>ことが、INT8 量子化後の精度を保つ鍵。
+</p>
+
+<h2>学習データ要件 (v12345 実績)</h2>
+
+<table>
+  <thead><tr><th>項目</th><th>v1234</th><th>v12345_50f</th><th>v12345_BLJIT (本番)</th></tr></thead>
+  <tbody>
+    <tr><td>captures</td><td>v1+v2+v3+v4</td><td>+v5 (50 frame/state)</td><td>同左 × 5 baseline jittering</td></tr>
+    <tr><td>サンプル数</td><td>5,760</td><td>7,360</td><td><b>36,800</b></td></tr>
+    <tr><td>32cls MCU 実機 acc</td><td>59% (LIVE)</td><td>100% (LIVE) / 66% (factory)</td><td><b>100% (LIVE) / 88% (factory)</b></td></tr>
+    <tr><td>14cls MCU 実機 acc</td><td>97%</td><td>100% (校正不要)</td><td><b>100% (校正不要)</b></td></tr>
+  </tbody>
+</table>
+
+<p>
+  決め手は <b>Baseline jittering augmentation</b>: 各録音を 5 種類の baseline で diff して 5 サンプル分に増殖し、
+  「baseline 環境に依存しないラベル決定境界」を獲得させた。これで factory モード（校正なし）でも
+  32cls 88% / 14cls 100% を達成。詳細は <a href="v12345_report.html">v12345 検証レポート §8</a>。
+</p>
+
+<h3>初期計測で観察された特異点 (full_32_v1)</h3>
+
+<div class="callout warn">
+  <strong>クラス A2 内に 2 つの外れ値: s10100 / s11000</strong>:
+  Linear chirp で全 32 状態を 1 ショットずつ取得した
+  <a href="full32_initial_test.html">full_32_v1</a> 解析で、観測等価クラス A2
+  （扉 AB 閉 × 窓 a 開、メンバー 8 個）の中で 2 つの状態がクラス内中央値から
+  系統的にずれていることが判明した。本来このクラスの 8 メンバーは
+  原理上同一スペクトルになるはずだが:
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>state</th><th>RMS_dB vs A2 中央値</th><th>max\|Δ\| 周波数</th><th>ずれの性質</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>s10100</code></td>
+      <td>+5.00 dB</td>
+      <td>326 Hz</td>
+      <td>強い peak 差（クラス内最大の外れ）</td>
+    </tr>
+    <tr>
+      <td><code>s11000</code></td>
+      <td>+1.58 dB</td>
+      <td>215 Hz（200-280 Hz 帯に集中）</td>
+      <td>軽度の dip（低域に系統的減衰）</td>
+    </tr>
+    <tr>
+      <td>その他 A2 メンバー (6 個)</td>
+      <td>1.00 〜 1.46 dB</td>
+      <td>多様</td>
+      <td>クラスタとして tight</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>原因仮説 — 外部雑音の可能性が最有力</h4>
+
+<ol>
+  <li>
+    <b>外部雑音の影響（最有力）</b>: max\|Δ\| のピーク周波数が両者とも
+    <b>200-330 Hz の低域</b>に集中しており、ここは
+    <ul>
+      <li>SPK (45 mm, 0.25 W) の物理的出力が弱い帯域</li>
+      <li>外部生活雑音（空調・通行音・低周波振動）が乗りやすい帯域</li>
+      <li>chirp の開始周波数 200 Hz 直後の遷移帯</li>
+    </ul>
+    が重なる「<b>計測ノイズが本物の信号を上回る領域</b>」。同じデータでも 400 Hz
+    以上に限定して RMS を再計算すると、A2 クラス内の std が 0.316 → 0.072 dB と
+    <b>4.4× 改善し外れ値が消える</b>。これは「外れ値の正体は低域雑音」という
+    仮説を強く支持する。
+  </li>
+  <li>
+    <b>扉 AB の遮音不完全</b>: 仮説 1 が違う場合、扉 AB の物理的な隙間から
+    向こう側の窓状態が漏れて見えている可能性。s10100 は窓 c 開、s11000 は窓 b 開、
+    両者とも「向こう側の窓が開いている」状態で、観測等価性が崩れている方向。
+  </li>
+  <li>
+    <b>サーボ機械的ばらつき</b>: SG90 の位置決め精度 ±2° 程度の差で
+    模型の小開口部が微妙に変わる可能性。
+  </li>
+</ol>
+
+<h4>NN 設計上の対策</h4>
+
+<table>
+  <thead><tr><th>対策</th><th>段階</th><th>効果</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>入力帯域を 500-6000 Hz に制限</b></td>
+      <td>v0.4 特徴抽出（features.py）</td>
+      <td>低域雑音帯を学習対象から外す。クラス内分散が劇的に改善 (×4)</td>
+    </tr>
+    <tr>
+      <td><b>repeats=5 中央値集約</b></td>
+      <td>v0.4 データ収集（plans/）</td>
+      <td>1 ショット特異点を多サンプル中央値で吸収</td>
+    </tr>
+    <tr>
+      <td><b>整合フィルタによる chirp デコンボリューション</b></td>
+      <td>v0.4 前処理</td>
+      <td>chirp と無相関な雑音を √N 抑制（+30〜45 dB SNR 改善）</td>
+    </tr>
+    <tr>
+      <td><b>雑音 augmentation</b>（実環境雑音 WAV を学習時に overlay）</td>
+      <td>v0.6 学習</td>
+      <td>NN が雑音込みデータで頑健化、配置先の雑踏に対する精度低下を抑制</td>
+    </tr>
+    <tr>
+      <td><b>配置先 PC 再学習</b>（v1.5 計画）</td>
+      <td>v1.5 配置時</td>
+      <td>展示会場等で雑音 30-60 秒採取 → PC で head fine-tune → MCU flash 書込</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  詳細解析は <a href="full32_initial_test.html">Full 32 初期計測 §A2 / §6</a>。
+  この時点で立てた仮説「外部雑音が低域 (200-330 Hz) に乗っている」は
+  silence_2cond_v1 計測で経験的に確認され、その後の v12345 学習では
+  <b>baseline jittering augmentation</b> により学習段階で baseline 不変性を獲得させたため、
+  低域雑音影響は学習側で吸収された（<a href="v12345_report.html">v12345 §8 ノイズ耐性</a>）。
+</p>
+
+<h2>パラメータ数 — 2 系統 (S / XL)</h2>
+
+<p>
+  IchiPing には 2 つのモデルサイズが存在する。head 設計比較の baseline で使った
+  <b>S サイズ (~13.7K params)</b> と、本番デプロイされた <b>XL サイズ (~104K params)</b>。
+</p>
+
+<table>
+  <thead><tr><th>サイズ</th><th>backbone</th><th>head</th><th>計 params</th><th>INT8 サイズ</th><th>用途</th></tr></thead>
+  <tbody>
+    <tr><td><b>S</b></td><td>Conv1D 16/32/64 ch</td><td>FC 64→14</td><td>~13,690</td><td>~13.7 KB</td><td>head 設計比較の共通 baseline</td></tr>
+    <tr><td><b>XL (本番)</b></td><td>Conv2D + AvgPool (Neutron 互換)</td><td>1×1 Conv head (14 + 32)</td><td>~104,000</td><td><b>108 KB</b></td><td>v12345_BLJIT, MCU デプロイ</td></tr>
+  </tbody>
+</table>
+
+<p>
+  S サイズの内訳（参考）: conv1 272 + BN1 32 + conv2 4,128 + BN2 64 + conv3 8,256 + BN3 128 + head 910 = <b>13,690</b>。
+  XL は Neutron Converter が 100% NPU 化できる構造を満たすために Conv2D + 1×1 Conv head に書き換えたもので、
+  サイズが 8 倍弱になっても <b>1.89 ms / NPU 比率 100%</b> を達成（<a href="v12345_report.html">v12345 §10</a>）。
+</p>
+
+<h2>学習のコツ (v12345 経験則)</h2>
+<ul>
+  <li><b>Baseline jittering augmentation が決定打</b>: 各録音を 5 種類の baseline で diff して 5 サンプル分に増殖。
+    factory モード（校正なし）でも 32cls 88% / 14cls 100% を達成。詳細は
+    <a href="v12345_report.html">v12345 §8</a>。</li>
+  <li><b>クラス不均衡対策</b>: 14cls の A1 (全閉) は 32 状態のうち 16 個 (50%) を占めるが、
+    32cls で学ぶ場合は 32 状態が等分されるので不均衡は緩む。両 head 同時訓練が有効。</li>
+  <li><b>noise_diff + feature_aug の組合せ</b>: cross-day 汎化に不可欠
+    （<a href="nn_train_v1_result.html">nn_train_v1_result §11</a>）。</li>
+  <li><b>校正運用</b>: 14cls 用途なら校正不要、32cls の最高精度が必要なら LIVE 校正 25 秒。
+    騒音環境では「騒音下で校正」すると静粛時と同等精度を維持できる
+    （<a href="v12345_report.html">v12345 §8 ノイズ耐性</a>）。</li>
+</ul>
+
+<h2>ロードマップ上の位置づけ</h2>
+<table>
+  <thead><tr><th>マイルストーン</th><th>関連タスク</th><th>ステータス</th></tr></thead>
+  <tbody>
+    <tr><td>NN 設計確定</td><td>本ページ</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>PyTorch 訓練コード</td><td><a href="../pc/training/">pc/training/</a></td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>データ収集 (v1+v2+v3+v4+v5)</td><td>7,360 sample × 5 baseline jitter = 36,800</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>INT8 量子化 + Neutron 変換</td><td>pinto_neutron_sdk26_03.tflite</td><td><span class="status-badge completed">完了</span> → <a href="mcu_deployment.html">手順書</a></td></tr>
+    <tr><td>MCU 実機検証</td><td>v12345 sweep (8 モデル × 32 state)</td><td><span class="status-badge completed">14cls / 32cls とも 100% 達成</span> → <a href="v12345_report.html">レポート</a></td></tr>
+  </tbody>
+</table>
+
+<div class="footer-note">
+  関連ページ:
+  <a href="../index.html">index.html</a> ／
+  <a href="spec.html">spec.html</a> ／
+  <a href="mcu_deployment.html">mcu_deployment.html</a> ／
+  <a href="../pc/training/README.md">pc/training/README</a> ／
+  <a href="../tasks.html">tasks.html</a>
+</div>
+
+</main>
+</body>
+</html>

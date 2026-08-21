@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IchiPing UNO Q 作業ガイド</title>
+  <link rel="stylesheet" href="docs/style.css">
+  <style>main{max-width:1000px;margin:0 auto;padding:36px 24px 80px}table{width:100%;border-collapse:collapse}th,td{padding:9px 11px;border:1px solid #39414f;text-align:left;vertical-align:top}th{background:rgba(89,189,255,.1)}.warn{border-left:4px solid #f2cc60;padding:10px 14px}</style>
+</head>
+<body><main>
+  <h1>IchiPing UNO Q 作業ガイド</h1>
+  <p>このリポジトリはIchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の <a href="https://github.com/airpocket-soundman/IchiPing">IchiPing</a> は参照元であり、このリポジトリから変更しません。</p>
+
+  <h2>正本と独立性</h2>
+  <ul>
+    <li>UNO Q版の開発方針、配線、GPIOの正本は <a href="docs/uno_q_port.html">docs/uno_q_port.html</a>。</li>
+    <li>UNO Q実装の正本は <code>uno_q/app/</code>。</li>
+    <li><code>firmware/</code> と既存 <code>hardware/</code> はFRDM-MCXN947版からコピーした移植参照資料。</li>
+    <li>元IchiPingまたはdigikey_projectは、ユーザーが明示的に依頼した場合だけ変更する。</li>
+  </ul>
+
+  <h2>技術方針</h2>
+  <table><thead><tr><th>項目</th><th>方針</th></tr></thead><tbody>
+    <tr><td>ボード</td><td>Arduino UNO Q</td></tr>
+    <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr / Arduino sketch</td></tr>
+    <tr><td>推論・保存・ネットワーク</td><td>QRB2210 / Debian / Python</td></tr>
+    <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td></tr>
+    <tr><td>表示</td><td>内蔵8×13 blue LED Matrix</td></tr>
+    <tr><td>状態順</td><td>bit 0..4 = 窓a、窓b、窓c、扉AB、扉BC</td></tr>
+    <tr><td>PCA9685</td><td>Wire、D20/SDA、D21/SCL、0x40</td></tr>
+    <tr><td>GPIO</td><td>D3–D7状態、D8 EXEC、D9雨。3.3 V系。</td></tr>
+    <tr><td>音響</td><td>未確定。USB Audioを第一候補として検証。</td></tr>
+  </tbody></table>
+  <div class="warn">標準UNOヘッダに公式I²S割り当てがないため、INMP441/MAX98357Aの未検証直結は禁止。サーボは外部5 Vで給電し、UNO QとGNDを共通化する。</div>
+
+  <h2>移植順序</h2>
+  <ol>
+    <li>Matrix、Bridge、GPIO、I²Cのbring-up。</li>
+    <li>PCA9685とSG90を1チャンネルずつ安全に検証。</li>
+    <li>音響経路を確定し、16 kHz / mono / PCMの録音とping再生を確認。</li>
+    <li>PC版とUNO Q版の特徴量同値性を比較。</li>
+    <li>モデル推論と32状態評価を統合。</li>
+    <li>起動時実行と障害回復を追加。</li>
+  </ol>
+
+  <h2>実機作業</h2>
+  <ul>
+    <li>書き込み前にUSB VID/PIDまたはADB serialでUNO Qを確認する。</li>
+    <li>PCA9685検出だけではサーボを動かさない。電源・GND・機械端を確認してからPWMを有効化する。</li>
+    <li>外部ハード未接続でもbring-upが継続できる実装にする。</li>
+    <li>loopback、dummy、実モデルの結果を明確に区別する。</li>
+    <li>Linux起動中のMatrix利用を避け、OS起動完了後にアプリを開始する。</li>
+  </ul>
+
+  <h2>ドキュメントとGit</h2>
+  <ul>
+    <li>配線・GPIO変更時は <code>docs/uno_q_port.html</code> を更新。</li>
+    <li><code>README.md</code> / <code>index.html</code>、<code>AGENTS.md</code> / <code>Codex.html</code> は事実を同期。</li>
+    <li>図はSVGを使い、ASCIIアートは使わない。</li>
+    <li>このリポジトリだけでコミットし、App Labキャッシュや秘密情報はコミットしない。</li>
+  </ul>
+</main></body></html>

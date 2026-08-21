@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IchiPing UNO Q</title>
+  <link rel="stylesheet" href="docs/style.css">
+  <style>
+    main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+    .hero { padding: 34px; border: 1px solid var(--accent, #59bdff); border-radius: 18px; background: rgba(89,189,255,.08); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 16px; margin: 24px 0; }
+    .card { padding: 20px; border: 1px solid var(--border, #39414f); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 9px 11px; border: 1px solid var(--border, #39414f); text-align: left; vertical-align: top; }
+    th { background: rgba(89,189,255,.1); }
+    .status { color: var(--accent-2, #7ee787); }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <p class="status">Arduino UNO Q port / Phase 0 bring-up</p>
+    <h1>IchiPing UNO Q</h1>
+    <p>一発のpingを聴き、窓3枚と扉2枚の状態を推定するIchiPingを、Arduino UNO QのLinux + リアルタイムMCU構成へ移植する独立プロジェクトです。</p>
+    <p>元の<a href="https://github.com/airpocket-soundman/IchiPing">IchiPingリポジトリ</a>には変更を加えません。</p>
+  </section>
+
+  <section>
+    <h2>現在の到達点</h2>
+    <div class="grid">
+      <article class="card"><h3>UNO Q実機</h3><p>USB COMとADBを認識し、QRB2210 DebianとSTM32U585 / Zephyrの両方を確認。</p></article>
+      <article class="card"><h3>LED Matrix</h3><p>内蔵8×13 Matrixで5状態、信頼度、pingアニメーションを表現。</p></article>
+      <article class="card"><h3>GPIO / I²C</h3><p>D3–D9の入力と、D20/D21上のPCA9685（0x40）検出を実装。</p></article>
+      <article class="card"><h3>MCU–Linux</h3><p>Arduino Router Bridgeで推論要求と結果表示を往復。現在の結果は明示的なloopback。</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>実機テスト</h2>
+    <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>UNO Qへ23,680 bytesのスケッチを書き込み、Bridge往復、Matrix API、GPIO読取、PCA9685未接続時の継続動作を確認しました。サーボPWMは未出力です。</p>
+  </section>
+
+  <section>
+    <h2>設計資料</h2>
+    <ul>
+      <li><a href="docs/uno_q_port.html">UNO Q移植方針・センサ接続・GPIO</a></li>
+      <li><a href="uno_q/README.md">UNO Q bring-upアプリ</a></li>
+      <li><a href="docs/spec.html">元IchiPing仕様のコピー</a></li>
+      <li><a href="docs/nn_design.html">既存NN設計</a></li>
+      <li><a href="pc/README.html">既存データ採取・学習資産</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>処理分担</h2>
+    <table>
+      <thead><tr><th>層</th><th>UNO Q側</th><th>担当</th></tr></thead>
+      <tbody>
+        <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr</td><td>GPIO、I²C、サーボ、LED Matrix、推論トリガ</td></tr>
+        <tr><td>アプリ・推論</td><td>QRB2210 / Debian</td><td>特徴量、モデル推論、保存、ネットワーク</td></tr>
+        <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td><td>状態、推論要求、推論結果</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>移植ロードマップ</h2>
+    <ol>
+      <li>Matrix・Bridge・GPIO・PCA9685検出のbring-up</li>
+      <li>PCA9685 + SG90 ×5と既存サーボ座標の移植</li>
+      <li>USB Audioによる16 kHzモノラル録音とping再生</li>
+      <li>既存特徴量・モデルのLinux側移植と同値性検証</li>
+      <li>起動時実行、ログ、ネットワーク通知の統合</li>
+    </ol>
+    <p>INMP441/MAX98357Aは、UNO Qの標準UNOヘッダに公式I²S割り当てがないため直結を保留しています。未検証配線を採用せず、USB Audioを第一候補として評価します。</p>
+  </section>
+</main>
+</body>
+</html>

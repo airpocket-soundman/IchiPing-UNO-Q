@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IchiPing 配線テーブル</title>
+<link rel="stylesheet" href="../docs/style.css">
+<script src="../docs/embed.js"></script>
+</head>
+<body>
+
+<aside class="sidenav">
+  <div class="sidenav-brand"><a href="../index.html">IchiPing</a>
+    <div class="sidenav-tag">v0.1 シリアル疎通フェーズ</div>
+  </div>
+  <nav>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ナビゲーション</div>
+      <a href="../index.html">トップ</a>
+      <a href="../tasks.html">タスクボード</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">設計 / 仕様</div>
+      <a href="../docs/spec.html">仕様書 (spec)</a>
+      <a href="wiring.html">配線図</a>
+      <a href="../docs/nn_design.html">NN 設計</a>
+      <a href="../docs/mcu_deployment.html">MCU デプロイ</a>
+      <a href="../docs/bringup.html">実機ブリングアップ</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">NN 検討</div>
+      <a href="../docs/probe_sound.html">走査音考察</a>
+      <a href="../docs/nn_review.html">NN 考察</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ハードウェア</div>
+      <a href="../hardware/wiring.html" class="current">配線テーブル</a>
+      <a href="../hardware/bom.html">BOM (部品表)</a>
+      <a href="../hardware/display_options.html">ディスプレイ候補</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">実装コード</div>
+      <a href="../firmware/README.html">firmware ガイド</a>
+      <a href="../pc/README.html">PC ガイド</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">対外発信</div>
+      <a href="../docs/protopedia_preview.html">ProtoPedia プレビュー</a>
+      <a href="../docs/protopedia.md">ProtoPedia 投稿原稿 (md)</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">メタ</div>
+      <a href="../docs/vscode_setup.html">VS Code セットアップ</a>
+      <a href="../CLAUDE.html">Claude 作業ガイド</a>
+    </div>
+  </nav>
+  <div class="sidenav-foot">
+    <a href="https://github.com/airpocket-soundman/IchiPing">GitHub: IchiPing</a><br>
+    <a href="https://github.com/airpocket-soundman/digikey_project">正本 digikey_project</a>
+  </div>
+</aside>
+
+<header class="page">
+  <div class="crumb">
+    <a href="../index.html">← IchiPing トップ</a>
+    ／ <a href="../tasks.html">タスクボード</a>
+    ／ <a href="../docs/spec.html">仕様書</a>
+  </div>
+  <h1>IchiPing 配線図 <span class="pill">v1, FRDM-MCXN947 + M5Stamp Pico + INMP441 想定</span></h1>
+  <div class="sub">
+    主要な配線図は <a href="wiring.svg">wiring.svg</a>、システム構成図は <a href="../docs/img/system_overview.svg">system_overview.svg</a>、機械可読ネットリストは <a href="netlist.csv">netlist.csv</a>。
+    本ドキュメントは <b>MCU ピン → 接続先デバイス端子</b> の関係を表形式で整理。
+  </div>
+</header>
+
+<main>
+
+<h2>0. 全デバイス ピン接続 早見表</h2>
+
+<p>
+  IchiPing v1 で使うすべてのデバイスと、それぞれが接続される MCU ピン（または周辺チップ経由）の対応を 1 つの表にまとめたもの。
+  詳細な信号名・代替機能・ジャンパ設定は §2 以降に分離して記載。
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>デバイス</th><th>役割</th><th>接続バス / 経路</th><th>MCU 直結ピン (Arduino 表記)</th><th>アドレス / ch</th><th>電源</th><th>配置</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>FRDM-MCXN947</b></td>
+      <td>MCU (NPU + PowerQuad + I²S 多系統)</td>
+      <td>—</td><td>—</td><td>—</td><td>USB-C 5V / 3.3V LDO</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>ILI9341</b> TFT 240×320</td>
+      <td>状態表示 (LVGL)</td>
+      <td>SPI (LPSPI1 / FC1) + GPIO ×4</td>
+      <td>D11/D12/D13 + A2(CS)/A3(RST)/A4(DC)/A5(BL)</td>
+      <td>—</td><td>3.3V</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>MAX98357A</b></td>
+      <td>I²S Class-D アンプ</td>
+      <td>I²S (SAI1 TX)</td>
+      <td>PIO3_16/17/20 (BCLK/FS/TXD0)</td>
+      <td>—</td><td>5V (GAIN=GND)</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>SPK 8Ω 0.25W</b></td>
+      <td>音響放射 (1 Ping)</td>
+      <td>アナログ 2 線</td>
+      <td>MAX98357A 出力</td>
+      <td>—</td><td>(MAX98357A から)</td>
+      <td>House 模型</td>
+    </tr>
+    <tr>
+      <td><b>INMP441</b></td>
+      <td>I²S MEMS マイク 24-bit</td>
+      <td>I²S (SAI1 RX)</td>
+      <td>PIO3_16/17/21 (BCLK/FS/RXD0)</td>
+      <td>L/R=GND</td><td>3.3V (SD=3.3V)</td>
+      <td>House 模型</td>
+    </tr>
+    <tr>
+      <td><b>PCA9685</b></td>
+      <td>16ch PWM サーボドライバ</td>
+      <td>I²C (LPI2C2 / FC2)</td>
+      <td>D18 (SDA) / D19 (SCL)</td>
+      <td>I²C 0x40</td><td>VCC=3.3V, V+=5V</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>SG90 ×5</b></td>
+      <td>窓 a/b/c + 扉 AB/BC 開閉</td>
+      <td>PWM (PCA9685 ch 0-4)</td>
+      <td>PCA9685 経由</td>
+      <td>ch 0 / 1 / 2 / 3 / 4</td><td>5V V+</td>
+      <td>House 模型</td>
+    </tr>
+    <tr>
+      <td><b>トグル ×5</b></td>
+      <td>窓・扉 真値入力 (学習データ用)</td>
+      <td>GPIO IN (プルアップ)</td>
+      <td>D3, D4, D5, D6, D7</td>
+      <td>SPST → GND</td><td>—</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>EXEC ボタン</b></td>
+      <td>手動推論トリガ</td>
+      <td>GPIO IN (プルアップ)</td>
+      <td>D8</td>
+      <td>モーメンタリ → GND</td><td>—</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>LED 推論中</b> 橙</td>
+      <td>推論サイクル中点灯</td>
+      <td>GPIO OUT (330Ω 直列)</td>
+      <td>D2</td>
+      <td>—</td><td>3.3V → GPIO</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr>
+      <td><b>LED PWR</b> 緑</td>
+      <td>電源 ON 表示</td>
+      <td>(電源直結、GPIO 不要)</td>
+      <td>—</td>
+      <td>—</td><td>3.3V 直 + 330Ω</td>
+      <td>コントローラ筐体</td>
+    </tr>
+    <tr style="background:rgba(194,24,91,0.10);">
+      <td><b>M5Stamp Pico</b><br>(ESP32-PICO-D4)</td>
+      <td>Wi-Fi モジュール (MQTT/HTTP)</td>
+      <td>UART (LPUART2 / FC2)</td>
+      <td>D0 (RX) / D1 (TX)</td>
+      <td>—</td><td>5V (内蔵 LDO → 3.3V)</td>
+      <td>コントローラ筐体内に統合</td>
+    </tr>
+    <tr style="background:rgba(31,93,153,0.10);">
+      <td><b>降雨センサ</b> YL-83</td>
+      <td>雨検出 → 推論トリガ</td>
+      <td>GPIO IN (デジタル)</td>
+      <td>D9 (P3_4 想定)</td>
+      <td>HIGH=乾燥 / LOW=雨</td><td>3.3V</td>
+      <td>House 模型に屋外設置</td>
+    </tr>
+    <tr>
+      <td><b>OpenSDA UART</b></td>
+      <td>デバッグ / PC 連携 (学習データ収集)</td>
+      <td>UART (LPUART4 / FC4)</td>
+      <td>オンボード MCU-Link</td>
+      <td>921600 bps</td><td>USB-Micro</td>
+      <td>コントローラ筐体</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <b>注</b>: 「Arduino 表記」は FRDM-MCXN947 ボード上の Arduino ヘッダ刻印 (D0-D19, A0-A5)。
+  実際の MCU P-port 番号は <b>MCUXpresso Config Tools の Pins ツール</b>で確定し、
+  各 firmware project の <code>pin_mux.c</code> に反映している。詳細マッピングは §2 参照。
+</div>
+
+<h2>1. バス割り当てサマリ</h2>
+<table>
+  <thead>
+    <tr><th>バス</th><th>MCU 周辺</th><th>接続先デバイス</th><th>アドレス / CS</th><th>Arduino ヘッダ</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>I²S (full-duplex)</td><td>SAI1</td><td>INMP441 マイク（RX）＋ MAX98357A スピーカ（TX）</td><td>—</td><td>J1 SAI 列（PIO3_16/17/20/21）</td></tr>
+    <tr><td>I²C</td><td>LPI2C2 (FC2)</td><td>PCA9685 / LU9685 / BMP585</td><td>0x40 / 0x1F (jumper 0x00–0x1F) / 0x47</td><td><b>D18 (SDA, PIO4_0), D19 (SCL, PIO4_1)</b></td></tr>
+    <tr><td>SPI</td><td>LPSPI1 (FC1)</td><td>ILI9341 TFT</td><td>CS=A2 (GPIO 駆動)</td><td>D11/D12/D13 (J2.8/10/12), A2/A3/A4/A5 (J4.6/8/10/12)</td></tr>
+    <tr><td>UART</td><td>LPUART4 (FC4)</td><td>OpenSDA 仮想 COM（v0.1 デバッグ／フレーム送信）</td><td>—</td><td>オンボード MCU-Link</td></tr>
+    <tr><td>UART</td><td>LPUART2 (FC2)</td><td><b>M5Stamp Pico</b> (ESP32-PICO-D4, Wi-Fi)</td><td>—</td><td>D0 (RX), D1 (TX)</td></tr>
+    <tr><td>USB</td><td>USB0</td><td>PC（CDC データ転送）</td><td>—</td><td>オンボード USB-C</td></tr>
+    <tr><td>PWM</td><td>（PCA9685 経由）</td><td>SG90 ×5</td><td>PCA ch 0–4</td><td>—</td></tr>
+    <tr><td>GPIO IN</td><td>—</td><td>トグル ×5 + EXEC ×1 + <b>降雨センサ</b></td><td>内蔵プルアップ / デジタル直結</td><td>D3–D9</td></tr>
+    <tr><td>GPIO OUT</td><td>—</td><td>LED 推論中 (1)</td><td>330Ω 直列</td><td>D2</td></tr>
+  </tbody>
+</table>
+
+<h2>2. MCU ピン → デバイス端子マップ</h2>
+<div class="callout warn">
+  <strong>注:</strong> Arduino ヘッダ番号（D0–D15、A0–A5）は FRDM-MCXN947 ボード上の刻印。実 P-port 番号は <b>MCUXpresso Config Tools の Pins ツール</b>で確定すること（<code>pin_mux.c</code> に反映）。
+</div>
+
+<h3>2.1 I²S（音響系, SAI1 full-duplex）</h3>
+<p>
+  INMP441（マイク）と MAX98357A（スピーカ）を <b>同一 SAI1 ペリフェラル</b>にぶら下げる。
+  BCLK/FS は MCU 側 TX 側マスタが発生し、両デバイスが共用する。これでサンプルクロックが
+  内部で揃うので、インパルス応答計測（<a href="../firmware/projects/08_mic_speaker_test/">08_mic_speaker_test</a>）でズレが出ない。
+</p>
+<table>
+  <thead>
+    <tr><th>MCU pin</th><th>Alt</th><th>SDK 機能</th><th>接続先</th><th>信号</th><th>方向</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>PIO3_16</td><td><b>Alt10</b></td><td><code>SAI1_TX_BCLK</code></td><td>INMP441 SCK + MAX98357A BCLK</td><td>BCLK</td><td>MCU → MIC / SPK</td></tr>
+    <tr><td>PIO3_17</td><td><b>Alt10</b></td><td><code>SAI1_TX_FS</code></td><td>INMP441 WS + MAX98357A LRC</td><td>LRCLK/FS</td><td>MCU → MIC / SPK</td></tr>
+    <tr><td>PIO3_20</td><td><b>Alt10</b></td><td><code>SAI1_TXD0</code></td><td>MAX98357A DIN</td><td>TX data</td><td>MCU → SPK</td></tr>
+    <tr><td>PIO3_21</td><td><b>Alt10</b></td><td><code>SAI1_RXD0</code></td><td>INMP441 SD</td><td>RX data</td><td>MIC → MCU</td></tr>
+    <tr><td>PIO1_21</td><td><b>Alt10</b></td><td><code>SAI1_MCLK</code>（任意）</td><td>(外部 codec 用)</td><td>MCLK</td><td>MCU → ext</td></tr>
+  </tbody>
+</table>
+<p>INMP441 の <code>L/R</code> ピンは <b>GND に接続</b>（左チャネル選択）。MAX98357A の <code>GAIN</code> は <b>GND 直結 (3 dB)</b> — デモ用 0.25 W スピーカを焼かないための保護。v1+ で 1〜3 W スピーカに上げるならフローティング (9 dB) に戻す。<code>SD</code> は 3.3V 直結（常時 ON）。</p>
+
+<h3>2.2 I²C（LPI2C2 / FC2, 内蔵プルアップ可）</h3>
+<div class="callout">
+  <b>動作実績</b>: <a href="../../FRDM-MCXN947_demo/41_lpi2c_vl53l0x_my/"><code>FRDM-MCXN947_demo/41_lpi2c_vl53l0x_my</code></a> で
+  <b>内蔵プルアップだけで VL53L0X が動いた</b>実績あり。100 kHz・短いシールド配線・1 〜 2 デバイスなら外付け不要。
+</div>
+<table>
+  <thead>
+    <tr><th>Arduino</th><th>MCU pin</th><th>Alt</th><th>SDK 機能</th><th>I²C アドレス</th><th>デバイス</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>D18</b> (J2 pin 18)</td><td>PIO4_0</td><td><b>Alt2</b></td><td><code>LP_FLEXCOMM2_P0</code> (LPI2C2 SDA)</td><td>0x40</td><td>PCA9685 サーボドライバ</td></tr>
+    <tr><td><b>D19</b> (J2 pin 20)</td><td>PIO4_1</td><td><b>Alt2</b></td><td><code>LP_FLEXCOMM2_P1</code> (LPI2C2 SCL)</td><td>0x00–0x1F（<b>現物 0x1F</b>）</td><td>LU9685（代替, <a href="../firmware/shared/source/lu9685.c">lu9685.c</a>）</td></tr>
+    <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>0x47</td><td>BMP585 気圧センサ（補助）</td></tr>
+  </tbody>
+</table>
+<div class="callout warn">
+  <b>注</b>: ボードシルクの "D14/D15" 表記は本ボードには存在しない（J2 ヘッダには D8〜D13 と D18/D19 が並ぶ）。
+  Arduino UNO R3 で SDA/SCL に当たる位置のピンが D18/D19 にラベルされている。<br>
+  内蔵プルアップは ~50 kΩ で I²C 仕様としては弱いが、上述の通り FRDM ボード上の短い配線では実機動作する。
+  複数デバイス（PCA9685 + BMP585 を同時に）下げる、または 400 kHz 動作時は外付け 4.7 kΩ × 2 を追加すること。
+</div>
+
+<h3>2.3 SPI（ILI9341 TFT のみ, LPSPI1 / FC1）</h3>
+
+<p>FRDM-MCXN947 Board User Manual Table 18（Arduino J2）と Table 20（J4）に基づく確定構成。出典: <a href="../docs/pdf/FRDM-MCXN947BoardUserManual.pdf">docs/pdf/FRDM-MCXN947BoardUserManual.pdf</a>。</p>
+
+<table>
+  <thead>
+    <tr><th>Arduino</th><th>J ピン</th><th>MCU pin</th><th>Alt</th><th>SDK 信号</th><th>ILI9341 端子</th><th>ソルダージャンパ</th><th>備考</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>D11</td><td>J2.8</td><td>P0_24</td><td>Alt2 (FC1)</td><td><code>FC1_SPI_SDO</code></td><td>SDI / MOSI</td><td><b>SJ7: 1-2</b> (default)</td><td>LPSPI1 master out</td></tr>
+    <tr><td>D12</td><td>J2.10</td><td>P0_26</td><td>Alt2 (FC1)</td><td><code>FC1_SPI_SDI</code></td><td>SDO / MISO（未接続）</td><td>—</td><td>ILI9341 は書込のみ。pin はムックスしておくが結線不要</td></tr>
+    <tr><td>D13</td><td>J2.12</td><td>P0_25</td><td>Alt2 (FC1)</td><td><code>FC1_SPI_SCK</code></td><td>SCK</td><td>—</td><td>LPSPI1 クロック</td></tr>
+    <tr><td><b>A2</b></td><td>J4.6</td><td>P0_14</td><td>Alt0 (GPIO)</td><td><code>ARD_A2</code></td><td>CS</td><td>—</td><td>マニュアル CS（ハード PCS 非使用）</td></tr>
+    <tr><td><b>A3</b></td><td>J4.8</td><td>P0_22</td><td>Alt0 (GPIO)</td><td><code>ARD_A3</code></td><td>RESET</td><td>—</td><td>Hard reset (init 時 LOW パルス)</td></tr>
+    <tr><td><b>A4</b></td><td>J4.10</td><td>P0_15</td><td>Alt0 (GPIO)</td><td><code>ARD_A4</code></td><td>DC</td><td><b>SJ8: 1-2</b> (default)</td><td>Data/Command 切替</td></tr>
+    <tr><td><b>A5</b></td><td>J4.12</td><td>P0_23</td><td>Alt0 (GPIO)</td><td><code>ARD_A5</code></td><td>LED/BL</td><td><b>SJ9: 1-2</b> (default)</td><td>バックライト。SJ9=2-3 だと Wakeup ピンに切替わる</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p><b>microSD は本計画では採用しない</b>。よって D10 (P0_27 / <code>FC1_SPI_PCS</code>) は <b>SJ6=2-3 のまま (default)</b> で LED_GREEN として残せる。学習データは PC 側（receiver.py）で受けて保存するので、ボード側ストレージ不要。</p>
+  <p><b>重要 1</b>: 旧 wiring.html は "FC? / LPSPI?" と "TODO" を残していたが、実機は <b>LPSPI1 (= FC1)</b> で確定。出典は Board User Manual Table 18。</p>
+  <p><b>重要 2</b>: A5 (P0_23) は <b>SJ9=1-2 (default)</b> が必要。SJ9=2-3 にすると Wakeup ピンとして使われて GPIO 出力できない。</p>
+  <p><b>検証ソース</b>: SDK の <code>examples/_boards/frdmmcxn947/driver_examples/lpspi/polling_b2b_transfer/master/pin_mux.c</code> も同じ PORT0_24/25/26 + Alt2 を使用。</p>
+</div>
+
+<p>全体ピン配置とコンフリクト解析は <a href="pin_plan.html">pin_plan.html</a> に集約。</p>
+
+<h3>2.4 UART（M5Stamp Pico, LPUART2 / FC2）</h3>
+<p>
+  Wi-Fi 連携の <b>M5Stamp Pico (ESP32-PICO-D4)</b> はコントローラ筐体内に組み込まれ、
+  LPUART2 経由で MCU と通信する。推論結果送信（MCU → M5Stamp → クラウド）と
+  「閉めて」コマンド受信（クラウド → M5Stamp → MCU）が同じ経路で双方向に流れる。
+</p>
+<table>
+  <thead>
+    <tr><th>Arduino</th><th>MCU pin</th><th>MCU 機能</th><th>M5Stamp Pico ピン</th><th>方向</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>D0</td><td>PIO4_2</td><td><code>LP_FLEXCOMM2_P2</code> (LPUART2 RX)</td><td>G1 (TX)</td><td>M5Stamp → MCU</td></tr>
+    <tr><td>D1</td><td>PIO4_3</td><td><code>LP_FLEXCOMM2_P3</code> (LPUART2 TX)</td><td>G3 (RX)</td><td>MCU → M5Stamp</td></tr>
+    <tr><td>—</td><td>—</td><td>5V 給電</td><td>5V</td><td>—</td></tr>
+    <tr><td>—</td><td>—</td><td>GND 共通</td><td>GND</td><td>—</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <b>注</b>: I²C と LPUART は同じ LPI2C2/LPFLEXCOMM2 を別 pin で使い分けるのが MCXN947 の作法。
+  ボード上で PCA9685 (D18/D19, FC2 P0/P1) と M5Stamp (D0/D1, FC2 P2/P3) は同じ Flexcomm2 を
+  チャネル分離して使う。pin_mux.c 設定で衝突しないよう注意。
+</div>
+
+<h3>2.5 PWM サーボ（PCA9685 / LU9685 経由）</h3>
+<table>
+  <thead>
+    <tr><th>PWM ch</th><th>servo 名</th><th>機構</th><th>サーボ役割</th><th>角度範囲（仮）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td><code>a</code></td><td>窓 a</td><td>開閉</td><td>0°（閉） – 90°（全開）</td></tr>
+    <tr><td>1</td><td><code>b</code></td><td>窓 b</td><td>開閉</td><td>0° – 90°</td></tr>
+    <tr><td>2</td><td><code>c</code></td><td>窓 c</td><td>開閉</td><td>0° – 90°</td></tr>
+    <tr><td>3</td><td><code>AB</code></td><td>扉 AB</td><td>開閉</td><td>0° – 90°</td></tr>
+    <tr><td>4</td><td><code>BC</code></td><td>扉 BC</td><td>開閉</td><td>0° – 90°</td></tr>
+  </tbody>
+</table>
+<p>
+  チャネル番号は <b>PCA9685 (16ch 中の 0..4) でも LU9685 (20ch 中の 0..4) でも共通</b>。
+  サーボ抽象層 <a href="../firmware/shared/include/servo_driver.h"><code>servo_driver.h</code></a> が
+  どちらのバックエンドでも同じ配列インデックスをチップのチャネル番号として書き込むため、
+  ハーネスを差し替えるだけで切替可能。LU9685 を使う場合 ch 5..19 は未使用
+  （bulk-write モードで <code>LU9685_DISABLED = 0xFF</code> 送出）。詳細は
+  <a href="../docs/servo_coords.html">servo_coords §2 既定値</a>。
+</p>
+<p>サーボ電源 V+ は <b>5V 専用レール</b>（MCU の 3.3V から分離）。V+ ↔ GND 間に 1000 µF 電解で突入電流吸収。</p>
+
+<h3>2.6 GPIO 入力（プルアップ有効、アクティブ Low）</h3>
+<table>
+  <thead>
+    <tr><th>Arduino</th><th>用途</th><th>ハード</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>D2</td><td>推論中 LED（出力）</td><td>GPIO 出力 330Ω 直列、橙 LED</td></tr>
+    <tr><td>D3</td><td>トグル: 窓 a</td><td>SPST → GND</td></tr>
+    <tr><td>D4</td><td>トグル: 窓 b</td><td>SPST → GND</td></tr>
+    <tr><td>D5</td><td>トグル: 窓 c</td><td>SPST → GND</td></tr>
+    <tr><td>D6</td><td>トグル: 扉 AB</td><td>SPST → GND</td></tr>
+    <tr><td>D7</td><td>トグル: 扉 BC</td><td>SPST → GND</td></tr>
+    <tr><td>D8</td><td>EXEC ボタン</td><td>モーメンタリ SPST → GND</td></tr>
+    <tr style="background:rgba(31,93,153,0.10);"><td><b>D9</b></td><td><b>降雨センサ</b> (YL-83) デジタル出力</td><td>House 模型に屋外設置、HIGH=乾燥 / LOW=雨。3.3V/GND 給電</td></tr>
+  </tbody>
+</table>
+
+<h3>2.6.1 降雨センサ YL-83 配線詳細</h3>
+<p>
+  抵抗式降雨検出モジュール。基板の電極パターンに水滴が付くと抵抗値が下がり、
+  オンボードコンパレータがデジタル出力 D0 を LOW にする (調整 VR で閾値可変)。
+</p>
+<table>
+  <thead>
+    <tr><th>YL-83 ピン</th><th>接続先</th><th>備考</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>VCC</td><td>FRDM 3.3V (J5.4 等)</td><td>5V でも動くが 3.3V を選択 (MCU と同電圧)</td></tr>
+    <tr><td>GND</td><td>FRDM GND</td><td>—</td></tr>
+    <tr><td>D0 (デジタル出力)</td><td>MCU D9 (PIO3_4 想定)</td><td>HIGH=乾燥 / LOW=雨。MCU 側で立下りエッジ割込</td></tr>
+    <tr><td>A0 (アナログ出力)</td><td>未接続</td><td>本構成ではデジタル D0 のみ使用</td></tr>
+  </tbody>
+</table>
+
+<h3>2.7 GPIO 出力</h3>
+<table>
+  <thead>
+    <tr><th>Arduino</th><th>用途</th><th>デバイス</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>—</td><td>PWR LED</td><td>外付け（3V3 直結 + 330Ω + 緑 LED → GND）、GPIO 不要で常時点灯。A0/A1 は ADC 専用ピンで GPIO 駆動不可</td></tr>
+    <tr><td><b>D2</b></td><td>推論中 LED</td><td>橙 LED、推論サイクル実行中点灯（GPIO 出力、330Ω 直列）</td></tr>
+    <tr><td><b>A2</b></td><td><b>ILI9341 CS</b></td><td>TFT chip select（GPIO 直駆動、330Ω 不要）</td></tr>
+    <tr><td><b>A3</b></td><td><b>ILI9341 RESET</b></td><td>TFT hard reset 線（GPIO 直駆動）</td></tr>
+    <tr><td><b>A4</b></td><td><b>ILI9341 DC</b></td><td>TFT data/command 切替（GPIO 直駆動）</td></tr>
+    <tr><td><b>A5</b></td><td><b>ILI9341 BL</b></td><td>バックライト制御（GPIO ON/OFF か PWM 減光）</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p><b>A0/A1 は ADC 専用ピン</b>（Board User Manual Table 20 で <code>ARD_A0=ADC0_A0</code>、<code>ARD_A1=ADC0_B0</code> と確定）で、GPIO 機能は持っていません。LED 駆動用には使えないので、PWR LED は外付け（電源直結）、推論中 LED は D2 に変更しました。</p>
+</div>
+
+<h3>2.8 USB（PC データ転送）</h3>
+<table>
+  <thead>
+    <tr><th>機能</th><th>MCU</th><th>用途</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>USB0 D+/D-</td><td>オンボード USB-C</td><td>CDC で生音声・ラベルを PC に送信／プログラム書込</td></tr>
+    <tr><td>VBUS</td><td>USB-C</td><td>5V 電源入力（LiPo 充電も兼用）</td></tr>
+  </tbody>
+</table>
+
+<h2>3. 電源系統</h2>
+<table>
+  <thead>
+    <tr><th>レール</th><th>供給</th><th>消費先</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>5V</td><td>USB-C VBUS or LiPo→ブースト</td><td>MAX98357A VIN、PCA9685 V+（サーボ系）、ESP32</td></tr>
+    <tr><td>3.3V</td><td>FRDM オンボード LDO</td><td>MCU、INMP441、ILI9341、BMP585、PCA9685 VCC（ロジック）</td></tr>
+    <tr><td>GND</td><td>全共通</td><td>サーボ電源 GND も必ずここに集約</td></tr>
+  </tbody>
+</table>
+<p>LiPo（3.7V, 2000 mAh）+ TP4056 充電 IC で携帯動作可能。USB-C 接続時は USB 給電に切替。</p>
+
+<h2>4. ピン使用統計（参考）</h2>
+<table>
+  <thead>
+    <tr><th>種別</th><th>使用数</th><th>余裕</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>I²S（SAI1 占有）</td><td>4 ピン</td><td>SAI1 専有、TX/RX 共有クロックでサンプルロック</td></tr>
+    <tr><td>I²C（FC2）</td><td>2 ピン</td><td>4 デバイス目以上追加可</td></tr>
+    <tr><td>SPI（ILI9341 のみ）</td><td>2 ピン + GPIO 4</td><td>microSD 採用なら +1 CS。LPSPI1 (FC1)</td></tr>
+    <tr><td>UART</td><td>2 ピン</td><td>OpenSDA 経由、別 FC で増設可</td></tr>
+    <tr><td>GPIO IN（トグル/EXEC/INT）</td><td>7 ピン</td><td>D3..D9（D9 はオプションの BMP INT）</td></tr>
+    <tr><td>GPIO OUT（推論中 LED）</td><td>1 ピン</td><td>D2 のみ。PWR LED は外付け電源直結</td></tr>
+    <tr><td><b>合計</b></td><td><b>20 ピン</b></td><td>Arduino ヘッダ 36 本中、約半数</td></tr>
+  </tbody>
+</table>
+
+<h2>5. 配線手順の推奨順序</h2>
+<ol>
+  <li><b>電源</b>（3.3V/5V/GND）を先に配り、テスタで各レール電圧を確認</li>
+  <li><b>I²C</b> を結線 → PCA9685 (0x40) / LU9685 (0x1F) / BMP585 (0x47) を <code>i2cdetect</code> 相当のコードで全アドレス確認</li>
+  <li><b>GPIO 入力</b>（トグル + EXEC）を結線 → MCU ポーリングで各ビット確認</li>
+  <li><b>GPIO 出力</b>（LED）を結線 → ブリンクテスト</li>
+  <li><b>SPI ILI9341</b> を結線 → 03_ili9341_test ファームで 5 フェーズ描画</li>
+  <li><b>I²S DAC</b>（MAX98357A）→ 07_speaker_test で 200/1k/5k Hz + chirp を耳で確認</li>
+  <li><b>I²S MIC</b>（INMP441）→ 06_mic_test で peak/RMS/ZCR を観測（学習データの永続化は PC 側 receiver.py で WAV 保存）</li>
+  <li><b>PCA9685 → SG90 ×5</b> → スイープテスト、各サーボの角度キャリブレーション</li>
+  <li><b>ESP32 UART</b>（任意） → AT コマンド疎通</li>
+  <li><b>USB CDC</b> → PC との双方向通信テスト（<a href="../firmware/README.html">firmware/</a> と <a href="../pc/README.html">pc/</a> のスケルトン使用）</li>
+</ol>
+
+<h2>6. 既知の注意点</h2>
+<div class="callout warn">
+  <ul style="margin: 0;">
+    <li><b>MAX98357A → INMP441 の機械クロストーク</b>: スピーカと MEMS マイクは筐体内で 40 mm 以上離し、防振フォームで挟む（spec.html §7.5 参照）</li>
+    <li><b>サーボ動作音の chirp 混入</b>: サーボ完了後 500 ms 以上の待機を入れてから chirp 放射（<a href="../docs/spec.html">spec.html §7.5</a> シーケンス）</li>
+    <li><b>I²C プルアップは 1 セットのみ</b>: PCA9685 / LU9685 / BMP585 のモジュールに既存プルアップがある場合、バス上で合成されて値が変わるので注意（多くのブレイクアウトに 10 kΩ が乗っている）</li>
+    <li><b>3.3V ロジック で 5V サーボ電源</b>: PCA9685 のオープンドレイン PWM 出力は 5V トレラントなので問題なし</li>
+  </ul>
+</div>
+
+<div class="footer-note">
+  関連ページ:
+  <a href="../index.html">index.html</a> ／
+  <a href="../tasks.html">tasks.html</a> ／
+  <a href="../docs/spec.html">spec.html</a> ／
+  <a href="wiring.svg">wiring.svg</a> ／
+  <a href="netlist.csv">netlist.csv</a> ／
+  <a href="../firmware/README.html">firmware/README.html</a>
+</div>
+
+</main>
+</body>
+</html>

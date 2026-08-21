@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IchiPing — 1 マイクで家を聴く</title>
+<link rel="stylesheet" href="style.css">
+<script src="embed.js"></script>
+</head>
+<body>
+
+<aside class="sidenav">
+  <div class="sidenav-brand"><a href="../index.html">IchiPing</a>
+    <div class="sidenav-tag">v0.1 シリアル疎通フェーズ</div>
+  </div>
+  <nav>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ナビゲーション</div>
+      <a href="../index.html">トップ</a>
+      <a href="../tasks.html">タスクボード</a>
+      <a href="near_term_plan.html">当面の実行計画</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">設計 / 仕様</div>
+      <a href="spec.html">仕様書 (spec)</a>
+      <a href="../hardware/wiring.html">配線図</a>
+      <a href="nn_design.html">NN 設計</a>
+      <a href="mcu_deployment.html">MCU デプロイ</a>
+      <a href="bringup.html">実機ブリングアップ</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">NN 検討</div>
+      <a href="probe_sound.html">走査音考察</a>
+      <a href="nn_review.html">NN 考察</a>
+      <a href="full32_initial_test.html">Full 32 初期計測</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">ハードウェア</div>
+      <a href="../hardware/wiring.html">配線テーブル</a>
+      <a href="../hardware/bom.html">BOM (部品表)</a>
+      <a href="../hardware/display_options.html">ディスプレイ候補</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">実装コード</div>
+      <a href="../firmware/README.html">firmware ガイド</a>
+      <a href="../pc/README.html">PC ガイド</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">対外発信</div>
+      <a href="protopedia.html">ProtoPedia HTML 原稿</a>
+      <a href="protopedia_preview.html">ProtoPedia プレビュー</a>
+      <a href="protopedia.md">ProtoPedia 投稿原稿</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-h">メタ</div>
+      <a href="vscode_setup.html">VS Code セットアップ</a>
+      <a href="../CLAUDE.html">Claude 作業ガイド</a>
+    </div>
+  </nav>
+  <div class="sidenav-foot">
+    <a href="https://github.com/airpocket-soundman/IchiPing">GitHub: IchiPing</a><br>
+    <a href="https://github.com/airpocket-soundman/digikey_project">正本 digikey_project</a>
+  </div>
+</aside>
+
+<header class="page">
+  <div class="crumb">
+    <a href="../tasks.html">タスクボード</a>
+    ／ <a href="near_term_plan.html">当面の計画</a>
+    ／ <a href="spec.html">仕様書</a>
+    ／ <a href="probe_sound.html">走査音考察</a>
+    ／ <a href="full32_initial_test.html">Full 32 初期計測</a>
+  </div>
+  <h1>IchiPing</h1>
+  <div class="sub">
+    <b>1 個のセンサと 1 発の Ping で、家のすべての窓を聴く。</b><br>
+    1 個のマイクと NN で、連続音響空間内の窓・扉の開閉状態を
+    <b>物理 Ping + RIR + 1D CNN</b> で同時推定するエッジ AI デバイス。
+  </div>
+  <div class="meta">
+    <span class="meta-stat active"><span class="num">v0.1</span> 現フェーズ</span>
+    <span class="meta-stat"><span class="num">DigiKey M1</span> 応募予定</span>
+    <span class="meta-stat"><span class="num">ROHM EDGE HACK 2026</span> 応募予定</span>
+  </div>
+</header>
+
+<main>
+
+<div class="callout" style="border-left: 4px solid #ffd166;">
+  <strong>作品コンセプト — 「雨降ってきた、窓大丈夫？」</strong>
+</div>
+
+<h3>シーン</h3>
+<p>
+  外出中に空が暗くなり、雨が降り出した。スマホを取り出して「あれ、窓閉めてきたっけ…？」と不安になる。
+  <b>家まで戻る時間も余裕もない</b>。
+</p>
+
+<h3>IchiPing のソリューション</h3>
+<p>
+  <b>1 個のマイクと 1 発の Ping（能動音響）だけで、家中の窓・扉 32 通りの組合せ状態を一発推定する</b>
+  エッジ AI デバイス。これに <b>降雨センサ + M5Stamp Pico (ESP32)</b> をデモ用周辺機器として追加することで、次のフローが成立する:
+</p>
+
+<ol>
+  <li>屋外の降雨センサが雨を検出 (GPIO 入力)</li>
+  <li>M5Stamp Pico → UART で IchiPing コントローラに推論トリガを送る</li>
+  <li>IchiPing が 1 Ping → MCU 上の Neutron NPU で <b>1.89 ms 推論</b> → 窓・扉 32 状態のうちどれかを特定</li>
+  <li>M5Stamp Pico が Wi-Fi 経由でスマートホームクラウドに結果を送信</li>
+  <li>ユーザのスマホに通知「窓 a が開いてます！」</li>
+</ol>
+
+<div class="callout" style="border-left: 4px solid #6c5ce7;">
+  <b>今回は PoC ですが、外部ネットワークへの接続用に ESP32 (M5Stamp Pico) を搭載しており、スマートホームシステムに統合する基本機能を実装しています。</b>
+</div>
+
+<h3>技術検証 (これまでに達成したこと)</h3>
+<ul>
+  <li>単一マイク + 単一スピーカで <b>32 真状態すべてが識別可能</b> と判明
+    (MCU 実機 32cls / 14cls とも 100%, XL モデル 104K params)</li>
+  <li>当初想定した「閉扉の向こうは観測不能 → 14 等価クラスが理論上限」は、
+    実扉の漏れ (-20〜-30 dB 減衰) により否定された。詳細:
+    <a href="v12345_report.html">v12345 検証レポート</a></li>
+  <li>推論は <b>MCXN947 内蔵 Neutron NPU で 7/7 op = 100% NPU 化、1.89 ms</b> で完結</li>
+</ul>
+
+<div class="callout">
+  <strong>母プロジェクト:</strong>
+  <a href="https://github.com/airpocket-soundman/digikey_project">airpocket-soundman/digikey_project §C4</a>
+  からピボットして専用リポジトリ化。アイデア・仕様の正本は <b>digikey_project 側</b>にあり、本リポはそこから生まれた実装専用のサブプロジェクト。詳細は <a href="../CLAUDE.html">CLAUDE.html</a>。
+</div>
+
+<h2>ハードウェア前提（v1）</h2>
+<table>
+  <thead>
+    <tr><th>役割</th><th>部品</th><th>備考</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>MCU</td><td><b>FRDM-MCXN947</b></td><td>NPU + PowerQuad + I²S 多系統</td></tr>
+    <tr><td>マイク</td><td><b>INMP441</b></td><td>I²S MEMS, 24-bit。DC オフセット問題なしで chirp/RIR に好適</td></tr>
+    <tr><td>スピーカ駆動</td><td>MAX98357A I²S DAC</td><td>Class-D 3.2 W</td></tr>
+    <tr><td>サーボ駆動</td><td>PCA9685 + SG90 ×5</td><td>I²C, 16ch PWM (オチ 2 の「自動閉」を担当)</td></tr>
+    <tr><td>表示</td><td>ILI9341 2.4" TFT 240×320</td><td>SPI (FC3 LPSPI), RGB565（<a href="../hardware/display_options.html">採用根拠</a>）</td></tr>
+    <tr><td>UI</td><td>トグル ×5 + EXEC + LED ×2</td><td>真値ラベル入力 / 推論トリガ</td></tr>
+    <tr><td>PC 連携通信</td><td>USB-C CDC ／ OpenSDA UART 921600 bps</td><td>学習データ収集・実機検証用</td></tr>
+  </tbody>
+</table>
+
+<h3>デモ用追加機器（雨検出 → スマホ通知シナリオ）</h3>
+<table>
+  <thead>
+    <tr><th>役割</th><th>部品</th><th>接続</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>降雨センサ</td><td>YL-83 等の安価モジュール</td><td>GPIO デジタル入力、屋外設置</td></tr>
+    <tr><td>Wi-Fi モジュール</td><td><b>M5Stamp Pico</b>（ESP32-PICO-D4）</td><td>IchiPing と <b>UART (LPUART)</b> 接続、降雨センサを <b>GPIO</b> で読む、<b>Wi-Fi</b> でクラウド送信</td></tr>
+    <tr><td>スマートホーム連携</td><td>クラウド (Home Assistant / 任意の MQTT broker)</td><td>M5Stamp から push、スマホアプリで受信</td></tr>
+  </tbody>
+</table>
+<p>詳細仕様は <a href="spec.html">docs/spec.html</a>（正本 <code>digikey_project/details/C4-IchiPing.html</code> の完全コピー）参照。</p>
+
+<h2>現在のステータス：<span class="pill" style="background:#7be0a4; color:#0f1115;">v12345 完了 — MCU 実機 32cls / 14cls とも 100%</span></h2>
+<p>
+  実ハード（INMP441 / MAX98357A / PCA9685 / SG90 ×5 / ILI9341 / トグル）配線・ファームウェア統合完了、
+  PC で学習・量子化・Neutron 変換、MCU 上で実機推論 (1.89 ms / NPU 比率 100%) まで一気通貫で動作。
+  8 モデル × 32 状態の sweep で <b>32cls / 14cls とも 100%</b> 達成
+  (<a href="v12345_report.html">v12345 検証レポート</a>)。
+  当初予想だった「14 等価クラスが情報理論的天井」は実扉の漏れ (-20〜-30 dB 減衰) により否定され、
+  32 真状態すべてが識別可能と判明。
+</p>
+
+<img src="img/dataflow_v01.svg" alt="v0.1 データフロー: MCU 内の合成 chirp+残響を UART 921600 bps で PC に送り、WAV と CSV ラベルに保存" style="width: 100%; max-width: 760px; display: block; margin: 14px 0;">
+
+<h2>クイックスタート</h2>
+
+<h3>1. ファーム側</h3>
+<ol>
+  <li>MCUXpresso IDE で <code>frdmmcxn947</code> SDK から LPUART ベースのテンプレートを作成</li>
+  <li><code>source/main.c</code> を <a href="../firmware/projects/09_collector/main.c">09_collector/main.c</a> で置き換え（最新の v0.5 統合版）</li>
+  <li>ビルド → OpenSDA で書き込み</li>
+</ol>
+<p>詳細は <a href="../firmware/README.html">firmware/README.html</a>。</p>
+
+<h3>2. PC 側（uv 推奨）</h3>
+<pre><code>cd pc
+uv sync                    # pyserial だけで動く軽量モード
+# あるいは解析機能つきで:
+uv sync --extra training   # numpy/scipy/matplotlib/torch 同梱
+
+uv run python collector_client.py --port COM7 --out ../captures
+</code></pre>
+<p>OpenSDA の COM ポート番号はデバイスマネージャで確認。venv 派の手順は <a href="../pc/README.html">pc/README.html</a>、VS Code でセットアップする場合は <a href="vscode_setup.html">docs/vscode_setup.html</a> 参照（F5 で受信・検証が走る）。</p>
+
+<h3>3. キャリブレーション + 解析（calibrator.py）</h3>
+<pre><code>cd pc
+# 1) SPK/マイク自由音場キャリブレーション計測
+uv run python calibrator.py record --port COM7 --out ../captures/raw.wav
+uv run python calibrator.py analyze ../captures/raw.wav
+
+# 2) フィルタ自動設計 → 適用 → 再計測 → 比較
+uv run python calibrator.py design-filter ../captures/raw.wav --out ../captures/filter.json
+uv run python calibrator.py upload-filter --port COM7 ../captures/filter.json --enable
+uv run python calibrator.py record --port COM7 --out ../captures/filtered.wav --filter-on
+uv run python calibrator.py compare ../captures/raw.wav ../captures/filtered.wav
+</code></pre>
+<p>詳細は <a href="probe_sound.html">走査音考察 §3.A</a>、AI スクリプト用 <code>--once</code> モードは <a href="../pc/README.html">pc/README.html</a> §A2。</p>
+
+<h2>通信方式</h2>
+<p>
+  <b>v0.1 は OpenSDA UART 921600 bps</b>（最も簡単に立ち上がる構成）。1 フレーム 64 KB を約 556 ms で転送、フレーム周期 3 秒なので帯域は余裕。USB CDC への置換は v0.3 以降のロードマップ項目。
+  PC ↔ ボードの正式プロトコル仕様: <a href="collector_protocol.md">collector_protocol.md</a>。
+</p>
+
+<h2>ロードマップ</h2>
+<table>
+  <thead>
+    <tr><th>バージョン</th><th>内容</th><th>状態</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>v0.1</td><td>シリアル疎通 + 実ハード統合 + Day 0 サニティチェック</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.2</td><td>走査音方式確定 (chirp + baseline diff + Welch FFT)</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.3</td><td>CMSIS-DSP rFFT (Welch) で RIR 抽出パイプライン MCU 実装</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.4</td><td>32 状態 × v1+v2+v3+v4+v5 (7,360 sample) 収集 + baseline jittering ×5 = 36,800</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.5</td><td>14cls + 32cls 両 head 共存モデル (Neutron 互換 XL, ~104K params)</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.6</td><td>PC FP32 で MCU 等価精度確認 (32cls / 14cls とも 100%)</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v0.7</td><td>INT8 量子化 + Neutron 変換 (NPU 比率 7/7 = 100%, 108 KB, 1.89 ms)</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v1.0</td><td>MCU 実機 推論検証 (v12345 sweep, 8 モデル × 32 state)</td><td><span class="status-badge completed">完了</span></td></tr>
+    <tr><td>v1.5</td><td>TFT (ILI9341) 表示 + EXEC ボタンによる手動デモモード完成</td><td><span class="status-badge pending">予定</span></td></tr>
+    <tr><td>v1.6</td><td>baseline jittering 拡張 (別室 baseline 投入で更なる汎化)</td><td><span class="status-badge pending">予定</span></td></tr>
+    <tr><td>v2.0</td><td>ML63Q2557 + Solist-AI への移植（ROHM EDGE HACK 提出版） — 技術課題まとめ: <a href="solist_porting.html">solist_porting.html</a></td><td><span class="status-badge pending">予定</span></td></tr>
+  </tbody>
+</table>
+<p>詳細タスクは <a href="../tasks.html">tasks.html</a>、次の意思決定は <a href="near_term_plan.html">near_term_plan.html</a>。</p>
+
+<h2>ライセンス</h2>
+<p>未定（DigiKey/ROHM コンテスト応募後に MIT 想定）。</p>
+
+<div class="footer-note">
+  関連ページ:
+  <a href="../tasks.html">tasks.html</a> ／
+  <a href="near_term_plan.html">near_term_plan.html</a> ／
+  <a href="spec.html">spec.html</a> ／
+  <a href="full32_initial_test.html">full32_initial_test.html</a> ／
+  <a href="probe_sound.html">probe_sound.html</a> ／
+  <a href="nn_review.html">nn_review.html</a> ／
+  <a href="../firmware/README.html">firmware/README.html</a> ／
+  <a href="../pc/README.html">pc/README.html</a> ／
+  <a href="../CLAUDE.html">CLAUDE.html</a>
+</div>
+
+</main>
+</body>
+</html>

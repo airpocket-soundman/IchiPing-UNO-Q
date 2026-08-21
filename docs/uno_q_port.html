@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IchiPing UNO Q — 移植方針・配線・GPIO</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; }
+    th, td { border: 1px solid var(--border, #39414f); padding: 9px 11px; vertical-align: top; }
+    th { text-align: left; background: rgba(89, 189, 255, .10); }
+    code { color: var(--accent-2, #7ee787); }
+    .ok { border-left: 4px solid var(--accent-2, #7ee787); padding: 10px 14px; }
+    .warn { border-left: 4px solid var(--warn, #f2cc60); padding: 10px 14px; }
+    .muted { opacity: .78; }
+    .diagram { width: 100%; height: auto; margin: 12px 0 24px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p><a href="../index.html">← IchiPing UNO Q</a></p>
+    <h1>IchiPing UNO Q 移植方針・センサ接続・GPIO</h1>
+    <p class="muted">対象: Arduino UNO Q（QRB2210 Linux + STM32U585 / Zephyr）</p>
+  </header>
+
+  <section>
+    <h2>1. 開発方針</h2>
+    <p>IchiPingの信号処理・32状態ラベル・学習資産を引き継ぎ、ボード依存層だけをUNO Qへ置き換える。リアルタイムI/OはSTM32U585、モデル推論・ログ・将来のネットワーク機能はDebian Linux側に置き、Arduino Router Bridgeで接続する。</p>
+    <svg class="diagram" viewBox="0 0 1040 250" role="img" aria-label="UNO Q上のIchiPing処理分担">
+      <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#59bdff"/></marker></defs>
+      <rect x="20" y="38" width="230" height="170" rx="14" fill="#17202b" stroke="#59bdff"/>
+      <text x="135" y="70" text-anchor="middle" fill="#fff" font-size="19">外部ハードウェア</text>
+      <text x="42" y="105" fill="#d9e1ea" font-size="16">PCA9685 + SG90 ×5</text>
+      <text x="42" y="135" fill="#d9e1ea" font-size="16">トグル ×5 / EXEC / 雨</text>
+      <text x="42" y="165" fill="#f2cc60" font-size="16">音響I/O: 次段で確定</text>
+      <rect x="405" y="18" width="250" height="210" rx="14" fill="#17202b" stroke="#7ee787"/>
+      <text x="530" y="52" text-anchor="middle" fill="#fff" font-size="19">STM32U585 / Zephyr</text>
+      <text x="430" y="91" fill="#d9e1ea" font-size="16">GPIO / I²C / サーボ</text>
+      <text x="430" y="121" fill="#d9e1ea" font-size="16">8×13 LED Matrix</text>
+      <text x="430" y="151" fill="#d9e1ea" font-size="16">決定論的トリガ処理</text>
+      <text x="430" y="181" fill="#d9e1ea" font-size="16">音響I/O（方式確定後）</text>
+      <rect x="790" y="38" width="230" height="170" rx="14" fill="#17202b" stroke="#ff7ab2"/>
+      <text x="905" y="70" text-anchor="middle" fill="#fff" font-size="19">QRB2210 / Debian</text>
+      <text x="812" y="108" fill="#d9e1ea" font-size="16">特徴量・モデル推論</text>
+      <text x="812" y="138" fill="#d9e1ea" font-size="16">データ保存・評価</text>
+      <text x="812" y="168" fill="#d9e1ea" font-size="16">Web / 通知</text>
+      <line x1="250" y1="123" x2="395" y2="123" stroke="#59bdff" stroke-width="3" marker-end="url(#arrow)"/>
+      <line x1="655" y1="105" x2="780" y2="105" stroke="#59bdff" stroke-width="3" marker-end="url(#arrow)"/>
+      <line x1="780" y1="145" x2="665" y2="145" stroke="#59bdff" stroke-width="3" marker-end="url(#arrow)"/>
+      <text x="717" y="93" text-anchor="middle" fill="#8b949e" font-size="13">Router Bridge</text>
+    </svg>
+    <ol>
+      <li><b>Phase 0 — bring-up:</b> Matrix、Bridge、GPIO、PCA9685検出を実機確認する。</li>
+      <li><b>Phase 1 — actuator:</b> PCA9685の校正値と5台のSG90制御を移植する。</li>
+      <li><b>Phase 2 — acoustic:</b> USB Audioを第一候補として16 kHzモノラル録音・ping再生を確立する。</li>
+      <li><b>Phase 3 — inference:</b>既存モデルと特徴量処理をLinux側へ移し、実測データで同値性を検証する。</li>
+      <li><b>Phase 4 — standalone:</b>起動時実行、ログ、ネットワーク通知を統合する。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>2. UNOヘッダ GPIO割り当て</h2>
+    <table>
+      <thead><tr><th>UNO Qピン</th><th>STM32U585</th><th>IchiPing用途</th><th>接続・状態</th></tr></thead>
+      <tbody>
+        <tr><td>D3</td><td>PB0</td><td>窓 a 真値</td><td>スイッチ → GND、<code>INPUT_PULLUP</code>、Low=開</td></tr>
+        <tr><td>D4</td><td>PA12</td><td>窓 b 真値</td><td>同上</td></tr>
+        <tr><td>D5</td><td>PA11</td><td>窓 c 真値</td><td>同上</td></tr>
+        <tr><td>D6</td><td>PB1</td><td>扉 AB 真値</td><td>同上</td></tr>
+        <tr><td>D7</td><td>PB2</td><td>扉 BC 真値</td><td>同上</td></tr>
+        <tr><td>D8</td><td>PB4</td><td>EXECボタン</td><td>ボタン → GND、<code>INPUT_PULLUP</code>、Low=押下</td></tr>
+        <tr><td>D9</td><td>PB8</td><td>降雨デジタル入力</td><td>YL-83等の3.3 Vロジック出力、Low=雨</td></tr>
+        <tr><td>D20 / SDA</td><td>PB11</td><td>PCA9685 SDA</td><td>I²C <code>Wire</code>、アドレス0x40</td></tr>
+        <tr><td>D21 / SCL</td><td>PB10</td><td>PCA9685 SCL</td><td>I²C <code>Wire</code>、初期bring-upは100 kHz</td></tr>
+        <tr><td>内蔵</td><td>STM32管理</td><td>8×13 LED Matrix</td><td><code>Arduino_LED_Matrix</code>、外部GPIO消費なし</td></tr>
+        <tr><td>D10–D13</td><td>PB9/PB15/PB14/PB13</td><td>将来拡張</td><td>SPI用に予約</td></tr>
+        <tr><td>D0/D1</td><td>PB7/PB6</td><td>保守UART</td><td>通常は未接続</td></tr>
+      </tbody>
+    </table>
+    <div class="warn"><b>電圧:</b> MCU GPIOは3.3 Vロジック。公式資料ではA0/A1以外は5 V tolerantだが、周辺機器は原則3.3 Vで統一する。PCA9685はVCC=3.3 V、サーボ電源V+=外部5 Vとし、UNO Q・PCA9685・サーボ電源のGNDを共通化する。サーボをUNO Qの3.3 V端子から給電しない。</div>
+  </section>
+
+  <section>
+    <h2>3. センサ・アクチュエータ接続</h2>
+    <table>
+      <thead><tr><th>機器</th><th>UNO Q接続</th><th>移植判断</th></tr></thead>
+      <tbody>
+        <tr><td>PCA9685</td><td>VCC→3V3、GND→GND、SDA→D20、SCL→D21、V+→外部5 V</td><td>Phase 0で0x40 ACKを検査。Phase 1で既存の5ch座標・校正を移植。</td></tr>
+        <tr><td>SG90 ×5</td><td>PCA9685 ch 0–4</td><td>既存のa/b/c/AB/BC順を維持。外部5 V電源を使用。</td></tr>
+        <tr><td>状態スイッチ ×5</td><td>D3–D7とGNDの間</td><td>既存の5-bitラベル順を維持。</td></tr>
+        <tr><td>EXEC</td><td>D8とGNDの間</td><td>Matrixのpingアニメーション後、Linux側へ推論要求。</td></tr>
+        <tr><td>降雨入力</td><td>D9、GND、3V3</td><td>入力が5 Vになるモジュールは分圧またはレベル変換を追加。</td></tr>
+        <tr><td>INMP441</td><td>未割り当て</td><td>UNOスタイルヘッダに公式I²S割り当て/APIがないため直結を保留。</td></tr>
+        <tr><td>MAX98357A</td><td>未割り当て</td><td>同上。未検証の下部コネクタ配線は採用しない。</td></tr>
+      </tbody>
+    </table>
+    <div class="ok"><b>音響の第一候補:</b> 給電対応USB-Cハブ + Linux互換USB Audioデバイスを使い、Debian側で16 kHz / mono / PCMの同時再生・録音を行う。IchiPingの既存INMP441/MAX98357Aを必ず継続する場合は、JMISC/高速コネクタのSAI信号とZephyrドライバ対応を別途検証してから配線を確定する。</div>
+  </section>
+
+  <section>
+    <h2>4. LED Matrixの表示規約</h2>
+    <p>左から5個のセルが窓a、窓b、窓c、扉AB、扉BC。明るいセルは開、暗いセルは閉。右端は下から伸びる信頼度バー。ping／推論中は中央から広がる菱形アニメーションを表示する。</p>
+    <svg class="diagram" viewBox="0 0 780 260" role="img" aria-label="LED Matrix表示の意味">
+      <rect x="22" y="22" width="520" height="208" rx="10" fill="#0b1118" stroke="#59bdff"/>
+      <g fill="#1c4f6b" stroke="#59bdff" stroke-width="1">
+        <rect x="62" y="82" width="56" height="92"/><rect x="142" y="82" width="56" height="92"/>
+        <rect x="222" y="82" width="56" height="92"/><rect x="302" y="82" width="56" height="92"/>
+        <rect x="382" y="82" width="56" height="92"/>
+      </g>
+      <g fill="#7ee787"><rect x="62" y="82" width="56" height="92"/><rect x="222" y="82" width="56" height="92"/><rect x="382" y="82" width="56" height="92"/></g>
+      <g fill="#d9e1ea" font-size="16" text-anchor="middle">
+        <text x="90" y="202">a</text><text x="170" y="202">b</text><text x="250" y="202">c</text>
+        <text x="330" y="202">AB</text><text x="410" y="202">BC</text>
+      </g>
+      <g fill="#59bdff"><rect x="480" y="150" width="24" height="24"/><rect x="480" y="122" width="24" height="24"/><rect x="480" y="94" width="24" height="24"/><rect x="480" y="66" width="24" height="24"/></g>
+      <text x="650" y="92" text-anchor="middle" fill="#7ee787" font-size="18">明 = 開</text>
+      <text x="650" y="130" text-anchor="middle" fill="#59bdff" font-size="18">暗 = 閉</text>
+      <text x="650" y="168" text-anchor="middle" fill="#d9e1ea" font-size="18">右端 = 信頼度</text>
+    </svg>
+  </section>
+
+  <section>
+    <h2>5. Phase 0 合格条件</h2>
+    <ul>
+      <li>UNO QがUSBでCOM/ADBの両方として認識される。</li>
+      <li>App Labアプリがビルドされ、STM32スケッチとLinux Pythonが起動する。</li>
+      <li>Router Bridge経由で状態値と信頼度をMatrixに表示できる。</li>
+      <li>D3–D7、D8、D9を安全に読み取れる。</li>
+      <li>PCA9685接続時は0x40を検出し、未接続時もアプリが継続する。</li>
+    </ul>
+    <h3 id="test-result">実機結果 — 2026-08-21 11:32 JST</h3>
+    <table>
+      <tbody>
+        <tr><th>接続</th><td>USB serial <code>2261748543</code>、VID:PID <code>2341:0078</code>、COM14 + ADB</td></tr>
+        <tr><th>UNO Q Linux</th><td>Debian 13 (trixie)、kernel 6.16.7、Arduino App CLI 0.8.2</td></tr>
+        <tr><th>MCU platform</th><td>Arduino Zephyr core 0.53.1、STM32U585へOpenOCD書き込み成功</td></tr>
+        <tr><th>使用量</th><td>program 23,680 bytes / 1,966,080 bytes、global RAM 6,068 bytes / 523,624 bytes</td></tr>
+        <tr><th>Bridge</th><td><code>get_hardware_status</code>、<code>get_physical_state</code>、<code>show_prediction</code>、Matrix self-testが完走</td></tr>
+        <tr><th>読み取り</th><td>hardware status <code>0x01</code>、physical state <code>0b00000</code></td></tr>
+        <tr><th>外部機器</th><td>PCA9685未接続（bit 1 = 0）、雨入力非アクティブ。サーボPWMは未出力。</td></tr>
+        <tr><th>判定</th><td><b>Phase 0 software smoke test PASS</b>。実LEDの見た目と外部スイッチ操作は目視確認項目。</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">ADBシェルでは<code>TMPDIR=/data/local/tmp</code>が設定される一方、そのパスがDebian上に存在しないため、CLI実行時は<code>TMPDIR=/tmp</code>を明示する。</p>
+  </section>
+
+  <footer>
+    <p>参照: <a href="https://docs.arduino.cc/hardware/uno-q/">Arduino UNO Q公式ページ</a> / <a href="https://github.com/arduino/docs-content/blob/main/content/hardware/02.uno/boards/uno-q/tutorials/01.user-manual/content.md">公式User Manual原稿</a> / <a href="https://docs.arduino.cc/resources/pinouts/ABX00162-full-pinout.pdf">公式Pinout</a></p>
+  </footer>
+</main>
+</body>
+</html>

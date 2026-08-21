@@ -1,0 +1,91 @@
+[project]
+name = "ichiping-pc"
+version = "0.1.0"
+description = "IchiPing PC-side tools — frame receiver, data collector, NN training, inference monitor"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "airpocket-soundman" },
+]
+
+# Runtime dependencies. Mirrors requirements.txt; conda environment.yml
+# stays as the alternative path for users who prefer conda.
+dependencies = [
+    "pyserial>=3.5",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Pull in training / NN export only when needed. `uv sync --extra training`
+# (or `uv sync --all-extras` to grab everything).
+training = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "h5py>=3.10",
+    "torch>=2.1",
+    "onnx>=1.15",
+    "onnxruntime>=1.16",
+    "tqdm>=4.66",
+    "onnxscript>=0.6",  # torch 2.11+ ONNX export 必須
+    # NXP eiq-onnx2tflite: ONNX → INT8 TFLite 変換 (MCXN947 Neutron 経由のデプロイ用)。
+    # Windows 専用、PyPI に無いので [tool.uv.sources] で NXP repo に振り向け。
+    "eiq-onnx2tflite>=0.10; sys_platform == 'win32'",
+]
+
+# Test dependencies (pytest replacement for `python -m unittest`,
+# plus the gcc-built shared lib check).
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+# Convenience entry points — `uv run ichiping-receiver --port COM7` etc.
+ichiping-receiver         = "receiver:main"
+ichiping-emulator         = "emulator:main"
+ichiping-verify           = "verify:main"
+ichiping-collector        = "collector_client:main"
+ichiping-inference-monitor = "inference_client:main"
+
+[tool.uv]
+# Single-source the package list. uv will resolve and lock to uv.lock
+# on first `uv sync`; commit uv.lock for reproducibility.
+package = false
+# This project is a workspace root — no src/ layout, scripts live next to
+# pyproject.toml. uv treats it as a flat collection of modules.
+
+# RTX 5060 Ti (Blackwell, sm_120) では CUDA 12.8 ビルドの PyTorch が必要。
+# Linux/macOS では CPU 版で良いので、Windows のみ cu128 index に固定する。
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'win32'" },
+]
+eiq-onnx2tflite = [
+    { index = "nxp-eiq", marker = "sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "nxp-eiq"
+url = "https://eiq.nxp.com/repository/"
+explicit = true
+
+[build-system]
+# Stub to satisfy PEP 517. uv does not require a real build backend for
+# `package = false`, but having one declared avoids warnings.
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "*.py",
+    "training/*.py",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["training"]
