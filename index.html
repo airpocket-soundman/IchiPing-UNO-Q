@@ -29,7 +29,7 @@
     <h2>現在の到達点</h2>
     <div class="grid">
       <article class="card"><h3>UNO Q実機</h3><p>USB COMとADBを認識し、QRB2210 DebianとSTM32U585 / Zephyrの両方を確認。</p></article>
-      <article class="card"><h3>LED Matrix</h3><p>内蔵8×13 Matrixで5状態、信頼度、pingアニメーションを表現。</p></article>
+      <article class="card"><h3>ILI9341 TFT</h3><p>元IchiPingと同じ外部2.4インチSPI TFTで5状態、信頼度、pingアニメーションを表現。オンボードMatrixは不使用。</p></article>
       <article class="card"><h3>GPIO / I²C</h3><p>D3–D9の入力と、D20/D21上のPCA9685（0x40）検出を実装。</p></article>
       <article class="card"><h3>MCU–Linux</h3><p>Arduino Router Bridgeで推論要求と結果表示を往復。現在の結果は明示的なloopback。</p></article>
       <article class="card"><h3>精度優先AI</h3><p>QRB2210側ではFP32の大型モデルやensembleを許容し、未知条件の精度で選定。</p></article>
@@ -38,7 +38,7 @@
 
   <section>
     <h2>実機テスト</h2>
-    <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>UNO Qへ23,680 bytesのスケッチを書き込み、Bridge往復、Matrix API、GPIO読取、PCA9685未接続時の継続動作を確認しました。サーボPWMは未出力です。</p>
+    <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>Bridge往復、GPIO読取、PCA9685未接続時の継続動作、ILI9341 SPIシーケンスを確認しました。プログラム25,160 bytes、RAM 6,588 bytesです。ILI9341実画面は未確認で、サーボPWMは未出力です。</p>
     <p>ALSAデバイスは列挙されますが、外部音響機器なしの16 kHzモノラル録音は<code>EINVAL</code>で、音響経路は未合格です。</p>
     <p>実機は通常時約3.0 GiBのavailable RAMを持ち、現行XLモデルは約0.7 MiBです。精度優先でモデルを段階拡張し、実機資源と外部評価を同時に測定します。</p>
   </section>
@@ -61,7 +61,7 @@
     <table>
       <thead><tr><th>層</th><th>UNO Q側</th><th>担当</th></tr></thead>
       <tbody>
-        <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr</td><td>GPIO、I²C、サーボ、LED Matrix、推論トリガ</td></tr>
+        <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr</td><td>GPIO、I²C、サーボ、ILI9341 TFT、推論トリガ</td></tr>
         <tr><td>アプリ・推論</td><td>QRB2210 / Debian</td><td>特徴量、モデル推論、保存、ネットワーク</td></tr>
         <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td><td>状態、推論要求、推論結果</td></tr>
       </tbody>
@@ -71,7 +71,7 @@
   <section>
     <h2>移植ロードマップ</h2>
     <ol>
-      <li>Matrix・Bridge・GPIO・PCA9685検出のbring-up</li>
+      <li>ILI9341・Bridge・GPIO・PCA9685検出のbring-up</li>
       <li>PCA9685 + SG90 ×5と既存サーボ座標の移植</li>
       <li>MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生</li>
       <li>既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較</li>

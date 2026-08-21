@@ -9,11 +9,11 @@ IchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の
 - UNO QをUSBのCOMポートとADBデバイスとして認識
 - QRB2210上のDebianとSTM32U585上のArduino/Zephyrを確認
 - Arduino App Lab形式のbring-upアプリを追加
-- 内蔵8×13 LED Matrixに5状態と信頼度を表示
+- 元IchiPingと同じILI9341 2.4インチSPI TFTへ5状態と信頼度を表示するドライバを追加（実画面未確認）
 - D3–D7の状態入力、D8のEXEC、D9の雨入力を割り当て
 - D20/D21のI²CでPCA9685（0x40）を非破壊検出
 - Router BridgeでLinux PythonとMCUスケッチを接続
-- 2026-08-21実機smoke test PASS（Bridge往復、Matrix API、GPIO読取、I²C未接続処理）
+- 2026-08-21実機smoke test PASS（Bridge往復、GPIO読取、I²C未接続処理、ILI9341 SPIシーケンス）。ILI9341実画面は未確認
 
 音響推論はまだloopbackです。既存INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。信号は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。
 Debian上ではALSAデバイスが列挙されますが、外部音響機器なしの16 kHzモノラル録音プローブは`EINVAL`となるため、音響経路は未合格です。
@@ -34,13 +34,13 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 
 | 層 | UNO Q側 | 担当 |
 |---|---|---|
-| リアルタイムI/O | STM32U585 / Zephyr | GPIO、I²C、サーボ、LED Matrix、推論トリガ |
+| リアルタイムI/O | STM32U585 / Zephyr | GPIO、I²C、サーボ、ILI9341 TFT、推論トリガ |
 | アプリ・推論 | QRB2210 / Debian | 特徴量、モデル推論、保存、ネットワーク |
 | MCU–Linux通信 | Arduino Router Bridge | 状態・推論要求・推論結果 |
 
-## LED Matrix表示
+## ILI9341 TFT表示
 
-左から窓a、窓b、窓c、扉AB、扉BCの5セルです。明るいセルは開、暗いセルは閉を示します。右端の縦バーは信頼度、中央から広がる菱形はping／推論中です。
+元IchiPingと同じ2.4インチ240×320 ILI9341を横向きで使います。D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BLです。5個の状態タイル、信頼度バー、ping／推論中の枠アニメーションを表示します。オンボードLED Matrixは使用しません。
 
 ## bring-upアプリの実行
 
@@ -53,7 +53,7 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 
 ## 移植ロードマップ
 
-1. Matrix・Bridge・GPIO・PCA9685検出のbring-up
+1. ILI9341・Bridge・GPIO・PCA9685検出のbring-up
 2. PCA9685 + SG90 ×5と既存サーボ座標の移植
 3. MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生
 4. 既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較
@@ -65,7 +65,7 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 |---|---|
 | `uno_q/app/` | UNO Q用Arduino App Labアプリ |
 | `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
-| `docs/uno_q_port.html` | 開発方針、配線、GPIO、Matrix表示規約 |
+| `docs/uno_q_port.html` | 開発方針、配線、GPIO、ILI9341表示規約 |
 | `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
 | `firmware/` | 元FRDM-MCXN947実装（移植参照） |
 | `pc/` | データ採取、学習、評価、既存モデル資産 |

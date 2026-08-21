@@ -12,7 +12,7 @@
 <body><main>
   <p><a href="../index.html">← IchiPing UNO Q</a> / <a href="uno_q_port.html">移植方針・GPIO表</a></p>
   <h1>GPIO接続図</h1>
-  <p class="lead">状態スイッチ、EXEC、雨入力、PCA9685、内蔵LED Matrix、INMP441マイク、MAX98357Aアンプとスピーカーまでを示す全体接続図です。GPIO／I²Cは実装済み、MI2S0音響線はLinux Device TreeとALSA routeの確定前なので接続候補です。</p>
+  <p class="lead">状態スイッチ、EXEC、雨入力、PCA9685、外部ILI9341 TFT、INMP441マイク、MAX98357Aアンプとスピーカーまでを示す全体接続図です。オンボードLED Matrixは使用しません。GPIO／I²C／TFTドライバは実装済み、MI2S0音響線はLinux Device TreeとALSA routeの確定前なので接続候補です。</p>
 
   <div class="diagram-wrap">
     <svg class="diagram" viewBox="0 0 1400 900" role="img" aria-labelledby="wiring-title wiring-desc">
@@ -58,7 +58,7 @@
         <g transform="translate(700 465)"><rect width="115" height="42" rx="8" class="pin"/><text x="57" y="27" text-anchor="middle">GND</text></g>
       </g>
       <rect x="585" y="600" width="150" height="78" rx="12" fill="#251d2d" stroke="#ff7ab6" stroke-width="2"/>
-      <text x="660" y="632" text-anchor="middle" class="t label">8×13 Matrix</text><text x="660" y="657" text-anchor="middle" class="t small">内蔵・配線不要</text>
+      <text x="660" y="632" text-anchor="middle" class="t label">LED Matrix</text><text x="660" y="657" text-anchor="middle" class="t small">不使用</text>
 
       <path d="M307 157 H445 V191 H500 M307 242 H430 V246 H500 M307 327 H420 V301 H500 M307 412 H410 V356 H500 M307 497 H400 V411 H500 M307 597 H455 V481 H500" class="sig"/>
       <path d="M390 690 H680 V486 H700" class="gnd"/>
@@ -103,8 +103,8 @@
   <h2>表示・マイク・スピーカー接続</h2>
   <div class="diagram-wrap">
     <svg class="diagram" viewBox="0 0 1400 650" role="img" aria-labelledby="audio-title audio-desc">
-      <title id="audio-title">UNO QのLED MatrixとMI2S0音響接続候補</title>
-      <desc id="audio-desc">結果は基板内蔵LED Matrixへ表示する。JMISCまたはUNO Breakout Carrierの1.8 V MI2S0クロックとワード選択をマイクとアンプで共有し、DATA0をマイク入力、DATA1をアンプ出力の候補とする。</desc>
+      <title id="audio-title">UNO QのILI9341 TFTとMI2S0音響接続候補</title>
+      <desc id="audio-desc">結果は外部ILI9341 SPI TFTへ表示する。JMISCまたはUNO Breakout Carrierの1.8 V MI2S0クロックとワード選択をマイクとアンプで共有し、DATA0をマイク入力、DATA1をアンプ出力の候補とする。</desc>
       <defs>
         <filter id="audio-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity=".42"/></filter>
         <style>
@@ -113,19 +113,19 @@
       </defs>
 
       <rect x="25" y="50" width="320" height="540" rx="20" class="uno" filter="url(#audio-shadow)"/>
-      <text x="185" y="92" text-anchor="middle" class="at ah">Arduino UNO Q</text>
-      <text x="185" y="120" text-anchor="middle" class="at as">QRB2210 Linux + STM32U585</text>
-      <rect x="68" y="165" width="234" height="185" rx="14" fill="#251d2d" stroke="#ff7ab6" stroke-width="2"/>
-      <text x="185" y="198" text-anchor="middle" class="at al">内蔵 8×13 LED Matrix</text>
+      <text x="185" y="92" text-anchor="middle" class="at ah">ILI9341 2.4” TFT</text>
+      <text x="185" y="120" text-anchor="middle" class="at as">240×320 RGB565・横向き</text>
+      <rect x="68" y="150" width="234" height="185" rx="14" fill="#251d2d" stroke="#ff7ab6" stroke-width="2"/>
+      <text x="185" y="183" text-anchor="middle" class="at al">外部ディスプレイ</text>
       <g fill="#6ea8fe">
         <circle cx="105" cy="242" r="8"/><circle cx="135" cy="242" r="8"/><circle cx="165" cy="242" r="8"/><circle cx="195" cy="242" r="8"/><circle cx="225" cy="242" r="8"/>
         <circle cx="105" cy="275" r="8"/><circle cx="165" cy="275" r="8"/><circle cx="225" cy="275" r="8"/>
       </g>
-      <text x="185" y="323" text-anchor="middle" class="at as">状態5 bit・信頼度・推論中</text>
-      <text x="185" y="390" text-anchor="middle" class="at al">表示配線は不要</text>
-      <text x="185" y="420" text-anchor="middle" class="at as">基板内接続をArduino_LED_Matrixで制御</text>
-      <path d="M90 455 H280" class="a-int"/>
-      <text x="185" y="490" text-anchor="middle" class="at as">外付けディスプレイは現構成で使用しない</text>
+      <text x="185" y="308" text-anchor="middle" class="at as">状態5 bit・信頼度・推論中</text>
+      <text x="70" y="378" class="at as">MOSI ← D11 / PB15</text><text x="70" y="404" class="at as">SCK ← D13 / PB13</text>
+      <text x="70" y="430" class="at as">CS ← D10 / PB9</text><text x="70" y="456" class="at as">RST ← A0 / PA4</text>
+      <text x="70" y="482" class="at as">DC ← A1 / PA5</text><text x="70" y="508" class="at as">BL ← A2 / PA6</text>
+      <text x="70" y="534" class="at as">VCC ← 3V3、GND → GND</text><text x="70" y="560" class="at as">MISO / D12は未接続</text>
 
       <rect x="395" y="50" width="360" height="540" rx="20" class="pending" filter="url(#audio-shadow)"/>
       <text x="575" y="90" text-anchor="middle" class="at ah">MI2S0 引き出し</text>
@@ -190,7 +190,9 @@
     <tr><td>D21 / SCL</td><td>PCA9685 SCL</td><td>bring-up時100 kHz</td></tr>
     <tr><td>3V3</td><td>PCA9685 VCC、3.3 V雨センサVCC</td><td>ロジック電源だけに使用</td></tr>
     <tr><td>GND</td><td>全スイッチ、雨センサ、PCA9685、外部5 V電源</td><td>全系統で共通化</td></tr>
-    <tr><td>内蔵LED Matrix</td><td>外部配線なし</td><td><code>Arduino_LED_Matrix</code>で5状態、信頼度、推論中を表示</td></tr>
+    <tr><td>D11 / D13</td><td>ILI9341 MOSI / SCK</td><td>SPI2、3.3 V、20 MHz開始</td></tr>
+    <tr><td>D10 / A0 / A1 / A2</td><td>ILI9341 CS / RST / DC / BL</td><td>3.3 V GPIO。VCC=3V3、GND共通、D12/MISOは未接続</td></tr>
+    <tr><td>内蔵LED Matrix</td><td>接続なし</td><td><b>不使用</b></td></tr>
     <tr><td>MI2S0 CLK / WS</td><td>INMP441 SCK/WSとMAX98357A BCLK/LRCで共有</td><td>GPIO98/99、1.8 V。J15-32/34またはJMISC-46/48</td></tr>
     <tr><td>MI2S0 DATA0候補</td><td>INMP441 SD</td><td>GPIO100、J15-36またはJMISC-50。Linux capture route確定後に接続</td></tr>
     <tr><td>MI2S0 DATA1候補</td><td>MAX98357A DIN</td><td>GPIO101、J15-38またはJMISC-52。Linux playback route確定後に接続</td></tr>

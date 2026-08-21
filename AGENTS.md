@@ -17,7 +17,8 @@
 - リアルタイムI/O: STM32U585 / Zephyr / Arduino sketch。
 - 推論・保存・ネットワーク: QRB2210 / Debian / Python。
 - MCU–Linux通信: Arduino Router Bridge。
-- 表示: 内蔵8×13 blue LED Matrix。
+- 表示: 元IchiPingと同じILI9341 2.4インチSPI TFT。オンボードLED Matrixは使用しない。
+- TFT配線: D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BL、3V3、GND。D12/MISOは書込専用のため未接続。
 - 状態順: bit 0..4 = 窓a、窓b、窓c、扉AB、扉BC。
 - PCA9685: `Wire`、D20/SDA、D21/SCL、アドレス0x40。
 - GPIO: D3–D7状態入力、D8 EXEC、D9雨入力。すべて3.3 V系で扱う。
@@ -29,7 +30,7 @@
 
 ## 移植の進め方
 
-1. Matrix、Bridge、GPIO、I²Cのbring-upを通す。
+1. ILI9341、Bridge、GPIO、I²Cのbring-upを通す。
 2. PCA9685とSG90を、1チャンネルずつ安全な角度範囲で検証する。
 3. 音響経路を確定し、16 kHz / mono / PCMの録音とping再生を確認する。
 4. PC版とUNO Q版の特徴量を同じ入力で比較する。
@@ -40,9 +41,8 @@
 
 - 書き込み前に対象がUNO QであることをUSB VID/PIDまたはADB serialで確認する。
 - PCA9685の検出だけではサーボを動かさない。電源・GND・機械端を確認してからPWMを有効化する。
-- GPIO、I²C、Matrixのテストは外部ハード未接続でも失敗せず継続できる構造にする。
+- GPIO、I²C、ILI9341のテストは外部ハード未接続でも失敗せず継続できる構造にする。
 - loopback、dummy、実モデルの結果をログと画面で明確に区別する。
-- UNO Qのブート後20–30秒はMatrixがブート表示に使用されるため、OS起動完了後にアプリを開始する。
 
 ## ドキュメント規則
 

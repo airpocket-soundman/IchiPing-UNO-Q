@@ -1,6 +1,7 @@
-#include <Arduino_LED_Matrix.h>
 #include <Arduino_RouterBridge.h>
 #include <Wire.h>
+
+#include "ili9341_display.h"
 
 namespace {
 
@@ -11,8 +12,8 @@ constexpr uint8_t kPca9685Address = 0x40;
 constexpr uint32_t kDebounceMs = 30;
 constexpr uint32_t kPredictionHoldMs = 5000;
 
-Arduino_LED_Matrix matrix;
-uint8_t pixels[8 * 13] = {};
+Ili9341Display display;
+bool displayInitialized = false;
 uint8_t physicalState = 0;
 uint8_t displayedState = 0;
 uint8_t displayedConfidence = 0;
@@ -22,71 +23,16 @@ bool stableExec = HIGH;
 uint32_t execChangedAt = 0;
 uint32_t predictionHoldUntil = 0;
 
-void clearPixels() {
-  memset(pixels, 0, sizeof(pixels));
-}
-
-void setPixel(uint8_t row, uint8_t col, uint8_t brightness) {
-  if (row < 8 && col < 13) {
-    pixels[row * 13 + col] = constrain(brightness, 0, 7);
-  }
-}
-
-void drawHouseFrame() {
-  for (uint8_t col = 1; col <= 10; ++col) {
-    setPixel(1, col, 2);
-    setPixel(7, col, 2);
-  }
-  for (uint8_t row = 2; row <= 6; ++row) {
-    setPixel(row, 0, 2);
-    setPixel(row, 11, 2);
-  }
-  setPixel(0, 5, 2);
-  setPixel(0, 6, 2);
-}
-
 void renderState(uint8_t stateMask, uint8_t confidence) {
-  clearPixels();
-  drawHouseFrame();
-
-  // Five vertical cells represent window a/b/c and door AB/BC from left to right.
-  for (uint8_t item = 0; item < 5; ++item) {
-    const uint8_t col = 1 + item * 2;
-    const uint8_t level = (stateMask & (1U << item)) ? 7 : 1;
-    for (uint8_t row = 3; row <= 5; ++row) {
-      setPixel(row, col, level);
-      setPixel(row, col + 1, level);
-    }
-  }
-
-  // Rightmost column is a bottom-up confidence meter (0..100%).
-  const uint8_t bars = static_cast<uint8_t>((constrain(confidence, 0, 100) * 8U + 99U) / 100U);
-  for (uint8_t i = 0; i < bars; ++i) {
-    setPixel(7 - i, 12, 7);
-  }
-  matrix.draw(pixels);
+  if (displayInitialized) display.showState(stateMask, confidence);
 }
 
 void renderPing(uint8_t radius) {
-  clearPixels();
-  const int centerRow = 4;
-  const int centerCol = 6;
-  for (int row = 0; row < 8; ++row) {
-    for (int col = 0; col < 13; ++col) {
-      const int distance = abs(row - centerRow) + abs(col - centerCol);
-      if (distance == radius || (radius == 0 && distance == 0)) {
-        setPixel(row, col, 7);
-      }
-    }
-  }
-  matrix.draw(pixels);
+  if (displayInitialized) display.showActivity(radius);
 }
 
-void runMatrixSelfTest() {
-  for (uint8_t radius = 0; radius < 10; ++radius) {
-    renderPing(radius);
-    delay(70);
-  }
+void runDisplaySelfTest() {
+  if (displayInitialized) display.runSelfTest();
   renderState(displayedState, displayedConfidence);
 }
 
@@ -113,8 +59,8 @@ void showPrediction(int stateMask, int confidence) {
 }
 
 int getHardwareStatus() {
-  // bit0=matrix initialized, bit1=PCA9685 detected, bit2=rain input active.
-  int status = 0x01;
+  // bit0=ILI9341 driver initialized, bit1=PCA9685 detected, bit2=rain active.
+  int status = displayInitialized ? 0x01 : 0x00;
   if (pca9685Present) status |= 0x02;
   if (digitalRead(kRainPin) == LOW) status |= 0x04;
   return status;
@@ -135,7 +81,10 @@ void pollExecButton() {
     stableExec = raw;
     if (stableExec == LOW) {
       physicalState = readPhysicalState();
-      runMatrixSelfTest();
+      for (uint8_t frame = 0; frame < 8; ++frame) {
+        renderPing(frame);
+        delay(70);
+      }
       Bridge.notify("on_infer_request", static_cast<int>(physicalState));
     }
   }
@@ -152,13 +101,11 @@ void setup() {
   Wire.setClock(100000);
   pca9685Present = detectPca9685();
 
-  matrix.begin();
-  matrix.setGrayscaleBits(3);
-  matrix.clear();
+  displayInitialized = display.begin();
 
   Bridge.begin();
   Bridge.provide("show_prediction", showPrediction);
-  Bridge.provide("run_matrix_self_test", runMatrixSelfTest);
+  Bridge.provide("run_display_self_test", runDisplaySelfTest);
   Bridge.provide("get_hardware_status", getHardwareStatus);
   Bridge.provide("get_physical_state", getPhysicalState);
 

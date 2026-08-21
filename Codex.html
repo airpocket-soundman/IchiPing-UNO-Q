@@ -25,7 +25,8 @@
     <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr / Arduino sketch</td></tr>
     <tr><td>推論・保存・ネットワーク</td><td>QRB2210 / Debian / Python</td></tr>
     <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td></tr>
-    <tr><td>表示</td><td>内蔵8×13 blue LED Matrix</td></tr>
+    <tr><td>表示</td><td>元IchiPingと同じILI9341 2.4インチSPI TFT。オンボードLED Matrixは不使用。</td></tr>
+    <tr><td>TFT配線</td><td>D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BL、3V3、GND。D12/MISOは未接続。</td></tr>
     <tr><td>状態順</td><td>bit 0..4 = 窓a、窓b、窓c、扉AB、扉BC</td></tr>
     <tr><td>PCA9685</td><td>Wire、D20/SDA、D21/SCL、0x40</td></tr>
     <tr><td>GPIO</td><td>D3–D7状態、D8 EXEC、D9雨。3.3 V系。</td></tr>
@@ -38,7 +39,7 @@
 
   <h2>移植順序</h2>
   <ol>
-    <li>Matrix、Bridge、GPIO、I²Cのbring-up。</li>
+    <li>ILI9341、Bridge、GPIO、I²Cのbring-up。</li>
     <li>PCA9685とSG90を1チャンネルずつ安全に検証。</li>
     <li>音響経路を確定し、16 kHz / mono / PCMの録音とping再生を確認。</li>
     <li>PC版とUNO Q版の特徴量同値性を比較。</li>
@@ -52,7 +53,7 @@
     <li>PCA9685検出だけではサーボを動かさない。電源・GND・機械端を確認してからPWMを有効化する。</li>
     <li>外部ハード未接続でもbring-upが継続できる実装にする。</li>
     <li>loopback、dummy、実モデルの結果を明確に区別する。</li>
-    <li>Linux起動中のMatrix利用を避け、OS起動完了後にアプリを開始する。</li>
+    <li>ILI9341未接続でもBridgeとGPIOのbring-upを継続できる構造にする。</li>
   </ul>
 
   <h2>ドキュメントとGit</h2>
