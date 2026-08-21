@@ -23,6 +23,7 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 ## 設計資料
 
 - [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
+- [UNO Q GPIO接続図](docs/gpio_wiring.html)
 - [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
 - [UNO Q bring-upアプリ](uno_q/README.md)
 - [元IchiPing仕様のコピー](docs/spec.html)
