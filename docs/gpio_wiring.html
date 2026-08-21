@@ -6,13 +6,13 @@
   <title>IchiPing UNO Q — GPIO接続図</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    main{max-width:1380px;margin:0 auto;padding:28px 24px 80px}.lead{color:var(--muted)}.diagram-wrap{overflow-x:auto;background:#0b1017;border:1px solid var(--border);border-radius:14px;padding:12px}.diagram{display:block;width:100%;min-width:1050px;height:auto}.legend{display:flex;flex-wrap:wrap;gap:12px 22px;margin:14px 0 24px}.key{display:inline-flex;align-items:center;gap:7px}.swatch{width:28px;height:5px;border-radius:3px}.signal{background:#6ea8fe}.power33{background:#7be0a4}.power5{background:#ffb454}.ground{background:#aab2c0}.internal{background:#ff7ab6}table{width:100%;border-collapse:collapse;margin:14px 0 28px}th,td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top}th{background:rgba(110,168,254,.1)}.warn{border-left:4px solid var(--warn);padding:10px 14px;background:rgba(255,180,84,.07)}.ok{border-left:4px solid var(--accent-2);padding:10px 14px;background:rgba(123,224,164,.06)}code{color:var(--accent-2)}
+    main{max-width:1380px;margin:0 auto;padding:28px 24px 80px}.lead{color:var(--muted)}.diagram-wrap{overflow-x:auto;background:#0b1017;border:1px solid var(--border);border-radius:14px;padding:12px}.diagram{display:block;width:100%;min-width:1050px;height:auto}.legend{display:flex;flex-wrap:wrap;gap:12px 22px;margin:14px 0 24px}.key{display:inline-flex;align-items:center;gap:7px}.swatch{width:28px;height:5px;border-radius:3px}.signal{background:#6ea8fe}.power33{background:#7be0a4}.power5{background:#ffb454}.ground{background:#aab2c0}.internal{background:#ff7ab6}.candidate{background:repeating-linear-gradient(90deg,#f2cc60 0 8px,transparent 8px 13px)}table{width:100%;border-collapse:collapse;margin:14px 0 28px}th,td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top}th{background:rgba(110,168,254,.1)}.warn{border-left:4px solid var(--warn);padding:10px 14px;background:rgba(255,180,84,.07)}.ok{border-left:4px solid var(--accent-2);padding:10px 14px;background:rgba(123,224,164,.06)}code{color:var(--accent-2)}
   </style>
 </head>
 <body><main>
   <p><a href="../index.html">← IchiPing UNO Q</a> / <a href="uno_q_port.html">移植方針・GPIO表</a></p>
   <h1>GPIO接続図</h1>
-  <p class="lead">UNO QのSTM32側GPIOへ、状態スイッチ5個、EXECボタン、雨入力、PCA9685を接続する図です。音響MI2S0はJMISC側の別系統なので、この図には含めていません。</p>
+  <p class="lead">状態スイッチ、EXEC、雨入力、PCA9685、内蔵LED Matrix、INMP441マイク、MAX98357Aアンプとスピーカーまでを示す全体接続図です。GPIO／I²Cは実装済み、MI2S0音響線はLinux Device TreeとALSA routeの確定前なので接続候補です。</p>
 
   <div class="diagram-wrap">
     <svg class="diagram" viewBox="0 0 1400 900" role="img" aria-labelledby="wiring-title wiring-desc">
@@ -100,12 +100,85 @@
     </svg>
   </div>
 
+  <h2>表示・マイク・スピーカー接続</h2>
+  <div class="diagram-wrap">
+    <svg class="diagram" viewBox="0 0 1400 650" role="img" aria-labelledby="audio-title audio-desc">
+      <title id="audio-title">UNO QのLED MatrixとMI2S0音響接続候補</title>
+      <desc id="audio-desc">結果は基板内蔵LED Matrixへ表示する。JMISCまたはUNO Breakout Carrierの1.8 V MI2S0クロックとワード選択をマイクとアンプで共有し、DATA0をマイク入力、DATA1をアンプ出力の候補とする。</desc>
+      <defs>
+        <filter id="audio-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity=".42"/></filter>
+        <style>
+          .ab{fill:#18202b;stroke:#39475a;stroke-width:2}.uno{fill:#153148;stroke:#6ea8fe;stroke-width:3}.dev{fill:#1c2632;stroke:#7be0a4;stroke-width:2}.pending{fill:#2b2719;stroke:#f2cc60;stroke-width:2}.at{fill:#e5e9f0;font-family:'Segoe UI','Yu Gothic UI',sans-serif}.am{fill:#8b95a7}.al{font-size:17px;font-weight:700}.as{font-size:14px}.ah{font-size:24px;font-weight:800}.a-sig{fill:none;stroke:#f2cc60;stroke-width:4;stroke-dasharray:11 7}.a-int{fill:none;stroke:#ff7ab6;stroke-width:4}.a-v18{fill:none;stroke:#7be0a4;stroke-width:4}.a-v5{fill:none;stroke:#ffb454;stroke-width:5}.a-gnd{fill:none;stroke:#aab2c0;stroke-width:4}.a-out{fill:none;stroke:#6ea8fe;stroke-width:5}
+        </style>
+      </defs>
+
+      <rect x="25" y="50" width="320" height="540" rx="20" class="uno" filter="url(#audio-shadow)"/>
+      <text x="185" y="92" text-anchor="middle" class="at ah">Arduino UNO Q</text>
+      <text x="185" y="120" text-anchor="middle" class="at as">QRB2210 Linux + STM32U585</text>
+      <rect x="68" y="165" width="234" height="185" rx="14" fill="#251d2d" stroke="#ff7ab6" stroke-width="2"/>
+      <text x="185" y="198" text-anchor="middle" class="at al">内蔵 8×13 LED Matrix</text>
+      <g fill="#6ea8fe">
+        <circle cx="105" cy="242" r="8"/><circle cx="135" cy="242" r="8"/><circle cx="165" cy="242" r="8"/><circle cx="195" cy="242" r="8"/><circle cx="225" cy="242" r="8"/>
+        <circle cx="105" cy="275" r="8"/><circle cx="165" cy="275" r="8"/><circle cx="225" cy="275" r="8"/>
+      </g>
+      <text x="185" y="323" text-anchor="middle" class="at as">状態5 bit・信頼度・推論中</text>
+      <text x="185" y="390" text-anchor="middle" class="at al">表示配線は不要</text>
+      <text x="185" y="420" text-anchor="middle" class="at as">基板内接続をArduino_LED_Matrixで制御</text>
+      <path d="M90 455 H280" class="a-int"/>
+      <text x="185" y="490" text-anchor="middle" class="at as">外付けディスプレイは現構成で使用しない</text>
+
+      <rect x="395" y="50" width="360" height="540" rx="20" class="pending" filter="url(#audio-shadow)"/>
+      <text x="575" y="90" text-anchor="middle" class="at ah">MI2S0 引き出し</text>
+      <text x="575" y="118" text-anchor="middle" class="at as">UNO Breakout Carrier J15 / raw JMISC</text>
+      <text x="420" y="165" class="at al">BCLK</text><text x="535" y="165" class="at as">GPIO98・J15-32・JMISC-46</text>
+      <text x="420" y="220" class="at al">WS / LRCLK</text><text x="535" y="220" class="at as">GPIO99・J15-34・JMISC-48</text>
+      <text x="420" y="275" class="at al">MIC DATA</text><text x="535" y="275" class="at as">GPIO100・J15-36・JMISC-50</text>
+      <text x="420" y="330" class="at al">AMP DATA</text><text x="535" y="330" class="at as">GPIO101・J15-38・JMISC-52</text>
+      <rect x="425" y="375" width="300" height="135" rx="12" fill="#251f16" stroke="#f2cc60"/>
+      <text x="575" y="407" text-anchor="middle" class="at al">全信号 1.8 V</text>
+      <text x="445" y="438" class="at as">標準UNOヘッダには出ていない</text>
+      <text x="445" y="466" class="at as">DATA0/1の方向はDevice Treeで確定</text>
+      <text x="445" y="494" class="at as">確定前は配線・通電しない</text>
+      <text x="575" y="548" text-anchor="middle" class="at as">黄破線 = 接続候補（未合格）</text>
+
+      <rect x="815" y="45" width="255" height="245" rx="18" class="dev" filter="url(#audio-shadow)"/>
+      <text x="942" y="84" text-anchor="middle" class="at ah">INMP441</text>
+      <text x="842" y="126" class="at as">SCK ← BCLK</text><text x="842" y="154" class="at as">WS ← WS / LRCLK</text>
+      <text x="842" y="182" class="at as">SD → MIC DATA候補</text><text x="842" y="210" class="at as">VDD ← 外部1.8 V LDO</text>
+      <text x="842" y="238" class="at as">GND → 共通GND</text><text x="842" y="266" class="at as">L/R → GND（Left候補）</text>
+
+      <rect x="815" y="345" width="255" height="245" rx="18" class="dev" filter="url(#audio-shadow)"/>
+      <text x="942" y="384" text-anchor="middle" class="at ah">MAX98357A</text>
+      <text x="842" y="426" class="at as">BCLK ← BCLK</text><text x="842" y="454" class="at as">LRC ← WS / LRCLK</text>
+      <text x="842" y="482" class="at as">DIN ← AMP DATA候補</text><text x="842" y="510" class="at as">VIN ← 外部5 V</text>
+      <text x="842" y="538" class="at as">GND → 共通GND</text><text x="842" y="566" class="at as">SPK± → スピーカー</text>
+
+      <rect x="1160" y="365" width="205" height="205" rx="18" class="ab" filter="url(#audio-shadow)"/>
+      <text x="1262" y="405" text-anchor="middle" class="at ah">スピーカー</text>
+      <path d="M1200 458 H1235 L1280 425 V525 L1235 492 H1200 Z" fill="#6ea8fe"/>
+      <path d="M1295 445 Q1335 475 1295 505" class="a-out"/>
+      <text x="1262" y="548" text-anchor="middle" class="at as">4–8 Ω（アンプ仕様内）</text>
+
+      <path d="M755 158 H790 V115 H815 M755 213 H780 V145 H815" class="a-sig"/>
+      <path d="M755 268 H790 V175 H815" class="a-sig"/>
+      <path d="M755 158 H775 V415 H815 M755 213 H785 V445 H815 M755 323 H795 V475 H815" class="a-sig"/>
+      <path d="M1070 542 H1120 V465 H1160" class="a-out"/>
+      <path d="M1070 512 H1100 V320 H1120" class="a-v5"/>
+      <text x="1125" y="315" class="at as">外部5 V</text>
+      <path d="M1070 238 H1090 V305 H1120 M1070 538 H1090" class="a-gnd"/>
+      <text x="1125" y="310" dy="28" class="at as">共通GND</text>
+      <path d="M1070 208 H1095 V65 H1120" class="a-v18"/>
+      <text x="1125" y="70" class="at as">3.3→1.8 V LDO</text>
+    </svg>
+  </div>
+
   <div class="legend" aria-label="配線色の凡例">
     <span class="key"><span class="swatch signal"></span>GPIO / I²C信号</span>
     <span class="key"><span class="swatch power33"></span>3.3 V</span>
     <span class="key"><span class="swatch power5"></span>外部5 Vサーボ電源</span>
     <span class="key"><span class="swatch ground"></span>共通GND</span>
     <span class="key"><span class="swatch internal"></span>基板内蔵</span>
+    <span class="key"><span class="swatch candidate"></span>MI2S0接続候補・未検証</span>
   </div>
 
   <h2>接続一覧</h2>
@@ -117,9 +190,17 @@
     <tr><td>D21 / SCL</td><td>PCA9685 SCL</td><td>bring-up時100 kHz</td></tr>
     <tr><td>3V3</td><td>PCA9685 VCC、3.3 V雨センサVCC</td><td>ロジック電源だけに使用</td></tr>
     <tr><td>GND</td><td>全スイッチ、雨センサ、PCA9685、外部5 V電源</td><td>全系統で共通化</td></tr>
+    <tr><td>内蔵LED Matrix</td><td>外部配線なし</td><td><code>Arduino_LED_Matrix</code>で5状態、信頼度、推論中を表示</td></tr>
+    <tr><td>MI2S0 CLK / WS</td><td>INMP441 SCK/WSとMAX98357A BCLK/LRCで共有</td><td>GPIO98/99、1.8 V。J15-32/34またはJMISC-46/48</td></tr>
+    <tr><td>MI2S0 DATA0候補</td><td>INMP441 SD</td><td>GPIO100、J15-36またはJMISC-50。Linux capture route確定後に接続</td></tr>
+    <tr><td>MI2S0 DATA1候補</td><td>MAX98357A DIN</td><td>GPIO101、J15-38またはJMISC-52。Linux playback route確定後に接続</td></tr>
+    <tr><td>外部1.8 V LDO</td><td>INMP441 VDD</td><td>MI2S出力をQRB2210の1.8 V I/Oへ整合</td></tr>
+    <tr><td>外部5 V</td><td>MAX98357A VIN</td><td>アンプ電源。スピーカーはSPK+とSPK−間へ接続</td></tr>
   </tbody></table>
 
   <div class="warn"><b>サーボ電源:</b> PCA9685のVCCは3.3 Vですが、V+とSG90は外部5 Vです。VCCとV+を混同しないでください。</div>
+  <div class="warn"><b>MI2S0は接続候補:</b> GPIO98–101は1.8 V専用です。DATA0/1のcapture/playback方向、Device Treeのcodec DAI、ALSA routeを確認するまではINMP441/MAX98357Aを接続・通電しません。3.3 Vや5 VのI²S信号を直接入力しないでください。</div>
   <div class="ok"><b>安全な接続順:</b> 最初はサーボと外部5 Vを外し、スイッチ入力とPCA9685の0x40検出だけを確認します。次に共通GNDを再確認し、SG90を1台ずつ接続します。</div>
+  <p>公式資料: <a href="https://docs.arduino.cc/resources/datasheets/ABX00162-ABX00173-datasheet.pdf">UNO Q datasheet</a> / <a href="https://docs.arduino.cc/resources/datasheets/ASX00085-datasheet.pdf">UNO Breakout Carrier datasheet</a></p>
 </main></body>
 </html>
