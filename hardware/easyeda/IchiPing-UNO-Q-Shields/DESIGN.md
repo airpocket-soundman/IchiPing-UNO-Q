@@ -3,12 +3,13 @@
 The binding design input is [SPECIFICATION.md](SPECIFICATION.md). This file
 records implementation notes for the generated KiCad/EasyEDA board data.
 
-The two `*_easyeda_import.zip` archives intentionally contain the routed PCB
-only. The generated legacy `.sch` files are connector/pin-order drawings for
-review, not complete PCB netlists; importing them together would create a
-false schematic-vs-PCB netlist warning in EasyEDA Pro. The repository's
-`board/Ichiping uno q.eprj2` project therefore contains the two PCB-only
-imports, both checked with EasyEDA Pro DRC.
+The UNO `*_easyeda_import.zip` contains its routed PCB. The audio import ZIP
+contains both the routed PCB and the KiCad 8 `.kicad_sch` complete circuit.
+The UNO shield legacy `.sch` remains a connector/pin-order review drawing. The
+audio shield circuit includes the J14/J15 physical pin numbers, all three XH
+connectors, configuration resistors, mute jumper, and decoupling capacitors.
+The repository's `board/Ichiping uno q.eprj2` project contains both routed
+boards and the audio circuit drawing.
 
 ## Design assumptions
 
@@ -68,8 +69,10 @@ beside `J_PWR_IN`; `C_PWR_HF` (100 nF) remains in parallel. The separate
 ## Board B: IchiPing UNO Q Audio Shield
 
 This board plugs into the UNO Breakout Carrier J14 and J15 2x20, 2.54 mm male
-headers using bottom-side female sockets. It occupies the rightmost 46 mm of
-the carrier and follows the official J14/J15 spacing.
+headers using bottom-side female sockets. The J14/J15 coordinates and official
+15.24 mm spacing are unchanged. The outline is 79 x 53.34 mm: it extends 33 mm
+to the right of the previous outline, and all three XH connectors are placed
+to the right of J15.
 
 | Reference | Connector | Pin order | Breakout Carrier nets |
 |---|---|---|---|
@@ -77,8 +80,15 @@ the carrier and follows the official J14/J15 spacing.
 | J_AMP_PWR | XH-3 | SD, GND, VIN | SD selector, GND, J14-7 (+5V) |
 | J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, channel selector |
 
-`GAIN` and `L/R` default to GND through removable 0-ohm resistors. `SD` has a
-100 kOhm pull-up to 3.3 V and an open mute solder jumper to GND.
+`GAIN` and `L/R` default to GND through removable 0-ohm axial DIN0207
+resistors. `SD` has a 100 kOhm DIN0207 pull-up to 3.3 V and a normally open
+2.54 mm `JP_MUTE` header to GND. C1 is a radial 10 uF / 10 V electrolytic;
+C2/C3 are 100 nF through-hole disc capacitors. No SMD part is used on Board B.
+
+The complete circuit is in
+`audio_shield/ichiping_uno_q_audio_shield.kicad_sch`; the legacy `.sch` and its
+`-cache.lib` are retained as reproducible conversion sources. The complete
+circuit is no longer only a connector map.
 
 ## Manufacturing defaults
 
@@ -91,3 +101,9 @@ the carrier and follows the official J14/J15 spacing.
 - JST XH pin 1 is marked on both copper footprint and silkscreen.
 - Run ERC/DRC again after EasyEDA Pro import because library conversion can
   alter courtyard and solder-mask rules.
+- EasyEDA Pro's imported schematic reports missing `Footprint` metadata on the
+  12 converted symbols even when automatic association is selected. Its linked
+  PCB check consequently reports one `Import Changes` netlist-mismatch item,
+  while reporting no geometry, clearance, or unrouted-item violations. The PCB
+  document contains all 12 physical footprints; KiCad ERC and KiCad PCB DRC are
+  therefore the binding electrical and manufacturing checks.

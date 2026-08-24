@@ -72,6 +72,21 @@ def audit_board(relative_path: str, expected: dict[str, list[str]]) -> None:
         if not math.isclose(lead_pitch, 3.50, abs_tol=0.001):
             raise AssertionError(f"C_PWR_BULK lead pitch {lead_pitch:.4f} mm")
 
+    if "audio_shield" in relative_path:
+        j15_right = max(pad.GetPosition().x for pad in footprints["J15"].Pads())
+        for reference in ("J_AMP_SIG", "J_AMP_PWR", "J_MIC"):
+            connector_left = min(pad.GetPosition().x for pad in footprints[reference].Pads())
+            if connector_left <= j15_right:
+                raise AssertionError(f"{reference} is not to the right of J15")
+        for reference in ("R_GAIN", "R_SD", "R_LR", "JP_MUTE", "C1", "C2", "C3"):
+            for pad in footprints[reference].Pads():
+                if pad.GetAttribute() != pcbnew.PAD_ATTRIB_PTH:
+                    raise AssertionError(f"{reference} pad {pad.GetNumber()} is not through-hole")
+        if footprints["C1"].FindPadByNumber("1").GetNetname() != "+5V":
+            raise AssertionError("C1 positive pad is not on +5V")
+        if footprints["C1"].FindPadByNumber("2").GetNetname() != "GND":
+            raise AssertionError("C1 negative pad is not on GND")
+
     print(f"PASS {relative_path}: connector nets and 2.54 mm XH pitch")
 
 

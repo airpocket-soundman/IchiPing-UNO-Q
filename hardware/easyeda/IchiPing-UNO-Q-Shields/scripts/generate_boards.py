@@ -419,7 +419,10 @@ def generate_audio_board() -> Path:
     print("audio: start", flush=True)
     out_dir = ROOT / "audio_shield"
     out_dir.mkdir(parents=True, exist_ok=True)
-    board = new_board(46.0, 53.34)
+    # Keep the carrier header coordinates fixed and extend the PCB to the
+    # right, so every cable connector sits beyond J15 rather than underneath
+    # the carrier body on the left side.
+    board = new_board(79.0, 53.34)
     print("audio: board", flush=True)
     board.SetFileName(str(out_dir / "ichiping_uno_q_audio_shield.kicad_pcb"))
 
@@ -479,34 +482,43 @@ def generate_audio_board() -> Path:
     ]:
         route_direct(board, net_name, find_pad(footprint, first), find_pad(footprint, second), pcbnew.B_Cu, width)
 
-    _, amp_sig = add_xh(board, "J_AMP_SIG", ["MI2S0_WS", "MI2S0_CLK", "MI2S0_DATA1", "AMP_GAIN"], 4.0, 12.0)
-    _, amp_pwr = add_xh(board, "J_AMP_PWR", ["AMP_SD", "GND", "+5V"], 4.0, 25.5)
-    _, mic = add_xh(board, "J_MIC", ["GND", "+1V8", "MI2S0_DATA0", "MI2S0_CLK", "MI2S0_WS", "MIC_LR"], 4.0, 39.0)
+    _, amp_sig = add_xh(board, "J_AMP_SIG", ["MI2S0_WS", "MI2S0_CLK", "MI2S0_DATA1", "AMP_GAIN"], 61.0, 10.0)
+    _, amp_pwr = add_xh(board, "J_AMP_PWR", ["AMP_SD", "GND", "+5V"], 61.0, 23.5)
+    _, mic = add_xh(board, "J_MIC", ["GND", "+1V8", "MI2S0_DATA0", "MI2S0_CLK", "MI2S0_WS", "MIC_LR"], 61.0, 36.5)
     print("audio: xh", flush=True)
 
-    # Fixed safe defaults use resistors/solder jumpers, not pin-header
-    # connectors: GAIN=GND, MIC L/R=GND, and SD pulled up to 3.3 V.
-    r_gain = load_footprint(board, "Resistor_SMD", "R_0805_2012Metric", "R_GAIN", "0R GAIN=GND", 29.0, 14.0, 90)
+    # All configurable and decoupling parts are through-hole for hand
+    # assembly. Fixed defaults are GAIN=GND, MIC L/R=GND, and SD pulled up.
+    resistor_fp = "R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+    r_gain = load_footprint(board, "Resistor_THT", resistor_fp, "R_GAIN", "0R GAIN=GND", 44.0, 16.0, 90)
     set_pad_net(board, r_gain, "1", "AMP_GAIN")
     set_pad_net(board, r_gain, "2", "GND")
-    r_lr = load_footprint(board, "Resistor_SMD", "R_0805_2012Metric", "R_LR", "0R MIC_LR=GND", 29.0, 45.0, 90)
+    r_lr = load_footprint(board, "Resistor_THT", resistor_fp, "R_LR", "0R MIC_LR=GND", 48.0, 49.0, 90)
     set_pad_net(board, r_lr, "1", "MIC_LR")
     set_pad_net(board, r_lr, "2", "GND")
-    r_sd = load_footprint(board, "Resistor_SMD", "R_0805_2012Metric", "R_SD", "100k SD pull-up", 29.0, 29.0, 90)
+    r_sd = load_footprint(board, "Resistor_THT", resistor_fp, "R_SD", "100k SD pull-up", 49.0, 23.5, 90)
     set_pad_net(board, r_sd, "1", "AMP_SD")
     set_pad_net(board, r_sd, "2", "+3V3")
-    sj_mute = load_footprint(board, "Jumper", "SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm", "SJ_MUTE", "AMP SD mute", 32.0, 29.0, 90)
-    set_pad_net(board, sj_mute, "1", "AMP_SD")
-    set_pad_net(board, sj_mute, "2", "GND")
+    jp_mute = load_footprint(
+        board,
+        "Connector_PinHeader_2.54mm",
+        "PinHeader_1x02_P2.54mm_Vertical",
+        "JP_MUTE",
+        "AMP SD MUTE (OPEN)",
+        55.0,
+        25.0,
+    )
+    set_pad_net(board, jp_mute, "1", "AMP_SD")
+    set_pad_net(board, jp_mute, "2", "GND")
 
     # Local rail decoupling at the cable connectors.
     caps = [
-        ("C1", "10u", "+5V", 29.0, 34.0, "C_1206_3216Metric"),
-        ("C2", "100n", "+5V", 32.0, 37.0, "C_0805_2012Metric"),
-        ("C3", "100n", "+1V8", 32.0, 45.0, "C_0805_2012Metric"),
+        ("C1", "10u 10V", "+5V", 48.0, 33.0, "CP_Radial_D5.0mm_P2.00mm"),
+        ("C2", "100n", "+5V", 54.0, 33.0, "C_Disc_D5.0mm_W2.5mm_P5.00mm"),
+        ("C3", "100n", "+1V8", 54.0, 47.5, "C_Disc_D5.0mm_W2.5mm_P5.00mm"),
     ]
     for reference, value, supply, x, y, footprint_name in caps:
-        capacitor = load_footprint(board, "Capacitor_SMD", footprint_name, reference, value, x, y)
+        capacitor = load_footprint(board, "Capacitor_THT", footprint_name, reference, value, x, y)
         set_pad_net(board, capacitor, "1", supply)
         set_pad_net(board, capacitor, "2", "GND")
     print("audio: parts", flush=True)
@@ -514,10 +526,10 @@ def generate_audio_board() -> Path:
     # Shared clock and word-select buses, then short branches to both XH headers.
     for net, y_bus in [("MI2S0_CLK", 34.0), ("MI2S0_WS", 36.0)]:
         hx, hy = pad_xy(header[net])
-        add_track(board, net, [(hx, hy), (30.0, hy), (30.0, y_bus), (12.5, y_bus)], pcbnew.F_Cu)
+        add_track(board, net, [(hx, hy), (44.0, hy), (44.0, y_bus), (57.0, y_bus)], pcbnew.F_Cu)
         for target in (amp_sig[net], mic[net]):
             tx, ty = pad_xy(target)
-            add_track(board, net, [(12.5, y_bus), (tx, y_bus), (tx, ty)], pcbnew.F_Cu)
+            add_track(board, net, [(57.0, y_bus), (tx, y_bus), (tx, ty)], pcbnew.F_Cu)
 
     route_direct(board, "MI2S0_DATA1", header["MI2S0_DATA1"], amp_sig["MI2S0_DATA1"], pcbnew.B_Cu)
     route_direct(board, "MI2S0_DATA0", header["MI2S0_DATA0"], mic["MI2S0_DATA0"], pcbnew.B_Cu)
@@ -529,43 +541,304 @@ def generate_audio_board() -> Path:
     route_dogleg(board, "+1V8", header["+1V8"], mic["+1V8"], pcbnew.B_Cu, 46.5, 0.50)
     route_direct(board, "AMP_SD", find_pad(r_sd, "1"), amp_pwr["AMP_SD"], pcbnew.F_Cu)
     route_direct(board, "+3V3", find_pad(r_sd, "2"), header["+3V3"], pcbnew.B_Cu, 0.50)
-    route_direct(board, "AMP_SD", find_pad(sj_mute, "1"), amp_pwr["AMP_SD"], pcbnew.F_Cu)
+    route_direct(board, "AMP_SD", find_pad(jp_mute, "1"), amp_pwr["AMP_SD"], pcbnew.F_Cu)
 
     for reference, _, supply, _, _, _ in caps:
         cap = board_footprints(board)[reference]
         route_direct(board, supply, find_pad(cap, "1"), header[supply], pcbnew.B_Cu, 0.50)
 
-    polygon = [(0.6, 0.6), (45.4, 0.6), (45.4, 52.74), (0.6, 52.74)]
+    polygon = [(0.6, 0.6), (78.4, 0.6), (78.4, 52.74), (0.6, 52.74)]
     add_zone(board, "GND", pcbnew.F_Cu, polygon)
     add_zone(board, "GND", pcbnew.B_Cu, polygon)
     print("audio: routes", flush=True)
 
     add_text(board, "IchiPing AUDIO", 9.0, 4.0, 1.0, bold=True)
-    add_text(board, "I2S=1V8", 6.5, 7.0, 0.8)
-    add_text(board, "AMP: LRC BCLK DIN GAIN", 12.0, 9.0, 0.80)
-    add_text(board, "AMP: SD GND VIN(5V)", 11.5, 22.5, 0.80)
-    add_text(board, "MIC G 1V8 SD CK WS LR", 10.0, 36.0, 0.80)
-    add_text(board, "GAIN/LR=GND", 8.0, 50.0, 0.80)
-    add_text(board, "REV A 2026-08-24", 9.0, 52.0, 0.80, layer=pcbnew.B_SilkS)
+    add_text(board, "I2S=1V8  ALL PARTS THT", 12.0, 7.0, 0.8)
+    add_text(board, "AMP SIG: LRC BCLK DIN GAIN", 60.0, 6.0, 0.80)
+    add_text(board, "AMP PWR: SD GND VIN(5V)", 60.0, 20.0, 0.80)
+    add_text(board, "MIC: G 1V8 SD CK WS LR", 65.0, 41.5, 0.80)
+    add_text(board, "MUTE", 55.0, 21.5, 0.80)
+    add_text(board, "REV B 2026-08-25", 12.0, 52.0, 0.80, layer=pcbnew.B_SilkS)
 
     prepare_for_autorouter(board)
     configure_netclasses(board)
     strip_footprint_silks(board)
     print("audio: save for autorouter", flush=True)
     pcbnew.SaveBoard(str(out_dir / "ichiping_uno_q_audio_shield.kicad_pcb"), board)
-    write_legacy_schematic(
-        out_dir / "ichiping_uno_q_audio_shield.sch",
-        "IchiPing UNO Q Audio Shield",
-        [
-            ("J_AMP_SIG", ["MI2S0_WS", "MI2S0_CLK", "MI2S0_DATA1", "AMP_GAIN"]),
-            ("J_AMP_PWR", ["AMP_SD", "GND", "+5V"]),
-            ("J_MIC", ["GND", "+1V8", "MI2S0_DATA0", "MI2S0_CLK", "MI2S0_WS", "MIC_LR"]),
-            ("SJ_MUTE", ["AMP_SD", "GND"]),
-        ],
-        "J15-32/34/36/38 = CLK/WS/DATA0/DATA1; J14 supplies +1V8 and +5V.",
-    )
+    write_audio_schematic(out_dir / "ichiping_uno_q_audio_shield.sch")
+    write_audio_cache_library(out_dir / "ichiping_uno_q_audio_shield-cache.lib")
     write_project_file(out_dir / "ichiping_uno_q_audio_shield.kicad_pro")
     return out_dir
+
+
+def write_audio_schematic(path: Path) -> None:
+    """Write the complete audio-shield circuit as a KiCad legacy schematic."""
+    lines = [
+        "EESchema Schematic File Version 4",
+        "LIBS:ichiping_uno_q_audio_shield-cache",
+        "LIBS:power",
+        "LIBS:device",
+        "LIBS:Connector_Generic",
+        "EELAYER 29 0",
+        "EELAYER END",
+        "$Descr A4 11693 8268",
+        "Sheet 1 1",
+        'Title "IchiPing UNO Q Audio Shield"',
+        'Date "2026-08-25"',
+        'Rev "B"',
+        'Comp "IchiPing UNO Q"',
+        'Comment1 "Complete circuit; all discrete parts are through-hole"',
+        "$EndDescr",
+        "Text Notes 700 650 0    100  ~ 20",
+        "IchiPing UNO Q Audio Shield - complete circuit",
+        "Text Notes 700 900 0    55   ~ 11",
+        "QRB2210 MI2S0 is 1.8 V logic. Confirm Device Tree and ALSA direction before fitting modules.",
+    ]
+
+    def component(
+        library_id: str,
+        reference: str,
+        value: str,
+        footprint: str,
+        x: int,
+        y: int,
+        orientation: str = "1 0 0 -1",
+    ) -> None:
+        component_id = uuid.uuid4().int & 0xFFFFFFFF
+        lines.extend(
+            [
+                "$Comp",
+                f"L {library_id} {reference}",
+                f"U 1 1 {component_id:08X}",
+                f"P {x} {y}",
+                f'F 0 "{reference}" H {x+200} {y+150} 50  0000 C CNN',
+                f'F 1 "{value}" H {x+350} {y-150} 50  0000 C CNN',
+                f'F 2 "{footprint}" H {x} {y} 50  0001 C CNN',
+                f'F 3 "~" H {x} {y} 50  0001 C CNN',
+                f"\t1    {x} {y}",
+                f"\t{orientation}",
+                "$EndComp",
+            ]
+        )
+
+    def label_wire(x1: int, y1: int, x2: int, y2: int, net: str) -> None:
+        lines.extend(
+            [
+                f"Wire Wire Line\n\t{x1} {y1} {x2} {y2}",
+                f"Text Label {x2} {y2} 0    45   ~ 0\n{net}",
+            ]
+        )
+
+    # Breakout Carrier sockets retain their physical pin numbers. Every
+    # unused pin is explicitly marked no-connect so the schematic is useful
+    # for both wiring review and ERC.
+    carrier_connectors = [
+        (
+            "J14",
+            1700,
+            3000,
+            {
+                5: "GND",
+                6: "GND",
+                7: "+5V",
+                9: "+5V",
+                13: "+3V3",
+                15: "+3V3",
+                19: "+1V8",
+                21: "+1V8",
+            },
+        ),
+        (
+            "J15",
+            4000,
+            3000,
+            {
+                23: "GND",
+                30: "GND",
+                32: "MI2S0_CLK",
+                34: "MI2S0_WS",
+                36: "MI2S0_DATA0",
+                38: "MI2S0_DATA1",
+                40: "GND",
+            },
+        ),
+    ]
+    socket_fp = "Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical"
+    for reference, x, y, used_pins in carrier_connectors:
+        component("Connector_Generic:Conn_02x20_Odd_Even", reference, "UNO Breakout Carrier", socket_fp, x, y)
+        for pin in range(1, 41):
+            row_y = y - 900 + ((pin - 1) // 2) * 100
+            pin_x = x - 200 if pin % 2 else x + 300
+            if pin in used_pins:
+                end_x = pin_x - 450 if pin % 2 else pin_x + 450
+                label_wire(pin_x, row_y, end_x, row_y, used_pins[pin])
+            else:
+                lines.append(f"NoConn ~ {pin_x} {row_y}")
+
+    def xh(reference: str, count: int, x: int, y: int, nets: list[str]) -> None:
+        component(
+            f"Connector_Generic:Conn_01x{count:02d}",
+            reference,
+            f"XH2.54_VERTICAL_{count}",
+            f"Connector_PinHeader_2.54mm:PinHeader_1x{count:02d}_P2.54mm_Vertical",
+            x,
+            y,
+            "-1 0 0 1",
+        )
+        first_y = y + ((count - 1) // 2) * 100
+        for index, net in enumerate(nets):
+            pin_y = first_y - index * 100
+            label_wire(x + 200, pin_y, x + 650, pin_y, net)
+            lines.extend([f"Text Notes {x-850} {pin_y+15} 0    40   ~ 0", f"{index+1}: {net}"])
+
+    xh("J_AMP_SIG", 4, 6700, 1650, ["MI2S0_WS", "MI2S0_CLK", "MI2S0_DATA1", "AMP_GAIN"])
+    xh("J_AMP_PWR", 3, 6700, 2850, ["AMP_SD", "GND", "+5V"])
+    xh("J_MIC", 6, 6700, 4300, ["GND", "+1V8", "MI2S0_DATA0", "MI2S0_CLK", "MI2S0_WS", "MIC_LR"])
+
+    resistor_fp = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+    for reference, value, y, left_net, right_net in [
+        ("R_GAIN", "0R GAIN=GND", 1700, "AMP_GAIN", "GND"),
+        ("R_SD", "100k SD pull-up", 2500, "AMP_SD", "+3V3"),
+        ("R_LR", "0R MIC_LR=GND", 4700, "MIC_LR", "GND"),
+    ]:
+        component("Device:R", reference, value, resistor_fp, 9000, y, "0 -1 -1 0")
+        label_wire(8850, y, 8500, y, left_net)
+        label_wire(9150, y, 9500, y, right_net)
+
+    component(
+        "Connector_Generic:Conn_01x02",
+        "JP_MUTE",
+        "AMP SD MUTE (OPEN)",
+        "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+        9000,
+        3200,
+        "-1 0 0 1",
+    )
+    label_wire(9200, 3200, 9500, 3200, "AMP_SD")
+    label_wire(9200, 3100, 9500, 3100, "GND")
+
+    for library_id, reference, value, footprint, x, y, supply in [
+        ("Device:C_Polarized", "C1", "10u 10V", "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm", 8400, 3900, "+5V"),
+        ("Device:C", "C2", "100n", "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm", 9300, 3900, "+5V"),
+        ("Device:C", "C3", "100n", "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm", 10200, 3900, "+1V8"),
+    ]:
+        component(library_id, reference, value, footprint, x, y)
+        label_wire(x, y - 150, x, y - 350, supply)
+        label_wire(x, y + 150, x, y + 350, "GND")
+
+    lines.extend(
+        [
+            "Text Notes 8050 1250 0    60   ~ 12",
+            "Configuration and decoupling (THT)",
+            "Text Notes 8050 5200 0    50   ~ 10",
+            "JP_MUTE open: amplifier enabled by R_SD. Fit shunt: SD forced Low / mute.",
+            "Text Notes 700 5600 0    50   ~ 10",
+            "J14: 5/6=GND, 7/9=+5V, 13/15=+3V3, 19/21=+1V8",
+            "Text Notes 700 5850 0    50   ~ 10",
+            "J15: 23/30/40=GND, 32=CLK, 34=WS, 36=DATA0(mic), 38=DATA1(amp)",
+            "$EndSCHEMATC",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_audio_cache_library(path: Path) -> None:
+    """Embed the small symbol set needed by legacy KiCad/EasyEDA import."""
+    lines = ["EESchema-LIBRARY Version 2.4", "#encoding utf-8"]
+
+    def connector(name: str, count: int) -> None:
+        first_y = ((count - 1) // 2) * 100
+        last_y = first_y - (count - 1) * 100
+        lines.extend(
+            [
+                "#",
+                f"# {name}",
+                "#",
+                f"DEF {name} J 0 40 Y N 1 F N",
+                'F0 "J" 50 0 50 H V L CNN',
+                f'F1 "{name}" 50 -100 50 H V L CNN',
+                "DRAW",
+                f"S -50 {first_y + 50} 0 {last_y - 50} 1 1 10 f",
+            ]
+        )
+        for pin in range(1, count + 1):
+            pin_y = first_y - (pin - 1) * 100
+            lines.append(f"X Pin_{pin} {pin} -200 {pin_y} 150 R 50 50 1 1 P")
+        lines.extend(["ENDDRAW", "ENDDEF"])
+
+    def connector_2x20() -> None:
+        lines.extend(
+            [
+                "#",
+                "# Conn_02x20_Odd_Even",
+                "#",
+                "DEF Conn_02x20_Odd_Even J 0 40 Y N 1 F N",
+                'F0 "J" 50 1050 50 H V C CNN',
+                'F1 "Conn_02x20_Odd_Even" 50 -1050 50 H V C CNN',
+                "DRAW",
+                "S -50 950 150 -1050 1 1 10 f",
+            ]
+        )
+        for row in range(20):
+            pin_y = 900 - row * 100
+            odd = row * 2 + 1
+            even = odd + 1
+            lines.append(f"X Pin_{odd} {odd} -200 {pin_y} 150 R 50 50 1 1 P")
+            lines.append(f"X Pin_{even} {even} 300 {pin_y} 150 L 50 50 1 1 P")
+        lines.extend(["ENDDRAW", "ENDDEF"])
+
+    connector_2x20()
+    for count in (2, 3, 4, 6):
+        connector(f"Conn_01x{count:02d}", count)
+
+    lines.extend(
+        [
+            "#",
+            "# R",
+            "#",
+            "DEF R R 0 0 N Y 1 F N",
+            'F0 "R" 80 0 50 V V C CNN',
+            'F1 "R" 0 0 50 V V C CNN',
+            "DRAW",
+            "S -40 -100 40 100 0 1 12 N",
+            "X ~ 1 0 150 50 D 50 50 1 1 P",
+            "X ~ 2 0 -150 50 U 50 50 1 1 P",
+            "ENDDRAW",
+            "ENDDEF",
+            "#",
+            "# C",
+            "#",
+            "DEF C C 0 10 N Y 1 F N",
+            'F0 "C" 25 100 50 H V L CNN',
+            'F1 "C" 25 -100 50 H V L CNN',
+            "DRAW",
+            "P 2 0 1 20 -80 -30 80 -30 N",
+            "P 2 0 1 20 -80 30 80 30 N",
+            "X ~ 1 0 150 120 D 50 50 1 1 P",
+            "X ~ 2 0 -150 120 U 50 50 1 1 P",
+            "ENDDRAW",
+            "ENDDEF",
+            "#",
+            "# C_Polarized",
+            "#",
+            "DEF C_Polarized C 0 10 N Y 1 F N",
+            'F0 "C" 25 100 50 H V L CNN',
+            'F1 "C_Polarized" 25 -100 50 H V L CNN',
+            "DRAW",
+            "P 2 0 1 20 -80 -30 80 -30 N",
+            "P 2 0 1 20 -80 30 80 30 N",
+            "P 2 0 1 0 -50 60 -10 60 N",
+            "P 2 0 1 0 -30 40 -30 80 N",
+            "X ~ 1 0 150 120 D 50 50 1 1 P",
+            "X ~ 2 0 -150 120 U 50 50 1 1 P",
+            "ENDDRAW",
+            "ENDDEF",
+            "#End Library",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def write_project_file(path: Path) -> None:

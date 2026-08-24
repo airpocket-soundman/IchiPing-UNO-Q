@@ -86,15 +86,17 @@ Pin 2がGNDである。
 - UNO Breakout CarrierのJ14/J15へ、2x20、2.54 mmピッチのボトム側メスソケットで
   直接嵌合する。この2個だけはXHではない。
 - Carrier公式外形107.6 x 53.34 mm、J14/J15中心間隔15.24 mmを基準に配置する。
-- 音響シールドはCarrier右側46 x 53.34 mm以内とする。
+- J14/J15の嵌合位置は維持し、基板外形は79 x 53.34 mmとする。J15より右側へ33 mm
+  延長し、外部ハーネスがCarrier本体側へ回り込まない構造にする。
 - 外部モジュール向けコネクタはすべてXH2.54垂直型とする。
+- J_AMP_SIG、J_AMP_PWR、J_MICはすべてJ15ヘッダより右側へ配置する。
 
 ### 3.2 音響コネクタ
 
 | Ref | 極数 | XH2.54のピン順 | Carrier接続／既定値 |
 |---|---:|---|---|
 | J_AMP_SIG | 4 | LRC, BCLK, DIN, GAIN | J15-34, J15-32, J15-38, R_GAIN |
-| J_AMP_PWR | 3 | SD, GND, VIN | R_SD/SJ_MUTE, GND, J14-7 (+5V) |
+| J_AMP_PWR | 3 | SD, GND, VIN | R_SD/JP_MUTE, GND, J14-7 (+5V) |
 | J_MIC | 6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, R_LR |
 
 - MI2S0 BCLK = SOC_GPIO_98 = J15-32、WS/LRCLK = SOC_GPIO_99 = J15-34。
@@ -105,7 +107,11 @@ Pin 2がGNDである。
 - `R_GAIN`と`R_LR`は実装時0 ΩでGNDへ接続し、既定状態を固定する。変更時は
   0 Ω抵抗を取り外して所望のストラップ抵抗へ置換する。
 - `R_SD`は100 kΩで3.3 Vへプルアップし、MAX98357Aを既定で有効にする。
-  `SJ_MUTE`を短絡するとSDをGNDへ落としてミュートできる。
+  `JP_MUTE`に2.54 mmジャンパシャントを挿すとSDをGNDへ落としてミュートできる。
+- `R_GAIN`、`R_LR`、`R_SD`はDIN0207軸型抵抗、C1はラジアル電解、C2/C3は
+  ディスクセラミック、JP_MUTEは2.54 mmピンヘッダとし、表面実装部品を使わない。
+- C1は10 uF / 10 V以上で+5 Vをデカップリングし、C2=100 nFを並列配置する。
+  C3=100 nFは+1.8 Vをデカップリングする。C1の極性はPin 1=+5 V、Pin 2=GND。
 - DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
   までは、音響モジュールを接続・通電しない。
 
@@ -126,6 +132,8 @@ Board AからBoard Bへ電源を渡すXHケーブルは現仕様では不要で�
 - I2SのBCLK/WSは短く、並走長を抑え、サーボ5 V配線と離す。
 - 全コネクタにRef、信号順、Pin 1マーク、電圧をシルク印刷する。
 - 製造前にERC、DRC、未配線0、異ネット短絡0、基板外形干渉0を必須とする。
+- 音響基板のKiCad回路図は`audio_shield/ichiping_uno_q_audio_shield.kicad_sch`を正とし、
+  J14/J15実ピン番号、全XH、設定抵抗、ミュートジャンパ、デカップリングを記載する。
 
 ## 5. 参照資料
 
