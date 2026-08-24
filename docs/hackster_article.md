@@ -20,12 +20,12 @@ The demonstrator contains three windows and two doors. Each opening is either op
 
 The goal is to recognize all 32 states from one active acoustic measurement.
 
-**IMAGE TO INSERT HERE — Use-case comic**  
-Caption: One chirp, one microphone, and a single 32-state result.  
+**IMAGE TO INSERT HERE — Use-case comic**
+Caption: One chirp, one microphone, and a single 32-state result.
 Path: `docs/img/hackster_one_ping_comic_en.png`
 
-**IMAGE TO INSERT HERE — Arduino UNO Q system architecture**  
-Caption: Audio is processed on Linux while deterministic GPIO, servo, and display control remain on the STM32U585.  
+**IMAGE TO INSERT HERE — Arduino UNO Q system architecture**
+Caption: Audio is processed on Linux while deterministic GPIO, servo, and display control remain on the STM32U585.
 Path: `docs/img/hackster_unoq_architecture.png`
 
 ## Why Arduino UNO Q?
@@ -116,14 +116,14 @@ The measurement pipeline is designed to emphasize changes in the room rather tha
 
 Baseline calibration is especially useful because constant background sound becomes part of the reference and is largely removed by the difference feature. In controlled evaluation, live calibration reached **32/32 correct states**, while baseline-jitter augmentation reached **28/32 states without live calibration**. These are controlled-environment results; cross-session, microphone-position, and background-noise splits remain the deciding metrics for the final UNO Q model.
 
-**IMAGE TO INSERT HERE — FFT difference feature**  
-Caption: The raw spectra look similar; subtracting the all-closed baseline reveals the acoustic change caused by one open window.  
+**IMAGE TO INSERT HERE — FFT difference feature**
+Caption: The raw spectra look similar; subtracting the all-closed baseline reveals the acoustic change caused by one open window.
 Path: `docs/img/hackster_fft_diff_en.png`
 
 The first physical model predicted only 14 acoustically distinguishable groups because a closed door should hide the openings beyond it:
 
-**IMAGE TO INSERT HERE — Initial acoustic observability model**  
-Caption: A closed door was initially expected to hide the acoustic state of rooms beyond it.  
+**IMAGE TO INSERT HERE — Initial acoustic observability model**
+Caption: A closed door was initially expected to hide the acoustic state of rooms beyond it.
 Path: `docs/img/hackster_observability_en.png`
 
 The controlled experiment exceeded that simplified model. Real doors were not perfect acoustic barriers; weak transmitted signatures remained, and the classifier used them to separate all 32 states with live calibration. This result is encouraging, but it also makes group-held-out testing essential: a model must recognize openings, not memorize one recording session.
