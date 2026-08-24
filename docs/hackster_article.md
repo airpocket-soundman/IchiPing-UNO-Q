@@ -20,6 +20,10 @@ The demonstrator contains three windows and two doors. Each opening is either op
 
 The goal is to recognize all 32 states from one active acoustic measurement.
 
+![One Ping use case](img/hackster_one_ping_comic_en.png)
+
+*The English edition of the project comic: one chirp, one microphone, and a single 32-state result.*
+
 ![System architecture](img/hackster_unoq_architecture.svg)
 
 ## Why Arduino UNO Q?
@@ -127,6 +131,16 @@ The measurement pipeline is designed to emphasize changes in the room rather tha
 
 Baseline calibration is especially useful because constant background sound becomes part of the reference and is largely removed by the difference feature. In controlled evaluation, live calibration reached **32/32 correct states**, while baseline-jitter augmentation reached **28/32 states without live calibration**. These are controlled-environment results; cross-session, microphone-position, and background-noise splits remain the deciding metrics for the final UNO Q model.
 
+![FFT difference feature](img/hackster_fft_diff_en.png)
+
+*The raw spectra look similar. Subtracting the all-closed baseline makes the acoustic change caused by one open window visible.*
+
+The first physical model predicted only 14 acoustically distinguishable groups because a closed door should hide the openings beyond it:
+
+![Initial acoustic observability model](img/hackster_observability_en.png)
+
+The controlled experiment exceeded that simplified model. Real doors were not perfect acoustic barriers; weak transmitted signatures remained, and the classifier used them to separate all 32 states with live calibration. This result is encouraging, but it also makes group-held-out testing essential: a model must recognize openings, not memorize one recording session.
+
 UNO Q allows a more accuracy-oriented search than a small MCU deployment. The planned comparison starts with the compact convolutional baseline, then evaluates approximately 1 M, 5 M, and 10–30 M parameter models, multi-resolution time-frequency features, and two- or three-model ensembles.
 
 Candidate deployment limits are:
@@ -215,4 +229,3 @@ One speaker, one microphone, and one short ping can reveal much more about a spa
 - Project repository: <https://github.com/airpocket-soundman/IchiPing-UNO-Q>
 - UNO Q connection diagram: [`gpio_wiring.html`](gpio_wiring.html)
 - Accuracy-first AI strategy: [`uno_q_ai_strategy.html`](uno_q_ai_strategy.html)
-
