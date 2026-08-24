@@ -345,7 +345,7 @@ def generate_uno_board() -> Path:
         route_direct(board, "+5V", header["+5V"], target, pcbnew.B_Cu, 1.50)
 
     power_caps = [
-        ("C_PWR_BULK", "100u", "+5V", 137.0, 79.0, "CP_Radial_D6.3mm_P2.50mm"),
+        ("C_PWR_BULK", "470u 10V LOW ESR", "+5V", 137.0, 79.0, "CP_Radial_D8.0mm_P3.50mm"),
         ("C_PWR_HF", "100n", "+5V", 145.0, 79.0, "C_0805_2012Metric"),
         ("C_SERVO_BULK", "1000u LOW ESR", "+5V", 126.0, 73.0, "CP_Radial_D10.0mm_P5.00mm"),
     ]

@@ -60,6 +60,11 @@ dedicated top-header I2C pins D20/D21, as required by the UNO Q.
 | J_PWR_IN | XH-2 | +5V, GND | UNO Q +5V pin, GND (never VIN) |
 | J_SERVO_5V_OUT | XH-2 | +5V, GND | Direct branch from J_PWR_IN for PCA9685 V+ |
 
+`C_PWR_BULK` is a polarized 470 uF / 10 V low-ESR input capacitor in an
+8.0 mm radial footprint with 3.50 mm lead spacing. It sits on the 5 V rail
+beside `J_PWR_IN`; `C_PWR_HF` (100 nF) remains in parallel. The separate
+`C_SERVO_BULK` 1000 uF capacitor remains beside the servo-power branch.
+
 ## Board B: IchiPing UNO Q Audio Shield
 
 This board plugs into the UNO Breakout Carrier J14 and J15 2x20, 2.54 mm male

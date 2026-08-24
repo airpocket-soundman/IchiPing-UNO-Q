@@ -57,6 +57,20 @@ def audit_board(relative_path: str, expected: dict[str, list[str]]) -> None:
             raise AssertionError("UNO VIN identity was lost")
         if footprints["J_PWR_IN"].FindPadByNumber("1").GetNetname() == "VIN":
             raise AssertionError("External regulated 5 V must never feed VIN")
+        input_bulk = footprints["C_PWR_BULK"]
+        if input_bulk.GetValue() != "470u 10V LOW ESR":
+            raise AssertionError("5 V input bulk capacitor is not 470 uF / 10 V")
+        if input_bulk.FindPadByNumber("1").GetNetname() != "+5V":
+            raise AssertionError("C_PWR_BULK positive pad is not on +5V")
+        if input_bulk.FindPadByNumber("2").GetNetname() != "GND":
+            raise AssertionError("C_PWR_BULK negative pad is not on GND")
+        positive = input_bulk.FindPadByNumber("1").GetPosition()
+        negative = input_bulk.FindPadByNumber("2").GetPosition()
+        lead_pitch = math.hypot(
+            pcbnew.ToMM(positive.x - negative.x), pcbnew.ToMM(positive.y - negative.y)
+        )
+        if not math.isclose(lead_pitch, 3.50, abs_tol=0.001):
+            raise AssertionError(f"C_PWR_BULK lead pitch {lead_pitch:.4f} mm")
 
     print(f"PASS {relative_path}: connector nets and 2.54 mm XH pitch")
 
