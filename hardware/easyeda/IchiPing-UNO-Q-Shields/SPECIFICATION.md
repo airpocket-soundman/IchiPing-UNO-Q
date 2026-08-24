@@ -141,6 +141,27 @@ Board AからBoard Bへ電源を渡すXHケーブルは現仕様では不要で�
   `Schematic Netlist`（rule 124）は無効とする。その他の回路図検査とPCB物理DRCは
   すべて有効にし、KiCad ERC/DRCを独立したネットリスト整合性確認に用いる。
 
+## 4.1 実装方式3種類
+
+UNOシールドと音響シールドの双方について、同一回路・同一ピン順から以下を生成する。
+
+| 版 | コネクタ | 抵抗・コンデンサ | 保存先 |
+|---|---|---|---|
+| THT | スルーホール | スルーホール | `variants/tht/` |
+| SMD | 表面実装 | 表面実装 | `variants/smd/` |
+| Hybrid | スルーホール | 表面実装 | `variants/hybrid/` |
+
+- 各版にUNO基板と音響基板の回路図、PCB、EasyEDAインポートZIPを含める。
+- 全版で外形、Ref、ネット名、コネクタのピン番号と2.54 mm中心間隔を一致させる。
+- `J_PWR_IN`は全版でUNO Qの`+5V`へ接続し、`VIN`へ接続しない。
+- THT版とHybrid版の外部コネクタは、指定どおり垂直XH2.54互換品とする。
+- XH/XH2.54には標準の垂直SMDヘッダがないため、SMD版のコネクタランドは
+  XHハーネス嵌合用の独自2.54 mm垂直SMDピンパターンである。シュラウド、キー、
+  ラッチを持つXHコネクタそのものではない。量産には部品図承認が必要であり、
+  XHの保持力が必要な場合はHybrid版を使用する。
+- `scripts/audit_variants.py`で実装属性、ピン順、ピッチ、5 V/VIN分離を監査し、
+  各回路図ERC=0、各PCB DRC=0、未配線=0を製造前の必須条件とする。
+
 ## 5. 参照資料
 
 - UNO Q datasheet: https://docs.arduino.cc/resources/datasheets/ABX00162-ABX00173-datasheet.pdf

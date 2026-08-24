@@ -12,9 +12,35 @@ connectors, configuration resistors, mute jumper, and decoupling capacitors.
 The repository's `board/Ichiping uno q.eprj2` project contains both routed
 boards and both circuit drawings.
 
+## Assembly variants
+
+`variants/` contains three routed, schematic-matched versions of **each**
+board. Connector references, pin numbers, nets, board outlines, and placement
+origins are identical across the variants.
+
+| Directory | Connectors | Resistors/capacitors | Intended use |
+|---|---|---|---|
+| `variants/tht/` | THT | THT | Hand assembly and repair |
+| `variants/smd/` | SMD | SMD | Reflow assembly / geometry comparison |
+| `variants/hybrid/` | THT | SMD | XH harness strength with automated passive placement |
+
+Each board directory includes `.kicad_sch`, `.kicad_pcb`, project, ERC report,
+and DRC report files. The adjacent `*_easyeda_import.zip` contains the matching
+schematic and PCB for EasyEDA Pro import. Regenerate them with
+`scripts/generate_variants.py` and audit technology, 2.54 mm pitch, connector
+pin order, and power nets with `scripts/audit_variants.py`.
+
+Important mechanical limitation: the XH/XH2.54 family has no standard
+top-entry surface-mount header equivalent. The `smd` variant therefore uses a
+project-local 2.54 mm vertical SMD pin landing pattern for an XH-harness mating
+interface. It does **not** provide the shroud, key, or latch of the vertical THT
+XH-compatible connector. Use `hybrid` when the specified vertical polarized
+XH housing and cable retention are mandatory; do not release the `smd` variant
+for production until an exact supplier part and its drawing are approved.
+
 ## Design assumptions
 
-- All external harness connectors are vertical, through-hole, 2.54 mm pitch
+- In the binding THT and hybrid builds, all external harness connectors are vertical, through-hole, 2.54 mm pitch
   XH-compatible parts. They use custom `XH2.54_Vertical_1xNN` footprints;
   genuine JST XH `B?B-XH-A` parts are 2.50 mm and must not be substituted.
 - Connector pin numbers below are viewed from the PCB top. Pin 1 has a square
@@ -86,7 +112,7 @@ to the right of J15.
 | J_AMP_PWR | XH-3 | SD, GND, VIN | SD selector, GND, J14-7 (+5V) |
 | J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, channel selector |
 
-`GAIN` and `L/R` default to GND through removable 0-ohm axial DIN0207
+In the binding THT build, `GAIN` and `L/R` default to GND through removable 0-ohm axial DIN0207
 resistors. `SD` has a 100 kOhm DIN0207 pull-up to 3.3 V and a normally open
 2.54 mm `JP_MUTE` header to GND. C1 is a radial 10 uF / 10 V electrolytic;
 C2/C3 are 100 nF through-hole disc capacitors. No SMD part is used on Board B.
