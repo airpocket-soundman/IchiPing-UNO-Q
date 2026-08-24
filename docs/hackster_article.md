@@ -20,11 +20,13 @@ The demonstrator contains three windows and two doors. Each opening is either op
 
 The goal is to recognize all 32 states from one active acoustic measurement.
 
-![One Ping use case](img/hackster_one_ping_comic_en.png)
+**IMAGE TO INSERT HERE — Use-case comic**  
+Caption: One chirp, one microphone, and a single 32-state result.  
+Path: `docs/img/hackster_one_ping_comic_en.png`
 
-*The English edition of the project comic: one chirp, one microphone, and a single 32-state result.*
-
-![System architecture](img/hackster_unoq_architecture.svg)
+**IMAGE TO INSERT HERE — Arduino UNO Q system architecture**  
+Caption: Audio is processed on Linux while deterministic GPIO, servo, and display control remain on the STM32U585.  
+Path: `docs/img/hackster_unoq_architecture.png`
 
 ## Why Arduino UNO Q?
 
@@ -36,26 +38,9 @@ UNO Q combines two processors with very different strengths:
 
 This division keeps timing-sensitive physical control separate from the accuracy-oriented AI pipeline. It also leaves enough Linux memory to evaluate larger FP32 models and small ensembles instead of forcing the classifier into a tiny MCU-only footprint.
 
-## Hardware
-
-| Quantity | Part | Purpose |
-|---:|---|---|
-| 1 | Arduino UNO Q, 4 GB version | Linux inference and real-time I/O |
-| 1 | INMP441 I²S MEMS microphone | Captures the acoustic response |
-| 1 | MAX98357A I²S amplifier | Drives the chirp speaker |
-| 1 | 4–8 Ω speaker | Emits the measurement chirp |
-| 1 | ILI9341 2.4-inch 240×320 TFT | State and confidence display |
-| 1 | PCA9685 | Controls five servos over I²C |
-| 5 | SG90 micro servo | Moves three windows and two doors |
-| 5 | SPST switch | Ground-truth state inputs |
-| 1 | Momentary push button | Starts a measurement |
-| 1 | Regulated external 5 V supply | Servo and amplifier power |
-| 1 | 3.3 V-to-1.8 V LDO | Powers the microphone at MI2S0 logic level |
-| 1 | UNO Breakout Carrier or custom JMISC adapter | Exposes the QRB2210 MI2S0 signals |
-
-All grounds are common. The servos must use the external 5 V rail; they must not be powered from the UNO Q 3.3 V output.
-
 ## Connections
+
+The complete bill of materials is maintained in Hackster's **Things** section. All grounds are common. The servos must use the external 5 V rail; they must not be powered from the UNO Q 3.3 V output.
 
 ### State, control, and I²C
 
@@ -131,13 +116,15 @@ The measurement pipeline is designed to emphasize changes in the room rather tha
 
 Baseline calibration is especially useful because constant background sound becomes part of the reference and is largely removed by the difference feature. In controlled evaluation, live calibration reached **32/32 correct states**, while baseline-jitter augmentation reached **28/32 states without live calibration**. These are controlled-environment results; cross-session, microphone-position, and background-noise splits remain the deciding metrics for the final UNO Q model.
 
-![FFT difference feature](img/hackster_fft_diff_en.png)
-
-*The raw spectra look similar. Subtracting the all-closed baseline makes the acoustic change caused by one open window visible.*
+**IMAGE TO INSERT HERE — FFT difference feature**  
+Caption: The raw spectra look similar; subtracting the all-closed baseline reveals the acoustic change caused by one open window.  
+Path: `docs/img/hackster_fft_diff_en.png`
 
 The first physical model predicted only 14 acoustically distinguishable groups because a closed door should hide the openings beyond it:
 
-![Initial acoustic observability model](img/hackster_observability_en.png)
+**IMAGE TO INSERT HERE — Initial acoustic observability model**  
+Caption: A closed door was initially expected to hide the acoustic state of rooms beyond it.  
+Path: `docs/img/hackster_observability_en.png`
 
 The controlled experiment exceeded that simplified model. Real doors were not perfect acoustic barriers; weak transmitted signatures remained, and the classifier used them to separate all 32 states with live calibration. This result is encouraging, but it also makes group-held-out testing essential: a model must recognize openings, not memorize one recording session.
 
