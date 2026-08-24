@@ -3,13 +3,14 @@
 The binding design input is [SPECIFICATION.md](SPECIFICATION.md). This file
 records implementation notes for the generated KiCad/EasyEDA board data.
 
-The UNO `*_easyeda_import.zip` contains its routed PCB. The audio import ZIP
-contains both the routed PCB and the KiCad 8 `.kicad_sch` complete circuit.
-The UNO shield legacy `.sch` remains a connector/pin-order review drawing. The
-audio shield circuit includes the J14/J15 physical pin numbers, all three XH
+Both `*_easyeda_import.zip` archives contain the routed PCB and a KiCad 8
+`.kicad_sch` complete circuit. The legacy `.sch` files and `-cache.lib` files
+are retained as reproducible conversion sources. The UNO circuit includes all
+four shield headers, all 12 XH connectors, and the three power capacitors. The
+audio circuit includes the J14/J15 physical pin numbers, all three XH
 connectors, configuration resistors, mute jumper, and decoupling capacitors.
 The repository's `board/Ichiping uno q.eprj2` project contains both routed
-boards and the audio circuit drawing.
+boards and both circuit drawings.
 
 ## Design assumptions
 
@@ -66,6 +67,11 @@ dedicated top-header I2C pins D20/D21, as required by the UNO Q.
 beside `J_PWR_IN`; `C_PWR_HF` (100 nF) remains in parallel. The separate
 `C_SERVO_BULK` 1000 uF capacitor remains beside the servo-power branch.
 
+The complete circuit is in
+`uno_shield/ichiping_uno_q_shield.kicad_sch`. Unused UNO header pins are
+explicitly marked no-connect so KiCad ERC can distinguish deliberate unused
+pins from wiring omissions.
+
 ## Board B: IchiPing UNO Q Audio Shield
 
 This board plugs into the UNO Breakout Carrier J14 and J15 2x20, 2.54 mm male
@@ -101,9 +107,12 @@ circuit is no longer only a connector map.
 - JST XH pin 1 is marked on both copper footprint and silkscreen.
 - Run ERC/DRC again after EasyEDA Pro import because library conversion can
   alter courtyard and solder-mask rules.
-- EasyEDA Pro's imported schematic reports missing `Footprint` metadata on the
-  12 converted symbols even when automatic association is selected. Its linked
-  PCB check consequently reports one `Import Changes` netlist-mismatch item,
-  while reporting no geometry, clearance, or unrouted-item violations. The PCB
-  document contains all 12 physical footprints; KiCad ERC and KiCad PCB DRC are
-  therefore the binding electrical and manufacturing checks.
+- EasyEDA Pro converts KiCad's footprint metadata into `Origin Footprint`, so
+  its native symbol-footprint and schematic-netlist identity checks cannot be
+  used for imported symbols. In `board/Ichiping uno q.eprj2`, those two
+  schematic checks are set to Note and PCB custom DRC rule 124 (`Schematic
+  Netlist`) is unchecked. All electrical wiring checks and all 123 physical PCB
+  checks remain enabled. Use `Design > Check DRC(Custom)... > Check Now` for
+  the imported PCB; the saved result is `All (0)`. The UNO KiCad checks remain
+  the independent binding cross-check: ERC 0 errors/0 warnings and PCB DRC 0
+  violations/0 unrouted items.

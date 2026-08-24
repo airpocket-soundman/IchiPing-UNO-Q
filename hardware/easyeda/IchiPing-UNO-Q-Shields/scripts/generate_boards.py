@@ -379,25 +379,8 @@ def generate_uno_board() -> Path:
     configure_netclasses(board)
     strip_footprint_silks(board)
     pcbnew.SaveBoard(str(out_dir / "ichiping_uno_q_shield.kicad_pcb"), board)
-    write_legacy_schematic(
-        out_dir / "ichiping_uno_q_shield.sch",
-        "IchiPing UNO Q Shield",
-        [
-            ("J_WIN_A", ["D3_WIN_A", "GND"]),
-            ("J_WIN_B", ["D4_WIN_B", "GND"]),
-            ("J_WIN_C", ["D5_WIN_C", "GND"]),
-            ("J_DOOR_AB", ["D6_DOOR_AB", "GND"]),
-            ("J_DOOR_BC", ["D7_DOOR_BC", "GND"]),
-            ("J_EXEC", ["D8_EXEC", "GND"]),
-            ("J_TFT_SIG", ["D12_MISO", "A5_LED", "D13_SCK", "D11_MOSI", "A4_DC"]),
-            ("J_TFT_PWR", ["A3_RST", "A2_CS", "GND", "+3V3"]),
-            ("J_RAIN", ["+3V3", "GND", "D9_RAIN"]),
-            ("J_SERVO_CTRL", ["GND", "D21_SCL", "D20_SDA", "+3V3"]),
-            ("J_PWR_IN", ["+5V", "GND"]),
-            ("J_SERVO_5V_OUT", ["+5V", "GND"]),
-        ],
-        "A4/A5 are TFT GPIO; D20/D21 are the separate UNO Q I2C header pins.",
-    )
+    write_uno_schematic(out_dir / "ichiping_uno_q_shield.sch")
+    write_uno_cache_library(out_dir / "ichiping_uno_q_shield-cache.lib")
     write_project_file(out_dir / "ichiping_uno_q_shield.kicad_pro")
     return out_dir
 
@@ -737,6 +720,207 @@ def write_audio_schematic(path: Path) -> None:
             "Text Notes 700 5850 0    50   ~ 10",
             "J15: 23/30/40=GND, 32=CLK, 34=WS, 36=DATA0(mic), 38=DATA1(amp)",
             "$EndSCHEMATC",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_uno_schematic(path: Path) -> None:
+    """Write the complete UNO-header shield circuit for ERC and EasyEDA DRC."""
+    lines = [
+        "EESchema Schematic File Version 4",
+        "LIBS:ichiping_uno_q_shield-cache",
+        "LIBS:power",
+        "LIBS:device",
+        "LIBS:Connector_Generic",
+        "EELAYER 29 0",
+        "EELAYER END",
+        "$Descr A4 11693 8268",
+        "Sheet 1 1",
+        'Title "IchiPing UNO Q Shield"',
+        'Date "2026-08-25"',
+        'Rev "B"',
+        'Comp "IchiPing UNO Q"',
+        'Comment1 "Complete circuit matching the routed PCB; XH2.54 vertical"',
+        "$EndDescr",
+        "Text Notes 600 500 0    100  ~ 20",
+        "IchiPing UNO Q Shield - complete circuit",
+        "Text Notes 600 750 0    55   ~ 11",
+        "External regulated 5 V feeds UNO +5V, never VIN. Servo 5 V is a direct protected-source branch.",
+    ]
+
+    def component(
+        library_id: str,
+        reference: str,
+        value: str,
+        footprint: str,
+        x: int,
+        y: int,
+        orientation: str = "-1 0 0 1",
+    ) -> None:
+        component_id = uuid.uuid4().int & 0xFFFFFFFF
+        lines.extend(
+            [
+                "$Comp",
+                f"L {library_id} {reference}",
+                f"U 1 1 {component_id:08X}",
+                f"P {x} {y}",
+                f'F 0 "{reference}" H {x-150} {y+300} 50  0000 C CNN',
+                f'F 1 "{value}" H {x-100} {y-300} 50  0000 C CNN',
+                f'F 2 "{footprint}" H {x} {y} 50  0001 C CNN',
+                f'F 3 "~" H {x} {y} 50  0001 C CNN',
+                f"\t1    {x} {y}",
+                f"\t{orientation}",
+                "$EndComp",
+            ]
+        )
+
+    def label_wire(x1: int, y1: int, x2: int, y2: int, net: str) -> None:
+        lines.extend(
+            [
+                f"Wire Wire Line\n\t{x1} {y1} {x2} {y2}",
+                f"Text Label {x2} {y2} 0    45   ~ 0\n{net}",
+            ]
+        )
+
+    def connector(
+        reference: str,
+        nets: list[str | None],
+        x: int,
+        y: int,
+        value: str,
+        footprint_library: str = "Connector_PinHeader_2.54mm",
+    ) -> None:
+        count = len(nets)
+        footprint_kind = "PinSocket" if reference in {"J1", "J2", "J3", "J4"} else "PinHeader"
+        footprint = f"{footprint_library}:{footprint_kind}_1x{count:02d}_P2.54mm_Vertical"
+        component(f"Connector_Generic:Conn_01x{count:02d}", reference, value, footprint, x, y)
+        first_y = y + ((count - 1) // 2) * 100
+        for index, net in enumerate(nets, start=1):
+            pin_y = first_y - (index - 1) * 100
+            if net is None:
+                lines.append(f"NoConn ~ {x+200} {pin_y}")
+            else:
+                label_wire(x + 200, pin_y, x + 650, pin_y, net)
+            lines.extend([f"Text Notes {x-820} {pin_y+15} 0    38   ~ 0", f"{index}: {net or 'NC'}"])
+
+    # UNO Q headers. Pin order and reference designators are identical to PCB.
+    connector("J1", [None, None, None, "+3V3", "+5V", "GND", "GND", None], 1450, 1900, "UNO POWER")
+    connector(
+        "J2",
+        ["D21_SCL", "D20_SDA", None, "GND", "D13_SCK", "D12_MISO", "D11_MOSI", None, "D9_RAIN", "D8_EXEC"],
+        3900,
+        1900,
+        "UNO DIGITAL 10",
+    )
+    connector("J3", [None, None, "A2", "A3", "A4", "A5"], 1450, 3900, "UNO ANALOG")
+    connector(
+        "J4",
+        ["D7_DOOR_BC", "D6_DOOR_AB", "D5_WIN_C", "D4_WIN_B", "D3_WIN_A", None, None, None],
+        3900,
+        3900,
+        "UNO DIGITAL 8",
+    )
+
+    xh_connectors = [
+        ("J_EXEC", ["D8_EXEC", "GND"], 6200, 1250),
+        ("J_DOOR_BC", ["D7_DOOR_BC", "GND"], 7800, 1250),
+        ("J_DOOR_AB", ["D6_DOOR_AB", "GND"], 9400, 1250),
+        ("J_WIN_C", ["D5_WIN_C", "GND"], 6200, 2250),
+        ("J_WIN_B", ["D4_WIN_B", "GND"], 7800, 2250),
+        ("J_WIN_A", ["D3_WIN_A", "GND"], 9400, 2250),
+        ("J_RAIN", ["+3V3", "GND", "D9_RAIN"], 6200, 3450),
+        ("J_SERVO_CTRL", ["GND", "D21_SCL", "D20_SDA", "+3V3"], 7800, 3450),
+        ("J_TFT_SIG", ["D12_MISO", "A5", "D13_SCK", "D11_MOSI", "A4"], 9400, 3450),
+        ("J_TFT_PWR", ["A3", "A2", "GND", "+3V3"], 6200, 4750),
+        ("J_PWR_IN", ["+5V", "GND"], 7800, 4750),
+        ("J_SERVO_5V_OUT", ["+5V", "GND"], 9400, 4750),
+    ]
+    for reference, nets, x, y in xh_connectors:
+        connector(reference, nets, x, y, f"XH2.54_VERTICAL_{len(nets)}")
+
+    capacitor_parts = [
+        ("Device:C_Polarized", "C_PWR_BULK", "470u 10V LOW ESR", "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm", 6500, 6200),
+        ("Device:C", "C_PWR_HF", "100n", "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm", 8000, 6200),
+        ("Device:C_Polarized", "C_SERVO_BULK", "1000u LOW ESR", "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm", 9500, 6200),
+    ]
+    for library_id, reference, value, footprint, x, y in capacitor_parts:
+        component(library_id, reference, value, footprint, x, y, "1 0 0 -1")
+        label_wire(x, y - 150, x, y - 350, "+5V")
+        label_wire(x, y + 150, x, y + 350, "GND")
+
+    lines.extend(
+        [
+            "Text Notes 600 5450 0    50   ~ 10",
+            "TFT: J_TFT_SIG 1=MISO(unused by write-only display), 2=LED/A5, 3=SCK/D13, 4=MOSI/D11, 5=DC/A4",
+            "Text Notes 600 5700 0    50   ~ 10",
+            "TFT: J_TFT_PWR 1=RST/A3, 2=CS/A2, 3=GND, 4=3V3",
+            "Text Notes 600 5950 0    50   ~ 10",
+            "All GPIO and I2C logic is 3.3 V. J_SERVO_5V_OUT is servo power only; grounds are common.",
+            "$EndSCHEMATC",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_uno_cache_library(path: Path) -> None:
+    """Embed symbols used by the UNO legacy schematic for deterministic conversion."""
+    lines = ["EESchema-LIBRARY Version 2.4", "#encoding utf-8"]
+
+    for count in (2, 3, 4, 5, 6, 8, 10):
+        name = f"Conn_01x{count:02d}"
+        first_y = ((count - 1) // 2) * 100
+        last_y = first_y - (count - 1) * 100
+        lines.extend(
+            [
+                "#",
+                f"# {name}",
+                "#",
+                f"DEF {name} J 0 40 Y N 1 F N",
+                'F0 "J" 50 0 50 H V L CNN',
+                f'F1 "{name}" 50 -100 50 H V L CNN',
+                "DRAW",
+                f"S -50 {first_y + 50} 0 {last_y - 50} 1 1 10 f",
+            ]
+        )
+        for pin in range(1, count + 1):
+            pin_y = first_y - (pin - 1) * 100
+            lines.append(f"X Pin_{pin} {pin} -200 {pin_y} 150 R 50 50 1 1 P")
+        lines.extend(["ENDDRAW", "ENDDEF"])
+
+    lines.extend(
+        [
+            "#",
+            "# C",
+            "#",
+            "DEF C C 0 10 N Y 1 F N",
+            'F0 "C" 25 100 50 H V L CNN',
+            'F1 "C" 25 -100 50 H V L CNN',
+            "DRAW",
+            "P 2 0 1 20 -80 -30 80 -30 N",
+            "P 2 0 1 20 -80 30 80 30 N",
+            "X ~ 1 0 150 120 D 50 50 1 1 P",
+            "X ~ 2 0 -150 120 U 50 50 1 1 P",
+            "ENDDRAW",
+            "ENDDEF",
+            "#",
+            "# C_Polarized",
+            "#",
+            "DEF C_Polarized C 0 10 N Y 1 F N",
+            'F0 "C" 25 100 50 H V L CNN',
+            'F1 "C_Polarized" 25 -100 50 H V L CNN',
+            "DRAW",
+            "P 2 0 1 20 -80 -30 80 -30 N",
+            "P 2 0 1 20 -80 30 80 30 N",
+            "P 2 0 1 0 -50 60 -10 60 N",
+            "P 2 0 1 0 -30 40 -30 80 N",
+            "X ~ 1 0 150 120 D 50 50 1 1 P",
+            "X ~ 2 0 -150 120 U 50 50 1 1 P",
+            "ENDDRAW",
+            "ENDDEF",
+            "#End Library",
             "",
         ]
     )

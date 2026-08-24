@@ -132,8 +132,14 @@ Board AからBoard Bへ電源を渡すXHケーブルは現仕様では不要で�
 - I2SのBCLK/WSは短く、並走長を抑え、サーボ5 V配線と離す。
 - 全コネクタにRef、信号順、Pin 1マーク、電圧をシルク印刷する。
 - 製造前にERC、DRC、未配線0、異ネット短絡0、基板外形干渉0を必須とする。
+- UNOシールドのKiCad回路図は`uno_shield/ichiping_uno_q_shield.kicad_sch`を正とし、
+  Arduinoヘッダ4個、XHコネクタ12個、電源コンデンサ3個を記載する。
 - 音響基板のKiCad回路図は`audio_shield/ichiping_uno_q_audio_shield.kicad_sch`を正とし、
   J14/J15実ピン番号、全XH、設定抵抗、ミュートジャンパ、デカップリングを記載する。
+- EasyEDA ProではKiCadインポートが`Footprint`を`Origin Footprint`へ変換するため、
+  回路図の部品属性／ピン・パッド対応検査はNote、PCB Custom DRCの
+  `Schematic Netlist`（rule 124）は無効とする。その他の回路図検査とPCB物理DRCは
+  すべて有効にし、KiCad ERC/DRCを独立したネットリスト整合性確認に用いる。
 
 ## 5. 参照資料
 
