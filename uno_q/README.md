@@ -16,9 +16,9 @@ TMPDIR=/tmp arduino-app-cli app start /home/arduino/ArduinoApps/ichiping-uno-q
 TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --all
 ```
 
-The original IchiPing 2.4-inch ILI9341 TFT is reused. UNO Q wiring is
-`D11=MOSI`, `D13=SCK`, `D10=CS`, `A0=RST`, `A1=DC`, `A2=BL`, `3V3`, and
-`GND`; `D12/MISO` is not connected for the write-only driver. Five tiles are
+The original IchiPing 2.4-inch ILI9341 TFT and shield wiring are reused. UNO Q
+wiring is `D11=MOSI`, `D13=SCK`, `A2=CS`, `A3=RST`, `A4=DC`, `A5=BL`, `3V3`,
+and `GND`; `D12/MISO` is not connected for the write-only driver. Five tiles are
 ordered `a, b, c, AB, BC`, followed by a confidence meter. The onboard LED
 Matrix is not used.
 

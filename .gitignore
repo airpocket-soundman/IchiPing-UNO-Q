@@ -70,6 +70,14 @@ firmware/projects/*/mcux_include.json
 Thumbs.db
 *.swp
 *~
+~$*.xlsx
+debug.log
+tmp/
+board/*_backup/
+board/easyeda-screen.png
+board/easyeda_cdp.mjs
+board/*.lnk
+*.kicad_prl
 
 # Conda lock / env exports (kept out by default — regenerate per machine)
 pc/environment-lock.yml

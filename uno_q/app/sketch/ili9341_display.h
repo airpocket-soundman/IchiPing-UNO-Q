@@ -11,10 +11,12 @@ class Ili9341Display {
   void runSelfTest();
 
  private:
-  static constexpr uint8_t kCsPin = D10;
-  static constexpr uint8_t kResetPin = A0;
-  static constexpr uint8_t kDcPin = A1;
-  static constexpr uint8_t kBacklightPin = A2;
+  // Keep the original FRDM-MCXN947 IchiPing shield wiring so the shield can
+  // be moved to the UNO Q without changing its traces or jumpers.
+  static constexpr uint8_t kCsPin = A2;
+  static constexpr uint8_t kResetPin = A3;
+  static constexpr uint8_t kDcPin = A4;
+  static constexpr uint8_t kBacklightPin = A5;
   static constexpr uint16_t kWidth = 320;
   static constexpr uint16_t kHeight = 240;
 

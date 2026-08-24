@@ -75,16 +75,17 @@
         <tr><td>D9</td><td>PB8</td><td>降雨デジタル入力</td><td>YL-83等の3.3 Vロジック出力、Low=雨</td></tr>
         <tr><td>D20 / SDA</td><td>PB11</td><td>PCA9685 SDA</td><td>I²C <code>Wire</code>、アドレス0x40</td></tr>
         <tr><td>D21 / SCL</td><td>PB10</td><td>PCA9685 SCL</td><td>I²C <code>Wire</code>、初期bring-upは100 kHz</td></tr>
-        <tr><td>D10</td><td>PB9</td><td>ILI9341 CS</td><td>SPI2_SS、3.3 V</td></tr>
+        <tr><td>D10</td><td>PB9</td><td>未使用</td><td>旧IchiPingシールドとの互換性のためTFT CSには使わない</td></tr>
         <tr><td>D11</td><td>PB15</td><td>ILI9341 MOSI</td><td>SPI2_MOSI、3.3 V</td></tr>
         <tr><td>D12</td><td>PB14</td><td>ILI9341 MISO</td><td>書込専用のため未接続</td></tr>
         <tr><td>D13</td><td>PB13</td><td>ILI9341 SCK</td><td>SPI2_SCK、3.3 V</td></tr>
-        <tr><td>A0 / A1 / A2</td><td>PA4 / PA5 / PA6</td><td>ILI9341 RST / DC / BL</td><td>3.3 V GPIO。A0/A1へ5 Vを入力しない</td></tr>
+        <tr><td>A2 / A3 / A4 / A5</td><td>PA6 / PA7 / PC1 / PC0</td><td>ILI9341 CS / RST / DC / BL</td><td>元IchiPingシールドと同じ3.3 V GPIO配線</td></tr>
         <tr><td>内蔵</td><td>STM32管理</td><td>8×13 LED Matrix</td><td><b>不使用</b></td></tr>
         <tr><td>D0/D1</td><td>PB7/PB6</td><td>保守UART</td><td>通常は未接続</td></tr>
       </tbody>
     </table>
-    <div class="warn"><b>電圧:</b> MCU GPIOは3.3 Vロジック。公式資料ではA0/A1以外は5 V tolerantだが、周辺機器は原則3.3 Vで統一する。PCA9685はVCC=3.3 V、サーボ電源V+=外部5 Vとし、UNO Q・PCA9685・サーボ電源のGNDを共通化する。サーボをUNO Qの3.3 V端子から給電しない。</div>
+    <div class="ok"><b>旧IchiPingシールド互換:</b> TFT制御線は元実装と同じA2/A3/A4/A5を使う。FRDM-MCXN947でD18/D19と呼ばれていたPCA9685のSDA/SCL端子は、同じUNOヘッダ物理位置にあるUNO QのD20/D21へそのまま接続される。</div>
+    <div class="warn"><b>電圧:</b> MCU GPIOは3.3 Vロジック。公式資料ではA0/A1以外は5 V tolerantだが、周辺機器は原則3.3 Vで統一する。PCA9685はVCC=3.3 V、サーボ電源V+=外部5 Vとし、UNO Q・PCA9685・サーボ電源のGNDを共通化する。シールドの安定化5 V入力はUNO Qの<code>+5V</code>端子へ接続する。<code>VIN</code>は7-24 V入力なので5 Vを接続しない。受けた5 Vはサーボ電源用XH2へ直接分岐し、サーボをUNO Qの3V3から給電しない。</div>
   </section>
 
   <section>

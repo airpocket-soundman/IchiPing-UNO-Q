@@ -26,7 +26,7 @@
     <tr><td>推論・保存・ネットワーク</td><td>QRB2210 / Debian / Python</td></tr>
     <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td></tr>
     <tr><td>表示</td><td>元IchiPingと同じILI9341 2.4インチSPI TFT。オンボードLED Matrixは不使用。</td></tr>
-    <tr><td>TFT配線</td><td>D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BL、3V3、GND。D12/MISOは未接続。</td></tr>
+    <tr><td>TFT配線</td><td>元IchiPingシールドと同じD11=MOSI、D13=SCK、A2=CS、A3=RST、A4=DC、A5=BL、3V3、GND。D12/MISOは未接続。</td></tr>
     <tr><td>状態順</td><td>bit 0..4 = 窓a、窓b、窓c、扉AB、扉BC</td></tr>
     <tr><td>PCA9685</td><td>Wire、D20/SDA、D21/SCL、0x40</td></tr>
     <tr><td>GPIO</td><td>D3–D7状態、D8 EXEC、D9雨。3.3 V系。</td></tr>
@@ -34,7 +34,7 @@
     <tr><td>推論モデル</td><td>QRB2210 / Debian上で精度優先。FP32、大型モデル、2〜3モデルensembleを許容。</td></tr>
     <tr><td>推論上限</td><td>peak RSS 1.5 GiB、warm p95 1,000 ms、モデル一式500 MiBを目安とし、swapには依存しない。</td></tr>
   </tbody></table>
-  <div class="warn">MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由。Device Tree・ALSA route確定前の直結は禁止。サーボは外部5 Vで給電し、UNO QとGNDを共通化する。</div>
+  <div class="warn">MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由。Device Tree・ALSA route確定前の直結は禁止。サーボは外部5 Vで給電し、UNO QとGNDを共通化する。シールドの安定化5 V入力はUNO Qの+5V端子へ接続し、7-24 V用のVINには接続しない。</div>
   <p>モデルは未知の収録日・雑音・設置差に対するmacro-F1を最優先する。大型化で外部評価が改善した候補だけを採用し、量子化は精度低下がない場合だけ行う。詳細は<a href="docs/uno_q_ai_strategy.html">精度優先AI方針</a>を参照。</p>
 
   <h2>移植順序</h2>

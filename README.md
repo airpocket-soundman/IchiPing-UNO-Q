@@ -24,6 +24,8 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 
 - [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
 - [UNO Q GPIO接続図](docs/gpio_wiring.html)
+- [UNO Qシールド基板仕様](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md)
+- [KiCad / EasyEDA基板データ](hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md)
 - [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
 - [Hackster投稿用記事 — One Ping, 32 States](docs/hackster_article.md)
 - [UNO Q bring-upアプリ](uno_q/README.md)
@@ -41,7 +43,7 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 
 ## ILI9341 TFT表示
 
-元IchiPingと同じ2.4インチ240×320 ILI9341を横向きで使います。D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BLです。5個の状態タイル、信頼度バー、ping／推論中の枠アニメーションを表示します。オンボードLED Matrixは使用しません。
+元IchiPingと同じ2.4インチ240×320 ILI9341と既存シールド配線を使います。D11=MOSI、D13=SCK、A2=CS、A3=RST、A4=DC、A5=BLです。5個の状態タイル、信頼度バー、ping／推論中の枠アニメーションを表示します。オンボードLED Matrixは使用しません。
 
 ## bring-upアプリの実行
 
@@ -68,9 +70,11 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 | `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
 | `docs/uno_q_port.html` | 開発方針、配線、GPIO、ILI9341表示規約 |
 | `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
+| `board/Ichiping uno q.eprj2` | EasyEDA Proプロジェクト（UNOシールド、音響拡張シールド） |
+| `hardware/easyeda/IchiPing-UNO-Q-Shields/` | 基板仕様、KiCadデータ、EasyEDAインポートデータ、DRC結果 |
 | `firmware/` | 元FRDM-MCXN947実装（移植参照） |
 | `pc/` | データ採取、学習、評価、既存モデル資産 |
-| `hardware/` | 元ハードウェア資料（UNO Q版は上記HTMLを正とする） |
+| `hardware/` | 元ハードウェア参照資料とUNO Q用シールド基板データ |
 
 ## ライセンス
 

@@ -123,8 +123,8 @@
       </g>
       <text x="185" y="308" text-anchor="middle" class="at as">状態5 bit・信頼度・推論中</text>
       <text x="70" y="378" class="at as">MOSI ← D11 / PB15</text><text x="70" y="404" class="at as">SCK ← D13 / PB13</text>
-      <text x="70" y="430" class="at as">CS ← D10 / PB9</text><text x="70" y="456" class="at as">RST ← A0 / PA4</text>
-      <text x="70" y="482" class="at as">DC ← A1 / PA5</text><text x="70" y="508" class="at as">BL ← A2 / PA6</text>
+      <text x="70" y="430" class="at as">CS ← A2 / PA6</text><text x="70" y="456" class="at as">RST ← A3 / PA7</text>
+      <text x="70" y="482" class="at as">DC ← A4 / PC1</text><text x="70" y="508" class="at as">BL ← A5 / PC0</text>
       <text x="70" y="534" class="at as">VCC ← 3V3、GND → GND</text><text x="70" y="560" class="at as">MISO / D12は未接続</text>
 
       <rect x="395" y="50" width="360" height="540" rx="20" class="pending" filter="url(#audio-shadow)"/>
@@ -191,7 +191,7 @@
     <tr><td>3V3</td><td>PCA9685 VCC、3.3 V雨センサVCC</td><td>ロジック電源だけに使用</td></tr>
     <tr><td>GND</td><td>全スイッチ、雨センサ、PCA9685、外部5 V電源</td><td>全系統で共通化</td></tr>
     <tr><td>D11 / D13</td><td>ILI9341 MOSI / SCK</td><td>SPI2、3.3 V、20 MHz開始</td></tr>
-    <tr><td>D10 / A0 / A1 / A2</td><td>ILI9341 CS / RST / DC / BL</td><td>3.3 V GPIO。VCC=3V3、GND共通、D12/MISOは未接続</td></tr>
+    <tr><td>A2 / A3 / A4 / A5</td><td>ILI9341 CS / RST / DC / BL</td><td>元IchiPingシールドと同じ3.3 V GPIO配線。VCC=3V3、GND共通、D12/MISOは未接続</td></tr>
     <tr><td>内蔵LED Matrix</td><td>接続なし</td><td><b>不使用</b></td></tr>
     <tr><td>MI2S0 CLK / WS</td><td>INMP441 SCK/WSとMAX98357A BCLK/LRCで共有</td><td>GPIO98/99、1.8 V。J15-32/34またはJMISC-46/48</td></tr>
     <tr><td>MI2S0 DATA0候補</td><td>INMP441 SD</td><td>GPIO100、J15-36またはJMISC-50。Linux capture route確定後に接続</td></tr>

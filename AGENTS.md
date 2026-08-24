@@ -18,11 +18,12 @@
 - 推論・保存・ネットワーク: QRB2210 / Debian / Python。
 - MCU–Linux通信: Arduino Router Bridge。
 - 表示: 元IchiPingと同じILI9341 2.4インチSPI TFT。オンボードLED Matrixは使用しない。
-- TFT配線: D11=MOSI、D13=SCK、D10=CS、A0=RST、A1=DC、A2=BL、3V3、GND。D12/MISOは書込専用のため未接続。
+- TFT配線: 元IchiPingシールドと同じD11=MOSI、D13=SCK、A2=CS、A3=RST、A4=DC、A5=BL、3V3、GND。D12/MISOは書込専用のため未接続。
 - 状態順: bit 0..4 = 窓a、窓b、窓c、扉AB、扉BC。
 - PCA9685: `Wire`、D20/SDA、D21/SCL、アドレス0x40。
 - GPIO: D3–D7状態入力、D8 EXEC、D9雨入力。すべて3.3 V系で扱う。
 - サーボ電源は外部5 V、UNO QとGND共通。UNO Qの3.3 V端子から給電しない。
+- シールドの外部5 V入力はUNO Qの`+5V`端子へ入れる。`VIN`は7-24 V入力なので5 Vを接続しない。受けた5 Vは別のXH2出力からPCA9685のサーボV+へ直接分岐する。
 - 音響I/OはQRB2210の1.8 V MI2S0を第一候補、USB Audioをフォールバックとして検証する。MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由であり、Device Tree・ALSA route確定前の直結は禁止。
 - 推論はQRB2210 / Debian上の精度優先。既存MCU用モデルサイズに縛られず、FP32・大型モデル・2〜3モデルensembleを候補にする。
 - 運用目安は推論アプリpeak RSS 1.5 GiB以下、warm推論p95 1,000 ms以下、配布モデル一式500 MiB以下。swap依存は禁止。
