@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Arduino UNO Q active acoustic sensing architecture</title>
+  <desc id="desc">A speaker emits one chirp into a room with five openings. An INMP441 microphone sends audio to the QRB2210 Linux processor for feature extraction and AI inference. Arduino Bridge connects Linux to the STM32U585, which controls GPIO, PCA9685 servos, and an ILI9341 display.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#6ea8fe"/></marker>
+    <style>
+      .bg{fill:#0f1115}.panel{fill:#181b22;stroke:#39475a;stroke-width:2}.linux{fill:#19283a;stroke:#6ea8fe;stroke-width:3}.mcu{fill:#183027;stroke:#7be0a4;stroke-width:3}.audio{fill:#302718;stroke:#ffb454;stroke-width:2}.display{fill:#2a1d2c;stroke:#ff7ab6;stroke-width:2}.txt{fill:#e5e9f0;font-family:'Segoe UI','Yu Gothic UI',sans-serif}.muted{fill:#9aa4b4}.h{font-size:25px;font-weight:700}.label{font-size:18px;font-weight:600}.small{font-size:15px}.line{fill:none;stroke:#6ea8fe;stroke-width:4;marker-end:url(#arrow)}.bridge{fill:none;stroke:#ff7ab6;stroke-width:4;marker-end:url(#arrow)}.i2c{fill:none;stroke:#7be0a4;stroke-width:4;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="620" rx="24" class="bg"/>
+  <text x="600" y="45" text-anchor="middle" class="txt h">One Ping, 32 States</text>
+
+  <rect x="35" y="95" width="230" height="420" rx="18" class="panel"/>
+  <text x="150" y="132" text-anchor="middle" class="txt label">Acoustic space</text>
+  <rect x="70" y="165" width="160" height="70" rx="12" class="audio"/>
+  <text x="150" y="194" text-anchor="middle" class="txt label">Speaker</text>
+  <text x="150" y="217" text-anchor="middle" class="txt small">one chirp</text>
+  <rect x="70" y="270" width="160" height="70" rx="12" class="audio"/>
+  <text x="150" y="299" text-anchor="middle" class="txt label">INMP441</text>
+  <text x="150" y="322" text-anchor="middle" class="txt small">one microphone</text>
+  <g transform="translate(62 385)">
+    <rect width="176" height="92" rx="10" fill="#11161d" stroke="#6ea8fe"/>
+    <g fill="#7be0a4"><rect x="14" y="20" width="23" height="50"/><rect x="47" y="20" width="23" height="50"/><rect x="80" y="20" width="23" height="50"/><rect x="113" y="20" width="23" height="50"/><rect x="146" y="20" width="16" height="50"/></g>
+  </g>
+  <text x="150" y="500" text-anchor="middle" class="txt small">3 windows + 2 doors</text>
+
+  <rect x="350" y="95" width="350" height="420" rx="18" class="linux"/>
+  <text x="525" y="132" text-anchor="middle" class="txt h">QRB2210 / Debian</text>
+  <text x="525" y="160" text-anchor="middle" class="txt small">accuracy-oriented processing</text>
+  <rect x="390" y="195" width="270" height="58" rx="10" class="panel"/><text x="525" y="230" text-anchor="middle" class="txt label">Chirp playback + capture</text>
+  <rect x="390" y="275" width="270" height="58" rx="10" class="panel"/><text x="525" y="310" text-anchor="middle" class="txt label">RIR + spectral features</text>
+  <rect x="390" y="355" width="270" height="58" rx="10" class="panel"/><text x="525" y="390" text-anchor="middle" class="txt label">32-class AI inference</text>
+  <rect x="390" y="435" width="270" height="48" rx="10" class="panel"/><text x="525" y="466" text-anchor="middle" class="txt small">storage · evaluation · network</text>
+
+  <rect x="785" y="95" width="380" height="420" rx="18" class="mcu"/>
+  <text x="975" y="132" text-anchor="middle" class="txt h">STM32U585 / Zephyr</text>
+  <text x="975" y="160" text-anchor="middle" class="txt small">Arduino Core · deterministic I/O</text>
+  <rect x="825" y="195" width="300" height="58" rx="10" class="panel"/><text x="975" y="230" text-anchor="middle" class="txt label">D3–D9 switches + EXEC</text>
+  <rect x="825" y="275" width="300" height="58" rx="10" class="panel"/><text x="975" y="310" text-anchor="middle" class="txt label">PCA9685 + SG90 ×5</text>
+  <rect x="825" y="355" width="300" height="58" rx="10" class="display"/><text x="975" y="390" text-anchor="middle" class="txt label">ILI9341 2.4” TFT</text>
+  <rect x="825" y="435" width="300" height="48" rx="10" class="panel"/><text x="975" y="466" text-anchor="middle" class="txt small">trigger · state · confidence UI</text>
+
+  <path d="M230 200 C290 200 290 220 350 220" class="line"/>
+  <path d="M350 300 C300 300 300 305 230 305" class="line"/>
+  <path d="M700 290 H785" class="bridge"/>
+  <path d="M785 330 H700" class="bridge"/>
+  <text x="742" y="276" text-anchor="middle" class="txt small">Arduino Bridge</text>
+  <path d="M265 432 C300 432 300 455 350 455" class="i2c"/>
+
+  <rect x="280" y="550" width="640" height="44" rx="22" fill="#1f242d" stroke="#39475a"/>
+  <text x="600" y="578" text-anchor="middle" class="txt label">one measurement → five bits → one of 32 combined states</text>
+</svg>
