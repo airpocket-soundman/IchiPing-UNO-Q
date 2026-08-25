@@ -14,6 +14,15 @@
     th, td { padding: 9px 11px; border: 1px solid var(--border, #39414f); text-align: left; vertical-align: top; }
     th { background: rgba(89,189,255,.1); }
     .status { color: var(--accent-2, #7ee787); }
+    .shell-route-frame {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: var(--bg, #0f1115);
+    }
   </style>
 </head>
 <body>
@@ -84,5 +93,28 @@
     <p>INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。</p>
   </section>
 </main>
+
+<script>
+  /* docs/embed.js redirects standalone documentation pages here with
+   * ?p=<path-from-project-root>. Render that page in an iframe so its
+   * embedded mode can suppress duplicate navigation without redirecting
+   * back to the project landing page. */
+  (function () {
+    var page = null;
+    try {
+      page = new URLSearchParams(window.location.search).get("p");
+    } catch (e) { /* legacy browser: keep the landing page visible */ }
+    if (!page) return;
+
+    /* Only project-relative paths are accepted. */
+    if (/^(?:[a-z]+:|\/\/|\/)/i.test(page) || page.indexOf("..") !== -1) return;
+
+    var frame = document.createElement("iframe");
+    frame.className = "shell-route-frame";
+    frame.title = "IchiPing UNO Q document viewer";
+    frame.src = page + (window.location.hash || "");
+    document.body.appendChild(frame);
+  })();
+</script>
 </body>
 </html>
