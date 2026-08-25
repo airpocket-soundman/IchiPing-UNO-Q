@@ -1,12 +1,12 @@
 Item,References,Qty,Value / specification,Package / footprint,Mounting,Procurement note,Populate
 PCB,PCB-B,1,2-layer FR-4 1.6 mm 1 oz,UNO Breakout Carrier audio shield outline,—,Bare board,YES
-Female socket header,"J14,J15",2,2x20 2.54 mm,2x20 vertical socket,THT,UNO Breakout Carrier mating headers,YES
-XH2.54-compatible vertical connector,J_MIC,1,1x06 2.54 mm,XH2.54_Vertical_1x06,THT,Generic XH2.54-compatible,YES
-XH2.54-compatible vertical connector,J_AMP_SIG,1,1x04 2.54 mm,XH2.54_Vertical_1x04,THT,Generic XH2.54-compatible,YES
-XH2.54-compatible vertical connector,J_AMP_PWR,1,1x03 2.54 mm,XH2.54_Vertical_1x03,THT,Generic XH2.54-compatible,YES
+Female socket header,"J14,J15",2,2x20 2.54 mm,2x20 vertical socket,THT,Akizuki 100085; verify carrier mating height,YES
+JST XH vertical connector,J_MIC,1,1x06 nominal 2.50 mm,XH2.54_Vertical_1x06,THT,Akizuki 112251; approved for the current 2.54 mm design holes; test-fit this longest connector,YES
+JST XH vertical connector,J_AMP_SIG,1,1x04 nominal 2.50 mm,XH2.54_Vertical_1x04,THT,Akizuki 112249; approved for the current 2.54 mm design holes,YES
+JST XH vertical connector,J_AMP_PWR,1,1x03 nominal 2.50 mm,XH2.54_Vertical_1x03,THT,Akizuki 112248; approved for the current 2.54 mm design holes,YES
 Pin header,JP_MUTE,1,1x02 2.54 mm,PinHeader_1x02_P2.54mm,THT,Normally open; fit shunt only to mute,YES
 Jumper shunt,JP_MUTE_SHUNT,1,2.54 mm shorting shunt,2.54 mm shunt,—,Store off-board during normal operation,OPTIONAL
-Chip resistor,"R_GAIN,R_LR",2,0 ohm,R_0805_2012Metric,SMD 0805,Fixes GAIN and MIC L/R default states to GND,YES
-Chip resistor,R_SD,1,100 kohm 1%,R_0805_2012Metric,SMD 0805,MAX98357A SD pull-up to 3.3 V,YES
-Electrolytic capacitor,C1,1,10 uF 10 V or higher,Radial D5.0 mm P2.00 mm,THT,+5 V bulk decoupling; observe polarity,YES
-Ceramic capacitor,"C2,C3",2,100 nF 25 V X7R,C_0805_2012Metric,SMD 0805,+5 V and +1.8 V high-frequency bypass,YES
+Chip resistor,"R_GAIN,R_LR",2,0 ohm,R_0805_2012Metric,SMD 0805,Akizuki 111619 is 1608 substitute for hand soldering on 2012 pads,YES
+Chip resistor,R_SD,1,100 kohm 1%,R_0805_2012Metric,SMD 0805,Akizuki 111798 2012 100 kohm 0.1%,YES
+Electrolytic capacitor,C1,1,10 uF 10 V or higher,Radial D5.0 mm P2.00 mm,THT,Akizuki 117897 10 uF 50 V D5 P2; observe polarity,YES
+Ceramic capacitor,"C2,C3",2,100 nF 25 V X7R,C_0805_2012Metric,SMD 0805,Akizuki 114559 is 1608 X7R substitute for hand soldering on 2012 pads,YES

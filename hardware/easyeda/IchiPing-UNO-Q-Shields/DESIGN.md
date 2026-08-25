@@ -1,7 +1,7 @@
 # IchiPing UNO Q shield design
 
 The binding electrical and mechanical requirements are in
-[SPECIFICATION.md](SPECIFICATION.md). The sole editable EDA source is the
+[SPECIFICATION.html](SPECIFICATION.html). The sole editable EDA source is the
 EasyEDA project `board/Ichiping uno q.eprj2`.
 
 The project contains two EasyEDA-native schematic/PCB boards:
@@ -138,5 +138,5 @@ define the complete electrical implementation.
   require `All (0)`, including rule 124 (`Schematic Netlist`).
 - Verify the schematic-to-PCB reference, unique-ID, pin/pad, and net mapping,
   then review connector pin order and supply rails against
-  [SPECIFICATION.md](SPECIFICATION.md), `docs/uno_q_port.html`, and the
+  [SPECIFICATION.html](SPECIFICATION.html), `docs/uno_q_port.html`, and the
   board-specific BOMs.

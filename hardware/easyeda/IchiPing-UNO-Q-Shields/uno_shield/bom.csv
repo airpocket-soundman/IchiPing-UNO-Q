@@ -1,12 +1,12 @@
 Item,References,Qty,Value / specification,Package / footprint,Mounting,Procurement note,Populate
 PCB,PCB-A,1,2-layer FR-4 1.6 mm 1 oz,Arduino UNO Q shield outline,—,Bare board,YES
-Female stacking header,"J1,J4",2,1x08 2.54 mm,1x08 vertical socket,THT,Arduino shield-compatible long-tail socket,YES
-Female stacking header,J2,1,1x10 2.54 mm,1x10 vertical socket,THT,Arduino shield-compatible long-tail socket,YES
-Female stacking header,J3,1,1x06 2.54 mm,1x06 vertical socket,THT,Arduino shield-compatible long-tail socket,YES
-XH2.54-compatible vertical connector,"J_PWR_IN,J_SERVO_5V_OUT,J_DOOR_AB,J_EXEC,J_WIN_C,J_DOOR_BC,J_WIN_A,J_WIN_B",8,1x02 2.54 mm,XH2.54_Vertical_1x02,THT,Generic XH2.54-compatible; do not order as genuine JST XH without pitch verification,YES
-XH2.54-compatible vertical connector,J_RAIN,1,1x03 2.54 mm,XH2.54_Vertical_1x03,THT,Generic XH2.54-compatible,YES
-XH2.54-compatible vertical connector,"J_TFT_PWR,J_SERVO_CTRL",2,1x04 2.54 mm,XH2.54_Vertical_1x04,THT,Generic XH2.54-compatible,YES
-XH2.54-compatible vertical connector,J_TFT_SIG,1,1x05 2.54 mm,XH2.54_Vertical_1x05,THT,Generic XH2.54-compatible,YES
+Female socket strip,"J1,J4",2,1x08 2.54 mm,1x08 vertical socket,THT,Akizuki 110299 cut-to-length; verify 3 mm lead and mounting height,YES
+Female socket strip,J2,1,1x10 2.54 mm,1x10 vertical socket,THT,Akizuki 110299 cut-to-length; verify 3 mm lead and mounting height,YES
+Female socket strip,J3,1,1x06 2.54 mm,1x06 vertical socket,THT,Akizuki 110299 cut-to-length; verify 3 mm lead and mounting height,YES
+JST XH vertical connector,"J_PWR_IN,J_SERVO_5V_OUT,J_DOOR_AB,J_EXEC,J_WIN_C,J_DOOR_BC,J_WIN_A,J_WIN_B",8,1x02 nominal 2.50 mm,XH2.54_Vertical_1x02,THT,Akizuki 112247; approved for the current 2.54 mm design holes,YES
+JST XH vertical connector,J_RAIN,1,1x03 nominal 2.50 mm,XH2.54_Vertical_1x03,THT,Akizuki 112248; approved for the current 2.54 mm design holes,YES
+JST XH vertical connector,"J_TFT_PWR,J_SERVO_CTRL",2,1x04 nominal 2.50 mm,XH2.54_Vertical_1x04,THT,Akizuki 112249; approved for the current 2.54 mm design holes,YES
+JST XH vertical connector,J_TFT_SIG,1,1x05 nominal 2.50 mm,XH2.54_Vertical_1x05,THT,Akizuki 112250; approved for the current 2.54 mm design holes,YES
 Radial ceramic capacitor,C_PWR_HF,1,100 nF 25 V or higher,C_Disc_D5.0mm_W2.5mm_P5.00mm,THT 5.00 mm pitch,Power-input high-frequency bypass; non-polar,YES
 Low-ESR electrolytic capacitor,C_PWR_BULK,1,470 uF 10 V or higher,Radial D8.0 mm P3.50 mm,THT,Observe polarity,YES
 Low-ESR electrolytic capacitor,C_SERVO_BULK,1,1000 uF 10 V or higher,Radial D10.0 mm P5.00 mm,THT,Servo-rail inrush buffer; observe polarity,YES

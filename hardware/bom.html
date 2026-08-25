@@ -10,6 +10,7 @@
   .bom-table td:nth-child(3), .bom-table td:nth-child(4) { white-space: nowrap; }
   .status-ok { color: #68d391; font-weight: 700; }
   .status-warn { color: #f6ad55; font-weight: 700; }
+  .status-info { color: #63b3ed; font-weight: 700; }
   .scope { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin:16px 0; }
   .scope > div { border:1px solid var(--border); border-radius:10px; padding:14px; background:var(--panel); }
 </style>
@@ -17,7 +18,7 @@
 <body>
 
 <header class="page">
-  <div class="crumb"><a href="../index.html">← IchiPing UNO Qトップ</a> ／ <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md">基板仕様</a></div>
+  <div class="crumb"><a href="../index.html">← IchiPing UNO Qトップ</a> ／ <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html">基板仕様</a></div>
   <h1>IchiPing UNO Q シールド基板BOM</h1>
   <div class="sub">UNO QシールドとAudioシールドを別集計した、基板実装用の部品表。統合CSVは <a href="bom.csv">bom.csv</a>。</div>
 </header>
@@ -42,10 +43,10 @@
       <tr><td>スタッキングソケット 1×8</td><td>J1, J4</td><td>2</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
       <tr><td>スタッキングソケット 1×10</td><td>J2</td><td>1</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
       <tr><td>スタッキングソケット 1×6</td><td>J3</td><td>1</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
-      <tr><td>XH2.54互換 1×2</td><td>J_PWR_IN, J_SERVO_5V_OUT, J_DOOR_AB, J_EXEC, J_WIN_C, J_DOOR_BC, J_WIN_A, J_WIN_B</td><td>8</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x02</td><td>純正JST XH指定ではない</td></tr>
-      <tr><td>XH2.54互換 1×3</td><td>J_RAIN</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>—</td></tr>
-      <tr><td>XH2.54互換 1×4</td><td>J_TFT_PWR, J_SERVO_CTRL</td><td>2</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>—</td></tr>
-      <tr><td>XH2.54互換 1×5</td><td>J_TFT_SIG</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x05</td><td>—</td></tr>
+      <tr><td>JST XH 1×2</td><td>J_PWR_IN, J_SERVO_5V_OUT, J_DOOR_AB, J_EXEC, J_WIN_C, J_DOOR_BC, J_WIN_A, J_WIN_B</td><td>8</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x02</td><td>2.54 mm設計穴へ実装（承認済み）</td></tr>
+      <tr><td>JST XH 1×3</td><td>J_RAIN</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>同上</td></tr>
+      <tr><td>JST XH 1×4</td><td>J_TFT_PWR, J_SERVO_CTRL</td><td>2</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>同上</td></tr>
+      <tr><td>JST XH 1×5</td><td>J_TFT_SIG</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x05</td><td>同上</td></tr>
       <tr><td>ラジアルセラミックコンデンサ</td><td>C_PWR_HF</td><td>1</td><td>100 nF、25 V以上</td><td><b>THT / P5.00 mm</b></td><td>高周波バイパス、無極性</td></tr>
       <tr><td>低ESR電解コンデンサ</td><td>C_PWR_BULK</td><td>1</td><td>470 µF、10 V以上</td><td>THT / D8.0 mm、P3.50 mm</td><td>極性注意</td></tr>
       <tr><td>低ESR電解コンデンサ</td><td>C_SERVO_BULK</td><td>1</td><td>1000 µF、10 V以上</td><td>THT / D10.0 mm、P5.00 mm</td><td>サーボ突入電流対策、極性注意</td></tr>
@@ -61,9 +62,9 @@
     <tbody>
       <tr><td>PCB</td><td>PCB-B</td><td>1</td><td>2層 FR-4、1.6 mm、1 oz</td><td>Audioシールド外形</td><td>裸基板</td></tr>
       <tr><td>ソケットヘッダ 2×20</td><td>J14, J15</td><td>2</td><td>2.54 mm</td><td>THT</td><td>UNO Breakout Carrier接続</td></tr>
-      <tr><td>XH2.54互換 1×6</td><td>J_MIC</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x06</td><td>マイク接続</td></tr>
-      <tr><td>XH2.54互換 1×4</td><td>J_AMP_SIG</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>アンプ信号</td></tr>
-      <tr><td>XH2.54互換 1×3</td><td>J_AMP_PWR</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>アンプ電源・SD</td></tr>
+      <tr><td>JST XH 1×6</td><td>J_MIC</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x06</td><td>マイク接続、2.54 mm設計穴へ実装</td></tr>
+      <tr><td>JST XH 1×4</td><td>J_AMP_SIG</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>アンプ信号、同上</td></tr>
+      <tr><td>JST XH 1×3</td><td>J_AMP_PWR</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>アンプ電源・SD、同上</td></tr>
       <tr><td>ピンヘッダ 1×2</td><td>JP_MUTE</td><td>1</td><td>2.54 mm</td><td>THT</td><td>通常はオープン</td></tr>
       <tr><td>ジャンパシャント</td><td>JP_MUTE_SHUNT</td><td>1</td><td>2.54 mm</td><td>基板外</td><td>装着時のみミュート、任意</td></tr>
       <tr><td>チップ抵抗</td><td>R_GAIN, R_LR</td><td>2</td><td>0 Ω</td><td><b>SMD 0805</b></td><td>既定状態をGNDに固定</td></tr>
@@ -75,20 +76,64 @@
 </section>
 
 <section>
-  <h2>製造前チェック</h2>
+  <h2 id="akizuki-order">秋月電子 購入表（基板実装部品）</h2>
+  <p>2026-08-25に秋月電子の販売ページで確認した購入候補。数量はBoard A／Bを各1枚実装する場合。販売状況・価格は注文時にリンク先で再確認する。</p>
   <div class="callout warn">
-    <strong>Audioシールド要修正:</strong>
-    BOMと実装方針では R_GAIN / R_LR / R_SD / C2 / C3 はSMD 0805だが、2026-08-25時点のEasyEDA PCBには旧THTフットプリントが残っている。
-    発注・Gerber出力前にPCBフットプリントをBOMへ合わせること。
+    <strong>JST XHのピッチ:</strong>
+    採用品の公称ピッチは2.50 mm、現行EasyEDAフットプリント名と穴中心は2.54 mm。ユーザー判断により、この基板ではJST XHをそのまま実装する。特に6極は端間差が最大になるため、量産前に現物を1個挿して確認する。
+  </div>
+  <table class="bom-table">
+    <thead><tr><th>Board</th><th>Ref / 用途</th><th>秋月商品</th><th>販売コード</th><th>購入数</th><th>適合</th><th>備考</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>J1–J4</td><td><a href="https://akizukidenshi.com/catalog/g/g110299/">分割ロングピンソケット 1×40</a></td><td><b>110299</b></td><td>1個</td><td><span class="status-warn">条件付き</span></td><td>32極分に切断。リード長3 mmのため上段へシールドを重ねない構成向け。装着高さを実機確認。</td></tr>
+      <tr><td>A</td><td>J_PWR_INほか 2P</td><td><a href="https://akizukidenshi.com/catalog/g/g112247/">JST XH ベース付ポスト 2P</a></td><td><b>112247</b></td><td>8個</td><td><span class="status-ok">採用</span></td><td>B2B-XH-A</td></tr>
+      <tr><td>A</td><td>J_RAIN 3P</td><td><a href="https://akizukidenshi.com/catalog/g/g112248/">JST XH ベース付ポスト 3P</a></td><td><b>112248</b></td><td>1個</td><td><span class="status-ok">採用</span></td><td>B3B-XH-A</td></tr>
+      <tr><td>A</td><td>J_TFT_PWR, J_SERVO_CTRL 4P</td><td><a href="https://akizukidenshi.com/catalog/g/g112249/">JST XH ベース付ポスト 4P</a></td><td><b>112249</b></td><td>2個</td><td><span class="status-ok">採用</span></td><td>B4B-XH-A</td></tr>
+      <tr><td>A</td><td>J_TFT_SIG 5P</td><td><a href="https://akizukidenshi.com/catalog/g/g112250/">JST XH ベース付ポスト 5P</a></td><td><b>112250</b></td><td>1個</td><td><span class="status-ok">採用</span></td><td>B5B-XH-A</td></tr>
+      <tr><td>A</td><td>C_PWR_HF</td><td><a href="https://akizukidenshi.com/catalog/g/g117059/">0.1 µF 50 V C0G、P5 mm</a></td><td><b>117059</b></td><td>1パック</td><td><span class="status-ok">適合</span></td><td>10個入、使用1個</td></tr>
+      <tr><td>A</td><td>C_PWR_BULK</td><td><a href="https://akizukidenshi.com/catalog/g/g108426/">470 µF 16 V、D8×9 mm</a></td><td><b>108426</b></td><td>1個</td><td><span class="status-ok">適合</span></td><td>105 ℃、P3.5 mm</td></tr>
+      <tr><td>A</td><td>C_SERVO_BULK</td><td><a href="https://akizukidenshi.com/catalog/g/g108424/">1000 µF 10 V、D10×9 mm</a></td><td><b>108424</b></td><td>1個</td><td><span class="status-ok">適合</span></td><td>105 ℃、P5 mm</td></tr>
+      <tr><td>B</td><td>J14, J15</td><td><a href="https://akizukidenshi.com/catalog/g/g100085/">ピンソケット 2×20</a></td><td><b>100085</b></td><td>2個</td><td><span class="status-info">要高さ確認</span></td><td>2.54 mm、標準ソケット</td></tr>
+      <tr><td>B</td><td>J_MIC 6P</td><td><a href="https://akizukidenshi.com/catalog/g/g112251/">JST XH ベース付ポスト 6P</a></td><td><b>112251</b></td><td>1個</td><td><span class="status-ok">採用</span></td><td>B6B-XH-A。実装前に穴位置確認</td></tr>
+      <tr><td>B</td><td>J_AMP_SIG 4P</td><td><a href="https://akizukidenshi.com/catalog/g/g112249/">JST XH ベース付ポスト 4P</a></td><td><b>112249</b></td><td>1個</td><td><span class="status-ok">採用</span></td><td>B4B-XH-A</td></tr>
+      <tr><td>B</td><td>J_AMP_PWR 3P</td><td><a href="https://akizukidenshi.com/catalog/g/g112248/">JST XH ベース付ポスト 3P</a></td><td><b>112248</b></td><td>1個</td><td><span class="status-ok">採用</span></td><td>B3B-XH-A</td></tr>
+      <tr><td>B</td><td>JP_MUTE</td><td><a href="https://akizukidenshi.com/catalog/g/g108593/">ピンヘッダ 1×2</a></td><td><b>108593</b></td><td>1パック</td><td><span class="status-ok">適合</span></td><td>10個入、使用1個</td></tr>
+      <tr><td>B</td><td>JP_MUTE_SHUNT</td><td><a href="https://akizukidenshi.com/catalog/g/g103687/">ジャンパープラグ 2.54 mm</a></td><td><b>103687</b></td><td>1パック</td><td><span class="status-ok">適合</span></td><td>任意部品</td></tr>
+      <tr><td>B</td><td>R_GAIN, R_LR</td><td><a href="https://akizukidenshi.com/catalog/g/g111619/">0 Ω チップ抵抗 1608</a></td><td><b>111619</b></td><td>1パック</td><td><span class="status-warn">代替</span></td><td>現行0805（2012）パッドへ1608を手はんだ。使用2個</td></tr>
+      <tr><td>B</td><td>R_SD</td><td><a href="https://akizukidenshi.com/catalog/g/g111798/">100 kΩ ±0.1% チップ抵抗 2012</a></td><td><b>111798</b></td><td>1パック</td><td><span class="status-ok">適合</span></td><td>5個入、使用1個</td></tr>
+      <tr><td>B</td><td>C1</td><td><a href="https://akizukidenshi.com/catalog/g/g117897/">10 µF 50 V、D5×11 mm</a></td><td><b>117897</b></td><td>1個</td><td><span class="status-ok">適合</span></td><td>105 ℃、P2 mm</td></tr>
+      <tr><td>B</td><td>C2, C3</td><td><a href="https://akizukidenshi.com/catalog/g/g114559/">0.1 µF 100 V X7R チップMLCC 1608</a></td><td><b>114559</b></td><td>1パック</td><td><span class="status-warn">代替</span></td><td>現行0805（2012）パッドへ1608を手はんだ。20個入、使用2個</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ケーブル側XH部品（必要な場合）</h3>
+  <table class="bom-table">
+    <thead><tr><th>部品</th><th>販売コード</th><th>必要数</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112255/">XHP-2 ハウジング 2P</a></td><td><b>112255</b></td><td>8個</td><td>Board A 2P端子</td></tr>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112256/">XHP-3 ハウジング 3P</a></td><td><b>112256</b></td><td>2個</td><td>Board A/B</td></tr>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112257/">XHP-4 ハウジング 4P</a></td><td><b>112257</b></td><td>3個</td><td>Board A/B</td></tr>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112258/">XHP-5 ハウジング 5P</a></td><td><b>112258</b></td><td>1個</td><td>Board A TFT信号</td></tr>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112259/">XHP-6 ハウジング 6P</a></td><td><b>112259</b></td><td>1個</td><td>Board B マイク</td></tr>
+      <tr><td><a href="https://akizukidenshi.com/catalog/g/g112265/">SXH-001T-P0.6 コンタクト</a></td><td><b>112265</b></td><td>1パック（100個）</td><td>45端子使用。予備込み</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>製造前チェック</h2>
+  <div class="callout ok">
+    <strong>実装方式:</strong>
+    現行BOMでは R_GAIN / R_LR / R_SD / C2 / C3をSMD、C1とBoard Aの3個のコンデンサをTHTとする。発注前にEasyEDAのフットプリントと再照合すること。
   </div>
   <ul>
-    <li>XHコネクタは<b>XH2.54互換</b>。純正JST XH（2.50 mm）と同一品として発注しない。</li>
+    <li>JST XHは公称2.50 mmだが、ユーザー承認により現行2.54 mm設計穴へ実装する。6Pで現物確認する。</li>
     <li>電解コンデンサは極性、直径、リードピッチ、高さを実装前に確認する。</li>
-    <li>外付けモジュールとケーブル／ハウジング／圧着端子は別途手配する。</li>
+    <li>外付けモジュールは別途手配する。ケーブル側XH部品は上表を使用する。</li>
   </ul>
 </section>
 
-<div class="footer-note">生成基準: 現行EasyEDA配置部品 + <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md">単一実装方式仕様</a>（2026-08-25）。</div>
+<div class="footer-note">生成基準: 現行EasyEDA配置部品 + <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html">単一実装方式仕様</a>（2026-08-25）。</div>
 </main>
 </body>
 </html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IchiPing UNO Q — シールド基板仕様書</title>
+<link rel="stylesheet" href="../../../docs/style.css">
+<script src="../../../docs/embed.js"></script>
+<style>
+  main { max-width: 1120px; }
+  table th:nth-child(2), table td:nth-child(2) { white-space: nowrap; }
+</style>
+</head>
+<body>
+<header class="page">
+  <div class="crumb"><a href="../../../index.html">← IchiPing UNO Qトップ</a> ／ <a href="../../bom.html">BOM</a></div>
+  <div class="sub">EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準</div>
+</header>
+<main>
+<h1 id="ichiping-uno-q">IchiPing UNO Q シールド基板仕様書</h1>
+<p>版: Rev A 設計入力 / 2026-08-24</p>
+<p>本書は、EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準の正本とする。GPIOの正本
+<code>docs/uno_q_port.html</code>、元IchiPingの<code>docs/pins.xlsx</code>、UNO QおよびUNO
+Breakout Carrierの公式資料を突き合わせた結果を記載する。</p>
+<h2 id="section">1. 共通コネクタ仕様</h2>
+<ul>
+<li>センサ、スイッチ、表示器、音響モジュール、外部電源に接続するコネクタは
+すべてXH形状、2.54 mmピッチ、基板上面から挿抜する垂直型とする。</li>
+<li>フットプリント名は<code>XH2.54_Vertical_1xNN</code>とし、1番ピンを角ランド、
+シルク三角、信号名で識別する。</li>
+<li>純正JST XHの公称ピッチは2.50 mmであり、本仕様の2.54 mmとは異なる。
+BOMには<code>XH2.54互換</code>と明記し、純正<code>B?B-XH-A</code>を指定しない。</li>
+<li>ピン順は基板上面から見て、シルクの1番ピン側から数える。</li>
+<li>UNO QおよびUNO Breakout Carrierへ直接嵌合するArduinoヘッダ／2x20ソケットは
+基板間接続なので、外部ハーネス用XH統一の対象外とする。</li>
+</ul>
+<h2 id="board-a-uno">2. Board A: UNOレイアウト・シールド</h2>
+<h3 id="section-1">2.1 機械仕様</h3>
+<ul>
+<li>Arduino UNO外形、4取付穴、4列のArduinoシールドヘッダ位置を使用する。</li>
+<li>EasyEDA上で確定したArduino UNO互換の非矩形外形を維持する。</li>
+<li>外形バウンディングボックスは約68.73 x 53.49 mm、取付穴は3.2 mm。</li>
+<li>XHはすべてトップエントリー垂直型とし、USB-C、ボタン、既存部品との高さ干渉を
+3D表示で確認する。</li>
+</ul>
+<h3 id="v">2.2 5 V電源</h3>
+<table>
+<thead>
+<tr>
+<th>Ref</th>
+<th style="text-align: right;">極数</th>
+<th>Pin 1</th>
+<th>Pin 2</th>
+<th>接続</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J_PWR_IN</td>
+<td style="text-align: right;">2</td>
+<td>+5V_IN</td>
+<td>GND</td>
+<td>外部の安定化5 V電源入力</td>
+</tr>
+<tr>
+<td>J_SERVO_5V_OUT</td>
+<td style="text-align: right;">2</td>
+<td>+5V_SERVO</td>
+<td>GND</td>
+<td>PCA9685サーボ電源V+へ出力</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>UNO Qの<code>VIN</code>は7-24 V入力である。5 Vを<code>VIN</code>へ接続してはならない。</li>
+<li><code>J_PWR_IN</code>の+5 VはUNO Q JANALOGヘッダの<code>+5V</code>端子へ接続する。Arduino公式資料は
+安定化5 Vをこの端子へ入力してUNO Qを給電できるとしている。</li>
+<li><code>+5V_SERVO</code>は<code>+5V_IN</code>から直接分岐し、UNO Qの3.3 Vレールを通さない。</li>
+<li>UNO Q、シールド、PCA9685、外部5 V電源のGNDを共通化する。</li>
+<li>入力は5.0 V安定化電源とし、通常範囲を4.75-5.25 Vとする。極性逆接は禁止。</li>
+<li>XH2.54互換コネクタ、端子、ハーネスの定格を含め、入力からサーボ出力までの
+連続電流上限を3 Aとする。5個のSG90を同時にストールさせない。</li>
+<li>5 V入力コネクタ直近に470 uF / 10 V以上の低ESR電解コンデンサと100 nFを配置する。
+電解コンデンサはPin 1が+5 V、Pin 2がGNDで、シルクの極性表示を確認して実装する。</li>
+<li>サーボ出力直近には1000 uF以上の低ESR電解コンデンサを追加配置する。</li>
+<li><code>+5V_SERVO</code>をPCA9685のロジック<code>VCC</code>へ接続しない。V+専用とする。</li>
+</ul>
+<h3 id="gpio">2.3 GPIO・表示・サーボ制御</h3>
+<p>トグルおよびEXECは内部プルアップを使うアクティブLow入力で、Pin 1が信号、
+Pin 2がGNDである。</p>
+<table>
+<thead>
+<tr>
+<th>Ref</th>
+<th style="text-align: right;">極数</th>
+<th>XH2.54のピン順</th>
+<th>UNO Q接続</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J_WIN_A</td>
+<td style="text-align: right;">2</td>
+<td>WIN_A, GND</td>
+<td>D3, GND</td>
+</tr>
+<tr>
+<td>J_WIN_B</td>
+<td style="text-align: right;">2</td>
+<td>WIN_B, GND</td>
+<td>D4, GND</td>
+</tr>
+<tr>
+<td>J_WIN_C</td>
+<td style="text-align: right;">2</td>
+<td>WIN_C, GND</td>
+<td>D5, GND</td>
+</tr>
+<tr>
+<td>J_DOOR_AB</td>
+<td style="text-align: right;">2</td>
+<td>DOOR_AB, GND</td>
+<td>D6, GND</td>
+</tr>
+<tr>
+<td>J_DOOR_BC</td>
+<td style="text-align: right;">2</td>
+<td>DOOR_BC, GND</td>
+<td>D7, GND</td>
+</tr>
+<tr>
+<td>J_EXEC</td>
+<td style="text-align: right;">2</td>
+<td>EXEC, GND</td>
+<td>D8, GND</td>
+</tr>
+<tr>
+<td>J_RAIN</td>
+<td style="text-align: right;">3</td>
+<td>VCC, GND, D0</td>
+<td>3V3, GND, D9</td>
+</tr>
+<tr>
+<td>J_SERVO_CTRL</td>
+<td style="text-align: right;">4</td>
+<td>GND, SCL, SDA, VIN</td>
+<td>GND, D21, D20, 3V3</td>
+</tr>
+<tr>
+<td>J_TFT_SIG</td>
+<td style="text-align: right;">5</td>
+<td>MISO, LED, SCK, MOSI, DC</td>
+<td>D12, A5, D13, D11, A4</td>
+</tr>
+<tr>
+<td>J_TFT_PWR</td>
+<td style="text-align: right;">4</td>
+<td>RST, CS, GND, VCC</td>
+<td>A3, A2, GND, 3V3</td>
+</tr>
+</tbody>
+</table>
+<p><code>J_SERVO_CTRL</code>の<code>VIN</code>表記はPCA9685モジュールのロジック電源入力を意味し、3.3 Vで
+ある。サーボ電源V+は<code>J_SERVO_5V_OUT</code>から別配線する。雨センサD0は必ず3.3 V以下に
+なる3.3 V動作モジュールを用いる。TFT MISOはコネクタへ出すが、現行ドライバは
+書込み専用なので未使用でもよい。</p>
+<h3 id="section-2">2.4 ソフトウェアとの一致</h3>
+<ul>
+<li>状態bit 0..4 = D3..D7 = 窓a、窓b、窓c、扉AB、扉BC。</li>
+<li>EXEC = D8、雨入力 = D9。</li>
+<li>PCA9685 = <code>Wire</code>、SDA=D20、SCL=D21、アドレス0x40。</li>
+<li>TFT = D11 MOSI、D12 MISO、D13 SCK、A2 CS、A3 RST、A4 DC、A5 BL。</li>
+<li>A4/A5はTFT GPIOであり、UNO Qの専用I2C D20/D21とは別ピンである。</li>
+</ul>
+<h2 id="board-b-uno-breakout-carrier">3. Board B: UNO Breakout Carrier音響シールド</h2>
+<h3 id="section-3">3.1 機械・基板間接続</h3>
+<ul>
+<li>UNO Breakout CarrierのJ14/J15へ、2x20、2.54 mmピッチのボトム側メスソケットで
+直接嵌合する。この2個だけはXHではない。</li>
+<li>Carrier公式外形107.6 x 53.34 mm、J14/J15中心間隔15.24 mmを基準に配置する。</li>
+<li>J14/J15の嵌合位置は維持し、基板外形は79 x 53.34 mmとする。J15より右側へ33 mm
+延長し、外部ハーネスがCarrier本体側へ回り込まない構造にする。</li>
+<li>外部モジュール向けコネクタはすべてXH2.54垂直型とする。</li>
+<li>J_AMP_SIG、J_AMP_PWR、J_MICはすべてJ15ヘッダより右側へ配置する。</li>
+</ul>
+<h3 id="section-4">3.2 音響コネクタ</h3>
+<table>
+<thead>
+<tr>
+<th>Ref</th>
+<th style="text-align: right;">極数</th>
+<th>XH2.54のピン順</th>
+<th>Carrier接続／既定値</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J_AMP_SIG</td>
+<td style="text-align: right;">4</td>
+<td>LRC, BCLK, DIN, GAIN</td>
+<td>J15-34, J15-32, J15-38, R_GAIN</td>
+</tr>
+<tr>
+<td>J_AMP_PWR</td>
+<td style="text-align: right;">3</td>
+<td>SD, GND, VIN</td>
+<td>R_SD/JP_MUTE, GND, J14-7 (+5V)</td>
+</tr>
+<tr>
+<td>J_MIC</td>
+<td style="text-align: right;">6</td>
+<td>GND, VCC, SD, SCK, WS, L/R</td>
+<td>GND, J14-19 (+1V8), J15-36, J15-32, J15-34, R_LR</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>MI2S0 BCLK = SOC_GPIO_98 = J15-32、WS/LRCLK = SOC_GPIO_99 = J15-34。</li>
+<li>マイクデータ候補 = SOC_GPIO_100 = J15-36。</li>
+<li>アンプデータ候補 = SOC_GPIO_101 = J15-38。</li>
+<li>上記4信号はすべてQRB2210の1.8 Vドメインである。</li>
+<li>マイクVCCはJ14-19の+1.8 V、MAX98357A VINはJ14-7の+5 Vを使う。</li>
+<li><code>R_GAIN</code>と<code>R_LR</code>は実装時0 ΩでGNDへ接続し、既定状態を固定する。変更時は
+0 Ω抵抗を取り外して所望のストラップ抵抗へ置換する。</li>
+<li><code>R_SD</code>は100 kΩで3.3 Vへプルアップし、MAX98357Aを既定で有効にする。
+<code>JP_MUTE</code>に2.54 mmジャンパシャントを挿すとSDをGNDへ落としてミュートできる。</li>
+<li><code>R_GAIN</code>、<code>R_LR</code>、<code>R_SD</code>は0805チップ抵抗、C2/C3は0805積層セラミック、
+C1はラジアル電解、JP_MUTEは2.54 mmスルーホールピンヘッダとする。</li>
+<li>C1は10 uF / 10 V以上で+5 Vをデカップリングし、C2=100 nFを並列配置する。
+C3=100 nFは+1.8 Vをデカップリングする。C1の極性はPin 1=+5 V、Pin 2=GND。</li>
+<li>DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
+までは、音響モジュールを接続・通電しない。</li>
+</ul>
+<h3 id="xh">3.3 基板間XH電源ケーブル</h3>
+<p>Board BはUNO Breakout CarrierのJ14から+5 V、+1.8 V、GNDを取得できるため、
+Board AからBoard Bへ電源を渡すXHケーブルは現仕様では不要である。将来Carrierを
+使わず別置きする場合は、XH2のPin 1=+5 V、Pin 2=GNDで追加し、逆給電が起きない
+電源経路を別途レビューする。</p>
+<h2 id="section-5">4. 配線・製造ルール</h2>
+<ul>
+<li>2層FR-4、1.6 mm、1 oz銅を初期値とする。</li>
+<li>3.3 V/1.8 V信号線は0.25 mm以上、一般電源は0.50 mm以上。</li>
+<li>5 V入力およびサーボ電源は細いトラックではなく両面の広い銅箔で配線し、
+サーマルネックを作らない。</li>
+<li>GNDプレーンを両面に設け、適切なスティッチングビアを配置する。</li>
+<li>I2SのBCLK/WSは短く、並走長を抑え、サーボ5 V配線と離す。</li>
+<li>全コネクタにRef、信号順、Pin 1マーク、電圧をシルク印刷する。</li>
+<li>EDA設計の正本は<code>board/Ichiping uno q.eprj2</code>だけとする。2枚ともEasyEDAの
+Board内でネイティブ回路図とPCBを関連付け、部品Ref、Unique ID、回路図ピン番号、
+PCBパッド番号、ネット、外形、配線、シルクを一体管理する。外部EDAとの変換・同期は
+行わない。</li>
+<li>製造前にEasyEDAのPCB DRCを両基板で実行し、クリアランス、異ネット短絡、
+接続エラー、未配線、基板外形干渉をすべて0件とする。</li>
+<li>回路図のDevice／FootprintはPCBと同じプロジェクト内レコードへ関連付ける。
+カスタムDRCの124番<code>Schematic Netlist</code>を含む全項目を有効にし、<code>All (0)</code>を必須とする。
+Ref、Unique ID、ピン／パッド番号、ネット名の対応監査はUNOシールド19部品／70ピン、
+Audioシールド12部品／107ピンを対象とし、差分0件を必須とする。UNOシールドの取付穴4個は
+直径3.2 mmの独立した非メッキ穴として扱い、電気部品のネットリストには含めない。</li>
+<li>製造前にEasyEDAの回路図DRCも両Boardで実行し、各部品のRef、Unique ID、ピン／
+パッド番号、ネットが対応することを確認する。回路接続は本仕様書、
+<code>docs/uno_q_port.html</code>、回路図、PCBネット、各基板の<code>bom.csv</code>を突き合わせて
+レビューする。</li>
+</ul>
+<h2 id="section-6">4.1 実装方式（単一設計）</h2>
+<p>UNOシールドと音響シールドは、次の実装方式だけを正規設計とする。</p>
+<table>
+<thead>
+<tr>
+<th>部品種別</th>
+<th>実装方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UNO／キャリア接続ヘッダ、XH2.54、ジャンパなど全コネクタ</td>
+<td>スルーホール</td>
+</tr>
+<tr>
+<td>極性付き電解コンデンサ</td>
+<td>ラジアル・スルーホール</td>
+</tr>
+<tr>
+<td>UNOシールドの<code>C_PWR_HF</code></td>
+<td>100 nFラジアル・スルーホール、5.00 mmピッチ</td>
+</tr>
+<tr>
+<td>Audioシールドの固定抵抗、無極性コンデンサ</td>
+<td>表面実装0805（検証済み配線のパッド中心を維持）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>正規設計は<code>uno_shield/</code>と<code>audio_shield/</code>だけに保存し、実装方式別の派生版は作らない。</li>
+<li>外形、Ref、ネット名、コネクタのピン番号と2.54 mm中心間隔を維持する。</li>
+<li><code>J_PWR_IN</code>はUNO Qの<code>+5V</code>へ接続し、<code>VIN</code>へ接続しない。</li>
+<li>外部コネクタは指定どおり垂直XH2.54互換品とする。</li>
+<li>EasyEDAの回路図DRC、PCB DRC、回路図／PCB対応監査と目視レビューで実装属性、
+ピン順、ピッチ、5 V/VIN分離を監査し、各PCBのDRC=0、接続エラー=0、未配線=0を
+製造前の必須条件とする。</li>
+</ul>
+<h2 id="section-7">5. 参照資料</h2>
+<ul>
+<li>UNO Q datasheet: <a href="https://docs.arduino.cc/resources/datasheets/ABX00162-ABX00173-datasheet.pdf">https://docs.arduino.cc/resources/datasheets/ABX00162-ABX00173-datasheet.pdf</a></li>
+<li>UNO Q full pinout: <a href="https://docs.arduino.cc/resources/pinouts/ABX00162-full-pinout.pdf">https://docs.arduino.cc/resources/pinouts/ABX00162-full-pinout.pdf</a></li>
+<li>UNO Breakout Carrier datasheet: <a href="https://docs.arduino.cc/resources/datasheets/ASX00085-datasheet.pdf">https://docs.arduino.cc/resources/datasheets/ASX00085-datasheet.pdf</a></li>
+<li>元IchiPing配線図: <code>docs/pins.xlsx</code></li>
+<li>UNO Q GPIO正本: <code>docs/uno_q_port.html</code></li>
+</ul>
+
+</main>
+</body>
+</html>

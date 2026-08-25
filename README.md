@@ -24,7 +24,7 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 
 - [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
 - [UNO Q GPIO接続図](docs/gpio_wiring.html)
-- [UNO Qシールド基板仕様](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md)
+- [UNO Qシールド基板仕様](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html)
 - [EasyEDA基板データ](hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md)
 - [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
 - [Hackster投稿用記事 — One Ping, 32 States](docs/hackster_article.md)
