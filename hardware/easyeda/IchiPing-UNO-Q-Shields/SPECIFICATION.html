@@ -224,8 +224,9 @@ Pin 2がGNDである。</p>
 0 Ω抵抗を取り外して所望のストラップ抵抗へ置換する。</li>
 <li><code>R_SD</code>は100 kΩで3.3 Vへプルアップし、MAX98357Aを既定で有効にする。
 <code>JP_MUTE</code>に2.54 mmジャンパシャントを挿すとSDをGNDへ落としてミュートできる。</li>
-<li><code>R_GAIN</code>、<code>R_LR</code>、<code>R_SD</code>は0805チップ抵抗、C2/C3は0805積層セラミック、
-C1はラジアル電解、JP_MUTEは2.54 mmスルーホールピンヘッダとする。</li>
+<li><code>R_GAIN</code>、<code>R_LR</code>、<code>R_SD</code>はリードピッチ10.16 mmのアキシャル抵抗、C2/C3は
+リードピッチ5.00 mmのラジアル積層セラミック、C1はラジアル電解、
+JP_MUTEは2.54 mmスルーホールピンヘッダとする。すべてスルーホール実装とする。</li>
 <li>C1は10 uF / 10 V以上で+5 Vをデカップリングし、C2=100 nFを並列配置する。
 C3=100 nFは+1.8 Vをデカップリングする。C1の極性はPin 1=+5 V、Pin 2=GND。</li>
 <li>DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
@@ -284,8 +285,12 @@ Audioシールド12部品／107ピンを対象とし、差分0件を必須とす
 <td>100 nFラジアル・スルーホール、5.00 mmピッチ</td>
 </tr>
 <tr>
-<td>Audioシールドの固定抵抗、無極性コンデンサ</td>
-<td>表面実装0805（検証済み配線のパッド中心を維持）</td>
+<td>Audioシールドの固定抵抗</td>
+<td>アキシャル・スルーホール、10.16 mmピッチ</td>
+</tr>
+<tr>
+<td>Audioシールドの無極性コンデンサ</td>
+<td>ラジアル・スルーホール、5.00 mmピッチ</td>
 </tr>
 </tbody>
 </table>

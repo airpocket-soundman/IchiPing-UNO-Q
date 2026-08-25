@@ -6,7 +6,7 @@ JST XH vertical connector,J_AMP_SIG,1,1x04 nominal 2.50 mm,XH2.54_Vertical_1x04,
 JST XH vertical connector,J_AMP_PWR,1,1x03 nominal 2.50 mm,XH2.54_Vertical_1x03,THT,Akizuki 112248; approved for the current 2.54 mm design holes,YES
 Pin header,JP_MUTE,1,1x02 2.54 mm,PinHeader_1x02_P2.54mm,THT,Normally open; fit shunt only to mute,YES
 Jumper shunt,JP_MUTE_SHUNT,1,2.54 mm shorting shunt,2.54 mm shunt,—,Store off-board during normal operation,OPTIONAL
-Chip resistor,"R_GAIN,R_LR",2,0 ohm,R_0805_2012Metric,SMD 0805,Akizuki 111619 is 1608 substitute for hand soldering on 2012 pads,YES
-Chip resistor,R_SD,1,100 kohm 1%,R_0805_2012Metric,SMD 0805,Akizuki 111798 2012 100 kohm 0.1%,YES
+Axial resistor,"R_GAIN,R_LR",2,0 ohm,Axial THT P10.16 mm,THT,Akizuki 107792 1/2 W 0 ohm; use 2 of 100,YES
+Axial resistor,R_SD,1,100 kohm 1%,Axial THT P10.16 mm,THT,Akizuki 108563 1/4 W 100 kohm 1%; use 1 of 100,YES
 Electrolytic capacitor,C1,1,10 uF 10 V or higher,Radial D5.0 mm P2.00 mm,THT,Akizuki 117897 10 uF 50 V D5 P2; observe polarity,YES
-Ceramic capacitor,"C2,C3",2,100 nF 25 V X7R,C_0805_2012Metric,SMD 0805,Akizuki 114559 is 1608 X7R substitute for hand soldering on 2012 pads,YES
+Radial ceramic capacitor,"C2,C3",2,100 nF 25 V or higher X7R,Radial THT P5.00 mm,THT,Akizuki 115927 100 nF 100 V X7R P5.00 mm; use 2 of 10,YES

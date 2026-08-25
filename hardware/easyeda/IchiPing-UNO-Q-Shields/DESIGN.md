@@ -14,11 +14,10 @@ is no external EDA conversion or synchronization step.
 ## Assembly technology
 
 The repository contains one binding production design for each board. All
-connectors and polarized electrolytic capacitors are through-hole; fixed
-resistors and non-polarized capacitors use SMD pads at the reviewed routing
-centers. This keeps
-mechanically loaded cable interfaces and large polarized parts serviceable
-while allowing automated placement of the remaining components.
+populated components are through-hole: connectors and headers, polarized
+electrolytic capacitors, axial fixed resistors, and radial non-polarized
+capacitors. This matches the current EasyEDA footprints and keeps every part
+hand-solderable and serviceable.
 
 The `uno_shield/bom.csv` and `audio_shield/bom.csv` files are the board-specific
 parts lists. `scripts/prune_easyeda_project.py` keeps the current EasyEDA
@@ -117,10 +116,11 @@ to the right of J15.
 | J_AMP_PWR | XH-3 | SD, GND, VIN | SD selector, GND, J14-7 (+5V) |
 | J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, channel selector |
 
-`GAIN` and `L/R` default to GND through 0-ohm SMD resistors. `SD` has a
-100 kOhm SMD pull-up to 3.3 V and a normally open through-hole 2.54 mm
-`JP_MUTE` header to GND. C1 is a radial through-hole 10 uF / 10 V
-electrolytic; C2/C3 are 100 nF SMD ceramic capacitors.
+`GAIN` and `L/R` default to GND through 0-ohm axial through-hole resistors.
+`SD` has a 100 kOhm axial through-hole pull-up to 3.3 V and a normally open
+through-hole 2.54 mm `JP_MUTE` header to GND. C1 is a radial through-hole
+10 uF / 10 V electrolytic; C2/C3 are 100 nF radial through-hole ceramic
+capacitors.
 
 The PCB nets, connector table, configuration components, and board-specific BOM
 define the complete electrical implementation.
