@@ -78,6 +78,30 @@
 <section>
   <h2 id="akizuki-order">秋月電子 購入表（基板実装部品）</h2>
   <p>2026-08-25に秋月電子の販売ページで確認した購入候補。数量はBoard A／Bを各1枚実装する場合。販売状況・価格は注文時にリンク先で再確認する。</p>
+  <h3>部品名・秋月部品名・秋月番号 対応表</h3>
+  <table class="bom-table">
+    <thead><tr><th>部品名</th><th>秋月部品名</th><th>秋月番号</th></tr></thead>
+    <tbody>
+      <tr><td>UNO Q接続ソケット J1–J4</td><td><a href="https://akizukidenshi.com/catalog/g/g110299/">分割ロングピンソケット（メス）1×40（40P）・赤</a></td><td><b>110299</b></td></tr>
+      <tr><td>JST XH 2P（Board A、8個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112247/">XHコネクター ベース付ポスト トップ型 2P B2B-XH-A</a></td><td><b>112247</b></td></tr>
+      <tr><td>JST XH 3P（Board A/B、計2個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112248/">XHコネクター ベース付ポスト トップ型 3P B3B-XH-A</a></td><td><b>112248</b></td></tr>
+      <tr><td>JST XH 4P（Board A/B、計3個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112249/">XHコネクター ベース付ポスト トップ型 4P B4B-XH-A</a></td><td><b>112249</b></td></tr>
+      <tr><td>JST XH 5P（Board A、1個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112250/">XHコネクター ベース付ポスト トップ型 5P B5B-XH-A</a></td><td><b>112250</b></td></tr>
+      <tr><td>JST XH 6P（Board B、1個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112251/">XHコネクター ベース付ポスト トップ型 6P B6B-XH-A</a></td><td><b>112251</b></td></tr>
+      <tr><td>C_PWR_HF 100 nF</td><td><a href="https://akizukidenshi.com/catalog/g/g117059/">積層セラミックコンデンサー 0.1 µF 50 V C0G 5 mm</a></td><td><b>117059</b></td></tr>
+      <tr><td>C_PWR_BULK 470 µF</td><td><a href="https://akizukidenshi.com/catalog/g/g108426/">電解コンデンサー 470 µF 16 V 105 ℃</a></td><td><b>108426</b></td></tr>
+      <tr><td>C_SERVO_BULK 1000 µF</td><td><a href="https://akizukidenshi.com/catalog/g/g108424/">電解コンデンサー 1000 µF 10 V 105 ℃</a></td><td><b>108424</b></td></tr>
+      <tr><td>Carrier接続ソケット J14/J15</td><td><a href="https://akizukidenshi.com/catalog/g/g100085/">ピンソケット（メス）2×20（40P）</a></td><td><b>100085</b></td></tr>
+      <tr><td>JP_MUTE 1×2</td><td><a href="https://akizukidenshi.com/catalog/g/g108593/">ピンヘッダー 1×2（2P）</a></td><td><b>108593</b></td></tr>
+      <tr><td>JP_MUTE_SHUNT</td><td><a href="https://akizukidenshi.com/catalog/g/g103687/">ジャンパープラグ 2.54 mm</a></td><td><b>103687</b></td></tr>
+      <tr><td>R_GAIN/R_LR 0 Ω</td><td><a href="https://akizukidenshi.com/catalog/g/g111619/">角形ジャンパーチップ抵抗器 1608 0 Ω</a></td><td><b>111619</b></td></tr>
+      <tr><td>R_SD 100 kΩ</td><td><a href="https://akizukidenshi.com/catalog/g/g111798/">金属皮膜チップ抵抗器 2012 100 kΩ ±0.1%</a></td><td><b>111798</b></td></tr>
+      <tr><td>C1 10 µF</td><td><a href="https://akizukidenshi.com/catalog/g/g117897/">電解コンデンサー 10 µF 50 V 105 ℃</a></td><td><b>117897</b></td></tr>
+      <tr><td>C2/C3 100 nF</td><td><a href="https://akizukidenshi.com/catalog/g/g114559/">チップ積層セラミックコンデンサー 0.1 µF 100 V X7R 1608</a></td><td><b>114559</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>数量・適合・備考を含む詳細表</h3>
   <div class="callout warn">
     <strong>JST XHのピッチ:</strong>
     採用品の公称ピッチは2.50 mm、現行EasyEDAフットプリント名と穴中心は2.54 mm。ユーザー判断により、この基板ではJST XHをそのまま実装する。特に6極は端間差が最大になるため、量産前に現物を1個挿して確認する。
