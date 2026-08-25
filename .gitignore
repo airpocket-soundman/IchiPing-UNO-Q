@@ -74,6 +74,7 @@ Thumbs.db
 debug.log
 tmp/
 board/*_backup/
+board/backups/
 board/easyeda-screen.png
 board/easyeda_cdp.mjs
 board/*.lnk

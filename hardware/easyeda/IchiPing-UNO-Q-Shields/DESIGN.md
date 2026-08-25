@@ -1,46 +1,52 @@
 # IchiPing UNO Q shield design
 
-The binding design input is [SPECIFICATION.md](SPECIFICATION.md). This file
-records implementation notes for the generated KiCad/EasyEDA board data.
+The binding electrical and mechanical requirements are in
+[SPECIFICATION.md](SPECIFICATION.md). The sole editable EDA source is the
+EasyEDA project `board/Ichiping uno q.eprj2`.
 
-Both `*_easyeda_import.zip` archives contain the routed PCB and a KiCad 8
-`.kicad_sch` complete circuit. The legacy `.sch` files and `-cache.lib` files
-are retained as reproducible conversion sources. The UNO circuit includes all
-four shield headers, all 12 XH connectors, and the three power capacitors. The
-audio circuit includes the J14/J15 physical pin numbers, all three XH
-connectors, configuration resistors, mute jumper, and decoupling capacitors.
-The repository's `board/Ichiping uno q.eprj2` project contains both routed
-boards and both circuit drawings.
+The project contains two EasyEDA-native schematic/PCB boards:
+`ichiping_uno_q_shield` and `ichiping_uno_q_audio_shield`. Each Board owns one
+schematic and its routed PCB. Component references, unique IDs, pin/pad
+numbers, nets, footprints, copper, board outlines, and silkscreen are
+maintained directly in EasyEDA. The schematics were rebuilt in EasyEDA; there
+is no external EDA conversion or synchronization step.
 
-## Assembly variants
+## Assembly technology
 
-`variants/` contains three routed, schematic-matched versions of **each**
-board. Connector references, pin numbers, nets, board outlines, and placement
-origins are identical across the variants.
+The repository contains one binding production design for each board. All
+connectors and polarized electrolytic capacitors are through-hole; fixed
+resistors and non-polarized capacitors use SMD pads at the reviewed routing
+centers. This keeps
+mechanically loaded cable interfaces and large polarized parts serviceable
+while allowing automated placement of the remaining components.
 
-| Directory | Connectors | Resistors/capacitors | Intended use |
-|---|---|---|---|
-| `variants/tht/` | THT | THT | Hand assembly and repair |
-| `variants/smd/` | SMD | SMD | Reflow assembly / geometry comparison |
-| `variants/hybrid/` | THT | SMD | XH harness strength with automated passive placement |
+The `uno_shield/bom.csv` and `audio_shield/bom.csv` files are the board-specific
+parts lists. `scripts/prune_easyeda_project.py` keeps the current EasyEDA
+project tree limited to the two canonical schematic/PCB Boards while retaining
+the project database's historical snapshots.
 
-Each board directory includes `.kicad_sch`, `.kicad_pcb`, project, ERC report,
-and DRC report files. The adjacent `*_easyeda_import.zip` contains the matching
-schematic and PCB for EasyEDA Pro import. Regenerate them with
-`scripts/generate_variants.py` and audit technology, 2.54 mm pitch, connector
-pin order, and power nets with `scripts/audit_variants.py`.
+## Schematic/PCB association
 
-Important mechanical limitation: the XH/XH2.54 family has no standard
-top-entry surface-mount header equivalent. The `smd` variant therefore uses a
-project-local 2.54 mm vertical SMD pin landing pattern for an XH-harness mating
-interface. It does **not** provide the shroud, key, or latch of the vertical THT
-XH-compatible connector. Use `hybrid` when the specified vertical polarized
-XH housing and cable retention are mandatory; do not release the `smd` variant
-for production until an exact supplier part and its drawing are approved.
+| Board | Schematic | PCB |
+|---|---|---|
+| `ichiping_uno_q_shield` | `ichiping_uno_q_shield_schematic` / `Main` | `ichiping_uno_q_shield` |
+| `ichiping_uno_q_audio_shield` | `ichiping_uno_q_audio_shield_schematic` / `Main` | `ichiping_uno_q_audio_shield` |
+
+Every electrical PCB component is represented in its schematic with the same
+reference, unique ID, pin/pad number, and net name. The four UNO mounting holes
+are standalone 3.2 mm non-plated through holes, not electrical components, and
+are therefore outside the electrical component audit.
+
+The rebuilt schematics reference the same project-local Device and Footprint
+records as their routed PCBs. EasyEDA `Import Changes` therefore reports no
+component differences. The pin-level audit also reports zero differences for
+19 components / 70 pins on the UNO shield and 12 components / 107 pins on the
+audio shield. Keep rule 124 (`Schematic Netlist`) enabled together with all
+other PCB checks.
 
 ## Design assumptions
 
-- In the binding THT and hybrid builds, all external harness connectors are vertical, through-hole, 2.54 mm pitch
+- All external harness connectors are vertical, through-hole, 2.54 mm pitch
   XH-compatible parts. They use custom `XH2.54_Vertical_1xNN` footprints;
   genuine JST XH `B?B-XH-A` parts are 2.50 mm and must not be substituted.
 - Connector pin numbers below are viewed from the PCB top. Pin 1 has a square
@@ -63,8 +69,8 @@ dedicated top-header I2C pins D20/D21, as required by the UNO Q.
 
 ### Mechanical outline
 
-- The board outline, four mounting holes, and the four shield headers are
-  inherited unchanged from KiCad 8's official `Arduino_Uno` board template.
+- The board outline, four mounting holes, and the four shield headers retain
+  the reviewed Arduino UNO shield geometry in EasyEDA.
 - Edge bounding box: 68.73 x 53.49 mm (nominal Arduino UNO outline is commonly
   specified as 68.6 x 53.4 mm; the small difference includes plotted edge-line
   width and the shaped USB/DC-jack end of the template).
@@ -90,13 +96,12 @@ dedicated top-header I2C pins D20/D21, as required by the UNO Q.
 
 `C_PWR_BULK` is a polarized 470 uF / 10 V low-ESR input capacitor in an
 8.0 mm radial footprint with 3.50 mm lead spacing. It sits on the 5 V rail
-beside `J_PWR_IN`; `C_PWR_HF` (100 nF) remains in parallel. The separate
+beside `J_PWR_IN`; `C_PWR_HF` is a 100 nF radial through-hole ceramic
+capacitor with 5.00 mm lead spacing and remains in parallel. The separate
 `C_SERVO_BULK` 1000 uF capacitor remains beside the servo-power branch.
 
-The complete circuit is in
-`uno_shield/ichiping_uno_q_shield.kicad_sch`. Unused UNO header pins are
-explicitly marked no-connect so KiCad ERC can distinguish deliberate unused
-pins from wiring omissions.
+The PCB nets and connector table above define the electrical connections.
+Unused UNO header pads are intentionally left without a net.
 
 ## Board B: IchiPing UNO Q Audio Shield
 
@@ -112,15 +117,13 @@ to the right of J15.
 | J_AMP_PWR | XH-3 | SD, GND, VIN | SD selector, GND, J14-7 (+5V) |
 | J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, channel selector |
 
-In the binding THT build, `GAIN` and `L/R` default to GND through removable 0-ohm axial DIN0207
-resistors. `SD` has a 100 kOhm DIN0207 pull-up to 3.3 V and a normally open
-2.54 mm `JP_MUTE` header to GND. C1 is a radial 10 uF / 10 V electrolytic;
-C2/C3 are 100 nF through-hole disc capacitors. No SMD part is used on Board B.
+`GAIN` and `L/R` default to GND through 0-ohm SMD resistors. `SD` has a
+100 kOhm SMD pull-up to 3.3 V and a normally open through-hole 2.54 mm
+`JP_MUTE` header to GND. C1 is a radial through-hole 10 uF / 10 V
+electrolytic; C2/C3 are 100 nF SMD ceramic capacitors.
 
-The complete circuit is in
-`audio_shield/ichiping_uno_q_audio_shield.kicad_sch`; the legacy `.sch` and its
-`-cache.lib` are retained as reproducible conversion sources. The complete
-circuit is no longer only a connector map.
+The PCB nets, connector table, configuration components, and board-specific BOM
+define the complete electrical implementation.
 
 ## Manufacturing defaults
 
@@ -128,17 +131,12 @@ circuit is no longer only a connector map.
 - Signal tracks 0.25 mm; power tracks 0.50 mm; +5 V tracks 1.00 mm.
 - Track clearance is 0.25 mm and copper-pour clearance is 0.30 mm. Standard
   vias are 0.90/0.50 mm (diameter/drill); the pour and drill sizes leave
-  margin above EasyEDA Pro's defaults after import rounding.
+  margin above EasyEDA's defaults after import rounding.
 - GND copper pours on both layers with stitching vias.
 - JST XH pin 1 is marked on both copper footprint and silkscreen.
-- Run ERC/DRC again after EasyEDA Pro import because library conversion can
-  alter courtyard and solder-mask rules.
-- EasyEDA Pro converts KiCad's footprint metadata into `Origin Footprint`, so
-  its native symbol-footprint and schematic-netlist identity checks cannot be
-  used for imported symbols. In `board/Ichiping uno q.eprj2`, those two
-  schematic checks are set to Note and PCB custom DRC rule 124 (`Schematic
-  Netlist`) is unchecked. All electrical wiring checks and all 123 physical PCB
-  checks remain enabled. Use `Design > Check DRC(Custom)... > Check Now` for
-  the imported PCB; the saved result is `All (0)`. The UNO KiCad checks remain
-  the independent binding cross-check: ERC 0 errors/0 warnings and PCB DRC 0
-  violations/0 unrouted items.
+- Before manufacturing, run the saved EasyEDA custom PCB DRC on both Boards and
+  require `All (0)`, including rule 124 (`Schematic Netlist`).
+- Verify the schematic-to-PCB reference, unique-ID, pin/pad, and net mapping,
+  then review connector pin order and supply rails against
+  [SPECIFICATION.md](SPECIFICATION.md), `docs/uno_q_port.html`, and the
+  board-specific BOMs.

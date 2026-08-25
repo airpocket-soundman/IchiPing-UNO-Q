@@ -25,7 +25,7 @@ Debian上ではALSAデバイスが列挙されますが、外部音響機器な�
 - [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
 - [UNO Q GPIO接続図](docs/gpio_wiring.html)
 - [UNO Qシールド基板仕様](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md)
-- [KiCad / EasyEDA基板データ](hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md)
+- [EasyEDA基板データ](hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md)
 - [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
 - [Hackster投稿用記事 — One Ping, 32 States](docs/hackster_article.md)
 - [UNO Q bring-upアプリ](uno_q/README.md)
@@ -70,8 +70,8 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 | `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
 | `docs/uno_q_port.html` | 開発方針、配線、GPIO、ILI9341表示規約 |
 | `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
-| `board/Ichiping uno q.eprj2` | EasyEDA Proプロジェクト（UNOシールド、音響拡張シールド） |
-| `hardware/easyeda/IchiPing-UNO-Q-Shields/` | 基板仕様、KiCadデータ、EasyEDAインポートデータ、DRC結果 |
+| `board/Ichiping uno q.eprj2` | 2枚のシールドを収録したEasyEDA設計正本（回路図とPCBをBoard単位で関連付け済み） |
+| `hardware/easyeda/IchiPing-UNO-Q-Shields/` | 基板仕様、基板別BOM、EasyEDA設計ノート |
 | `firmware/` | 元FRDM-MCXN947実装（移植参照） |
 | `pc/` | データ採取、学習、評価、既存モデル資産 |
 | `hardware/` | 元ハードウェア参照資料とUNO Q用シールド基板データ |

@@ -3,339 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IchiPing BOM (v1)</title>
+<title>IchiPing UNO Q — シールド基板BOM</title>
 <link rel="stylesheet" href="../docs/style.css">
 <script src="../docs/embed.js"></script>
+<style>
+  .bom-table td:nth-child(3), .bom-table td:nth-child(4) { white-space: nowrap; }
+  .status-ok { color: #68d391; font-weight: 700; }
+  .status-warn { color: #f6ad55; font-weight: 700; }
+  .scope { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin:16px 0; }
+  .scope > div { border:1px solid var(--border); border-radius:10px; padding:14px; background:var(--panel); }
+</style>
 </head>
 <body>
 
-<aside class="sidenav">
-  <div class="sidenav-brand"><a href="../index.html">IchiPing</a>
-    <div class="sidenav-tag">v0.1 シリアル疎通フェーズ</div>
-  </div>
-  <nav>
-    <div class="sidenav-group">
-      <div class="sidenav-h">ナビゲーション</div>
-      <a href="../index.html">トップ</a>
-      <a href="../tasks.html">タスクボード</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">設計 / 仕様</div>
-      <a href="../docs/spec.html">仕様書 (spec)</a>
-      <a href="wiring.html">配線図</a>
-      <a href="../docs/nn_design.html">NN 設計</a>
-      <a href="../docs/mcu_deployment.html">MCU デプロイ</a>
-      <a href="../docs/bringup.html">実機ブリングアップ</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">NN 検討</div>
-      <a href="../docs/probe_sound.html">走査音考察</a>
-      <a href="../docs/nn_review.html">NN 考察</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">ハードウェア</div>
-      <a href="../hardware/wiring.html">配線テーブル</a>
-      <a href="../hardware/bom.html" class="current">BOM (部品表)</a>
-      <a href="../hardware/display_options.html">ディスプレイ候補</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">実装コード</div>
-      <a href="../firmware/README.html">firmware ガイド</a>
-      <a href="../pc/README.html">PC ガイド</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">対外発信</div>
-      <a href="../docs/protopedia_preview.html">ProtoPedia プレビュー</a>
-      <a href="../docs/protopedia.md">ProtoPedia 投稿原稿 (md)</a>
-    </div>
-    <div class="sidenav-group">
-      <div class="sidenav-h">メタ</div>
-      <a href="../docs/vscode_setup.html">VS Code セットアップ</a>
-      <a href="../CLAUDE.html">Claude 作業ガイド</a>
-    </div>
-  </nav>
-  <div class="sidenav-foot">
-    <a href="https://github.com/airpocket-soundman/IchiPing">GitHub: IchiPing</a><br>
-    <a href="https://github.com/airpocket-soundman/digikey_project">正本 digikey_project</a>
-  </div>
-</aside>
-
 <header class="page">
-  <div class="crumb">
-    <a href="../index.html">← IchiPing トップ</a>
-    ／ <a href="../tasks.html">タスクボード</a>
-    ／ <a href="wiring.html">配線テーブル</a>
-    ／ <a href="display_options.html">ディスプレイ候補</a>
-    ／ <a href="../docs/spec.html">仕様書 §6</a>
-  </div>
-  <h1>IchiPing BOM <span class="pill">v1, DigiKey M1 想定</span></h1>
-  <div class="sub">
-    DigiKey M1 / ROHM EDGE HACK 2026 応募版（v1）の部品表。
-    機械可読版は <a href="bom.csv">bom.csv</a>。正本仕様 <a href="../docs/spec.html#6">spec.html §6</a> に
-    基づき、本リポ実装に必要な部品を網羅。
-    価格は 2026-05 時点の <b>参考値</b>。発注前に DigiKey で再確認。
-  </div>
-  <div class="meta">
-    <span class="meta-stat done"><span class="num">~$210</span> Required 部品計（試算、DigiKey 価格ベース）</span>
-    <span class="meta-stat"><span class="num">stock</span> 主要部品在庫あり</span>
-  </div>
+  <div class="crumb"><a href="../index.html">← IchiPing UNO Qトップ</a> ／ <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md">基板仕様</a></div>
+  <h1>IchiPing UNO Q シールド基板BOM</h1>
+  <div class="sub">UNO QシールドとAudioシールドを別集計した、基板実装用の部品表。統合CSVは <a href="bom.csv">bom.csv</a>。</div>
 </header>
 
 <main>
+<section>
+  <h2>対象範囲</h2>
+  <div class="scope">
+    <div><b>Board A — UNO Q Shield</b><br>Arduinoヘッダ、TFT・サーボ・状態入力コネクタ、電源コンデンサ。</div>
+    <div><b>Board B — Audio Shield</b><br>UNO Breakout Carrier J14/J15、MI2Sマイク・アンプ端子、設定抵抗、デカップリング。</div>
+  </div>
+  <p>ILI9341、PCA9685、INMP441、MAX98357A、Arduino UNO Q、UNO Breakout Carrierなどの<b>外付けモジュールは基板実装BOMに含めない</b>。</p>
+</section>
 
-<h2>1. 必須部品（v1 最小構成）</h2>
+<section>
+  <h2>Board A — UNO Q Shield</h2>
+  <p>個別CSV: <a href="easyeda/IchiPing-UNO-Q-Shields/uno_shield/bom.csv">uno_shield/bom.csv</a></p>
+  <table class="bom-table">
+    <thead><tr><th>部品</th><th>Ref</th><th>数量</th><th>値・仕様</th><th>実装 / フットプリント</th><th>備考</th></tr></thead>
+    <tbody>
+      <tr><td>PCB</td><td>PCB-A</td><td>1</td><td>2層 FR-4、1.6 mm、1 oz</td><td>UNO Qシールド外形</td><td>裸基板</td></tr>
+      <tr><td>スタッキングソケット 1×8</td><td>J1, J4</td><td>2</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
+      <tr><td>スタッキングソケット 1×10</td><td>J2</td><td>1</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
+      <tr><td>スタッキングソケット 1×6</td><td>J3</td><td>1</td><td>2.54 mm</td><td>THT</td><td>Arduinoシールド用ロングテール</td></tr>
+      <tr><td>XH2.54互換 1×2</td><td>J_PWR_IN, J_SERVO_5V_OUT, J_DOOR_AB, J_EXEC, J_WIN_C, J_DOOR_BC, J_WIN_A, J_WIN_B</td><td>8</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x02</td><td>純正JST XH指定ではない</td></tr>
+      <tr><td>XH2.54互換 1×3</td><td>J_RAIN</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>—</td></tr>
+      <tr><td>XH2.54互換 1×4</td><td>J_TFT_PWR, J_SERVO_CTRL</td><td>2</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>—</td></tr>
+      <tr><td>XH2.54互換 1×5</td><td>J_TFT_SIG</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x05</td><td>—</td></tr>
+      <tr><td>ラジアルセラミックコンデンサ</td><td>C_PWR_HF</td><td>1</td><td>100 nF、25 V以上</td><td><b>THT / P5.00 mm</b></td><td>高周波バイパス、無極性</td></tr>
+      <tr><td>低ESR電解コンデンサ</td><td>C_PWR_BULK</td><td>1</td><td>470 µF、10 V以上</td><td>THT / D8.0 mm、P3.50 mm</td><td>極性注意</td></tr>
+      <tr><td>低ESR電解コンデンサ</td><td>C_SERVO_BULK</td><td>1</td><td>1000 µF、10 V以上</td><td>THT / D10.0 mm、P5.00 mm</td><td>サーボ突入電流対策、極性注意</td></tr>
+    </tbody>
+  </table>
+</section>
 
-<h3>1.1 コア演算系</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>備考</th></tr></thead>
-  <tbody>
-    <tr>
-      <td>MCU</td>
-      <td><b>FRDM-MCXN947</b></td>
-      <td>1</td>
-      <td>$49.00</td>
-      <td><a href="https://www.digikey.com/en/products/detail/nxp-usa-inc/FRDM-MCXN947/22036137">DigiKey: FRDM-MCXN947</a></td>
-      <td>NPU + PowerQuad DSP + I²S 多系統。本プロジェクトの中心</td>
-    </tr>
-    <tr>
-      <td>マイク</td>
-      <td>INMP441 I²S MEMS breakout</td>
-      <td>1</td>
-      <td>$2-5</td>
-      <td>
-        汎用 (AliExpress / Amazon の汎用ブレイクアウト)<br>
-        <span class="label-small">代替: <a href="https://www.digikey.com/en/products/detail/tdk-invensense/INMP441ACEZ-R7/2606606">DigiKey: INMP441ACEZ-R7</a> (bare IC, 自作)</span>
-      </td>
-      <td>24-bit、DC オフセット問題なしで chirp/RIR 用途に好適。<a href="../docs/spec.html#6">spec §6</a> 指定品。<b>注</b>: Adafruit 3421 は INMP441 ではなく SPH0645LM4H で、互換ではない</td>
-    </tr>
-    <tr>
-      <td>DAC + Amp</td>
-      <td>MAX98357A breakout</td>
-      <td>1</td>
-      <td>$5.95</td>
-      <td><a href="https://www.digikey.com/en/products/detail/adafruit-industries-llc/3006/6058477">DigiKey: Adafruit 3006</a></td>
-      <td>Class-D 3.2 W @ 8 Ω。<b>GAIN ピンは GND 直結 (3 dB)</b> で固定。フローティング (9 dB) のままだと 0.25 W スピーカを焼く</td>
-    </tr>
-    <tr>
-      <td>スピーカ</td>
-      <td>8 Ω 0.25 W フルレンジ 45 mm</td>
-      <td>1</td>
-      <td>$2.50</td>
-      <td>
-        汎用 (手持ち想定)<br>
-        <span class="label-small">代替: <a href="https://www.digikey.com/en/products/filter/speakers/156">DigiKey スピーカ 検索</a></span>
-      </td>
-      <td>30 cm 模型 (v0.4 デモ) 用。実家屋スケール (v1+) は <a href="../docs/spec.html#6">spec §6</a> の 1〜3 W に戻す。chirp 振幅はファーム側で 50〜70 % にスケールし下限 300 Hz から</td>
-    </tr>
-  </tbody>
-</table>
+<section>
+  <h2>Board B — Audio Shield</h2>
+  <p>個別CSV: <a href="easyeda/IchiPing-UNO-Q-Shields/audio_shield/bom.csv">audio_shield/bom.csv</a></p>
+  <table class="bom-table">
+    <thead><tr><th>部品</th><th>Ref</th><th>数量</th><th>値・仕様</th><th>実装 / フットプリント</th><th>備考</th></tr></thead>
+    <tbody>
+      <tr><td>PCB</td><td>PCB-B</td><td>1</td><td>2層 FR-4、1.6 mm、1 oz</td><td>Audioシールド外形</td><td>裸基板</td></tr>
+      <tr><td>ソケットヘッダ 2×20</td><td>J14, J15</td><td>2</td><td>2.54 mm</td><td>THT</td><td>UNO Breakout Carrier接続</td></tr>
+      <tr><td>XH2.54互換 1×6</td><td>J_MIC</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x06</td><td>マイク接続</td></tr>
+      <tr><td>XH2.54互換 1×4</td><td>J_AMP_SIG</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>アンプ信号</td></tr>
+      <tr><td>XH2.54互換 1×3</td><td>J_AMP_PWR</td><td>1</td><td>垂直、2.54 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>アンプ電源・SD</td></tr>
+      <tr><td>ピンヘッダ 1×2</td><td>JP_MUTE</td><td>1</td><td>2.54 mm</td><td>THT</td><td>通常はオープン</td></tr>
+      <tr><td>ジャンパシャント</td><td>JP_MUTE_SHUNT</td><td>1</td><td>2.54 mm</td><td>基板外</td><td>装着時のみミュート、任意</td></tr>
+      <tr><td>チップ抵抗</td><td>R_GAIN, R_LR</td><td>2</td><td>0 Ω</td><td><b>SMD 0805</b></td><td>既定状態をGNDに固定</td></tr>
+      <tr><td>チップ抵抗</td><td>R_SD</td><td>1</td><td>100 kΩ、1%</td><td><b>SMD 0805</b></td><td>SDを3.3 Vへプルアップ</td></tr>
+      <tr><td>電解コンデンサ</td><td>C1</td><td>1</td><td>10 µF、10 V以上</td><td>THT / D5.0 mm、P2.00 mm</td><td>+5 V、極性注意</td></tr>
+      <tr><td>セラミックコンデンサ</td><td>C2, C3</td><td>2</td><td>100 nF、25 V、X7R</td><td><b>SMD 0805</b></td><td>+5 V / +1.8 Vバイパス</td></tr>
+    </tbody>
+  </table>
+</section>
 
-<h3>1.2 サーボ・アクチュエータ系</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>備考</th></tr></thead>
-  <tbody>
-    <tr>
-      <td>サーボドライバ</td>
-      <td>PCA9685 16ch PWM</td>
-      <td>1</td>
-      <td>$14.95</td>
-      <td><a href="https://www.digikey.com/en/products/detail/adafruit-industries-llc/815/4990757">DigiKey: Adafruit 815</a></td>
-      <td>I²C 0x40</td>
-    </tr>
-    <tr>
-      <td>サーボ</td>
-      <td>SG90 9g micro servo</td>
-      <td>5</td>
-      <td>$5.95</td>
-      <td><a href="https://www.digikey.com/en/products/detail/adafruit-industries-llc/169/5154651">DigiKey: Adafruit 169</a></td>
-      <td>窓 a/b/c + 扉 AB/BC を駆動</td>
-    </tr>
-  </tbody>
-</table>
+<section>
+  <h2>製造前チェック</h2>
+  <div class="callout warn">
+    <strong>Audioシールド要修正:</strong>
+    BOMと実装方針では R_GAIN / R_LR / R_SD / C2 / C3 はSMD 0805だが、2026-08-25時点のEasyEDA PCBには旧THTフットプリントが残っている。
+    発注・Gerber出力前にPCBフットプリントをBOMへ合わせること。
+  </div>
+  <ul>
+    <li>XHコネクタは<b>XH2.54互換</b>。純正JST XH（2.50 mm）と同一品として発注しない。</li>
+    <li>電解コンデンサは極性、直径、リードピッチ、高さを実装前に確認する。</li>
+    <li>外付けモジュールとケーブル／ハウジング／圧着端子は別途手配する。</li>
+  </ul>
+</section>
 
-<h3>1.3 表示</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>備考</th></tr></thead>
-  <tbody>
-    <tr>
-      <td><b>ディスプレイ</b></td>
-      <td>ILI9341 2.4" TFT 240×320 RGB565 (SPI, タッチパネル付き)</td>
-      <td>1</td>
-      <td>$29.95</td>
-      <td><a href="https://www.digikey.com/en/products/detail/adafruit-industries-llc/2478/5761253">DigiKey: Adafruit 2478</a></td>
-      <td>
-        <b>SH1106 から ILI9341 にアップグレード</b>。フルカラー RGB565 でデモ動画映え ◎、
-        LVGL ライブラリも公式サポート。
-        <a href="display_options.html">display_options.html</a> §採用決定 を参照
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>1.4 ユーザー入力・表示</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>備考</th></tr></thead>
-  <tbody>
-    <tr>
-      <td>トグル SPST</td>
-      <td>パネルマウント トグル</td>
-      <td>5</td>
-      <td>$3.50</td>
-      <td><a href="https://www.digikey.com/en/products/detail/e-switch/ST161D00/EG4815-ND/2116294">DigiKey: E-Switch ST161D00</a></td>
-      <td>窓/扉真値（D3〜D7）</td>
-    </tr>
-    <tr>
-      <td>モーメンタリ</td>
-      <td>タクトスイッチ 6×6 mm</td>
-      <td>1</td>
-      <td>$0.20</td>
-      <td><a href="https://www.digikey.com/en/products/filter/tactile-switches/197?s=N4IgjCBcoLQRgRgKxQMyhAGhDOB7AdgC4gC6AvkA">DigiKey: 6mm タクトスイッチ 検索</a></td>
-      <td>EXEC ボタン（D8）</td>
-    </tr>
-    <tr>
-      <td>LED 緑</td>
-      <td>5 mm 拡散 緑 (Through-Hole)</td>
-      <td>1</td>
-      <td>$0.25</td>
-      <td><a href="https://www.digikey.com/en/products/detail/dialight/5500205F/350-1598-ND/808996">DigiKey: Dialight 5500205F</a></td>
-      <td>PWR (電源直結)</td>
-    </tr>
-    <tr>
-      <td>LED 橙</td>
-      <td>5 mm 拡散 橙 (Through-Hole)</td>
-      <td>1</td>
-      <td>$0.25</td>
-      <td><a href="https://www.digikey.com/en/products/filter/led-indication-discrete/through-hole/105?s=N4IgjCBcpgTBDOIDGUBmBDANgZwKYBoQBLAOygBcBHfCKgB0xLAFY68KIBfNoA">DigiKey: 5mm 橙 LED 検索</a></td>
-      <td>推論中 (D2)</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>1.5 Wi-Fi / 環境センサ系（デモ完全自動化）</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>備考</th></tr></thead>
-  <tbody>
-    <tr>
-      <td>Wi-Fi モジュール</td>
-      <td><b>M5Stamp Pico</b>（ESP32-PICO-D4）</td>
-      <td>1</td>
-      <td>$6.50</td>
-      <td><a href="https://www.digikey.com/en/products/detail/m5stack-technology-co-ltd/K051/14672117">DigiKey: M5Stack K051</a><br>
-        <span class="label-small">(代替: <a href="https://www.digikey.com/en/products/detail/m5stack-technology-co-ltd/K051-B/14672109">K051-B</a> ピンソケット版)</span></td>
-      <td>
-        親指サイズの ESP32 モジュール。<b>コントローラ筐体内に統合</b>。
-        MCU と LPUART で接続し、推論結果を <b>MQTT / HTTP</b> でクラウド送信。
-        スマホからの「閉めて」コマンドも同経路で受信して MCU へ転送。
-      </td>
-    </tr>
-    <tr>
-      <td>降雨センサ</td>
-      <td>YL-83 抵抗式 降雨検出モジュール</td>
-      <td>1</td>
-      <td>$1.50</td>
-      <td>
-        汎用 (AliExpress / Amazon)<br>
-        <span class="label-small">DigiKey 取扱なし、安価な汎用品</span>
-      </td>
-      <td>
-        <b>House 模型に屋外設置</b>。MCU の GPIO に直接接続し、
-        雨検出で推論をトリガ。デモ時は水滴を垂らして検出を再現可能。
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>1.6 受動部品・ケーブル</h3>
-<table>
-  <thead><tr><th>カテゴリ</th><th>部品</th><th>数</th><th>単価</th><th>Vendor / 型番</th><th>用途</th></tr></thead>
-  <tbody>
-    <tr>
-      <td>抵抗</td>
-      <td>330 Ω 1/4 W</td>
-      <td>2</td>
-      <td>$0.10</td>
-      <td><a href="https://www.digikey.com/en/products/filter/through-hole-resistors/53?s=N4IgjCBcoLQRgRgKxQMyhAGhDOB7AdgC4gC6Avk0gKYBOAlgGYCGEAlpaZAMYAecYAJiAYwG7AHaEAtgWZkAxgGcWUUWQg14yIQDsCs%2BcvVbtu%2BgcOTpgkQwBaykg6vXzwQQHd5bAJ4AHALAA">DigiKey: 330Ω 1/4W 検索</a></td>
-      <td>LED 電流制限</td>
-    </tr>
-    <tr>
-      <td>抵抗</td>
-      <td>4.7 kΩ 1/4 W</td>
-      <td>4</td>
-      <td>$0.10</td>
-      <td><a href="https://www.digikey.com/en/products/filter/through-hole-resistors/53?s=N4IgjCBcoLQRgRgKxQMyhAGhDOB7AdgC4gC6Avk0gKYBOAlgGYCGEAlpaZAMYAecYAJiAYwG7AHaEAtgWZkAxgGcWUUWQg14yIQDsCs%2BcvVbtu%2BgcOTpgkQwBaykg6vXzwQQHd5bAJ4AHALAA">DigiKey: 4.7kΩ 1/4W 検索</a></td>
-      <td>I²C プルアップ（バス毎 1 セット）</td>
-    </tr>
-    <tr>
-      <td>電解コンデンサ</td>
-      <td>1000 µF 16 V (radial)</td>
-      <td>1</td>
-      <td>$0.55</td>
-      <td><a href="https://www.digikey.com/en/products/detail/chemi-con/EKYB160ELL102MJ16S/4843676">DigiKey: Chemi-Con EKYB160ELL102MJ16S</a></td>
-      <td>サーボ V+ 突入電流吸収</td>
-    </tr>
-    <tr>
-      <td>ジャンパ線</td>
-      <td>F/F + F/M Dupont 40 本×2</td>
-      <td>2</td>
-      <td>$5.95</td>
-      <td>汎用 (Adafruit / Amazon)</td>
-      <td>プロトタイプ配線</td>
-    </tr>
-    <tr>
-      <td>USB ケーブル</td>
-      <td>Micro-USB データ通信対応 ≥ 1 m</td>
-      <td>1</td>
-      <td>$4.95</td>
-      <td><a href="https://www.digikey.com/en/products/filter/usb-cables/471">DigiKey: USB ケーブル 検索</a></td>
-      <td>OpenSDA（充電専用 NG）</td>
-    </tr>
-    <tr>
-      <td>USB ケーブル</td>
-      <td>USB-C データ通信対応 ≥ 1 m</td>
-      <td>1</td>
-      <td>$5.95</td>
-      <td><a href="https://www.digikey.com/en/products/filter/usb-cables/471">DigiKey: USB ケーブル 検索</a></td>
-      <td>後で本体 USB CDC へ</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2>2. 概算サマリ</h2>
-<table>
-  <thead><tr><th>項目</th><th>小計</th></tr></thead>
-  <tbody>
-    <tr><td>必須電子部品 §1.1 コア演算系（MCU $49 + INMP441 $3 + MAX98357A $6 + speaker $3）</td><td>~$61</td></tr>
-    <tr><td>必須電子部品 §1.2 サーボ系（PCA9685 $15 + SG90×5 $30）</td><td>~$45</td></tr>
-    <tr><td>必須電子部品 §1.3 表示（ILI9341 Adafruit 2478）</td><td>~$30</td></tr>
-    <tr><td>必須電子部品 §1.4 ユーザー入力・表示（トグル×5 $18 + EXEC $0.2 + LED×2 $0.5）</td><td>~$19</td></tr>
-    <tr><td>必須電子部品 §1.5 Wi-Fi / 環境センサ（M5Stamp Pico $6.5 + YL-83 $1.5）</td><td>~$8</td></tr>
-    <tr><td>必須電子部品 §1.6 受動部品・ケーブル（抵抗・コンデンサ・USB×2）</td><td>~$24</td></tr>
-    <tr><td>送料・税</td><td>別途</td></tr>
-    <tr><td><b>応募 v1 必須計</b></td><td><b>~$187 (本体) + ジャンパ線等 = ~$210</b></td></tr>
-  </tbody>
-</table>
-
-<div class="callout warn">
-  <strong>応募運用上の注意:</strong> DigiKey M1 応募の <b>myLists 部品表</b>に登録できるのは DigiKey 取扱品のみ。
-</div>
-
-<h2>3. 同期管理</h2>
-<p>
-  正本 <a href="../docs/spec.html#6">spec.html §6</a> に部品変更があった場合は、本ファイル <b>と</b> <a href="bom.csv">bom.csv</a>
-  <b>と</b> <a href="wiring.html">wiring.html</a> をセットで更新する（<a href="../CLAUDE.html">CLAUDE.html</a> §6 行参照）。
-  発注前に DigiKey で在庫・価格を再確認するため、ここの値はあくまで <b>参考</b>。
-</p>
-
-<div class="footer-note">
-  関連ページ:
-  <a href="../index.html">index.html</a> ／
-  <a href="bom.csv">bom.csv (機械可読)</a> ／
-  <a href="display_options.html">display_options.html</a> ／
-  <a href="wiring.html">wiring.html</a> ／
-  <a href="../docs/spec.html">spec.html</a> ／
-  <a href="../tasks.html">tasks.html</a>
-</div>
-
+<div class="footer-note">生成基準: 現行EasyEDA配置部品 + <a href="easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md">単一実装方式仕様</a>（2026-08-25）。</div>
 </main>
 </body>
 </html>
