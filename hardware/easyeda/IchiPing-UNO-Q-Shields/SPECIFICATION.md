@@ -1,6 +1,6 @@
 # IchiPing UNO Q シールド基板仕様書
 
-版: Rev A 設計入力 / 2026-08-24
+版: Rev B 配線修正版設計入力 / 2026-09-07
 
 本書は、EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準の正本とする。GPIOの正本
 `docs/uno_q_port.html`、元IchiPingの`docs/pins.xlsx`、UNO QおよびUNO
@@ -66,6 +66,9 @@ Pin 2がGNDである。
 | J_TFT_SIG | 5 | MISO, LED, SCK, MOSI, DC | D12, A5, D13, D11, A4 |
 | J_TFT_PWR | 4 | RST, CS, GND, VCC | A3, A2, GND, 3V3 |
 
+TFTモジュール端子までのピン単位の対応は
+[`TFT_PIN_MAPPING.md`](TFT_PIN_MAPPING.md)を正本とする。
+
 `J_SERVO_CTRL`の`VIN`表記はPCA9685モジュールのロジック電源入力を意味し、3.3 Vで
 ある。サーボ電源V+は`J_SERVO_5V_OUT`から別配線する。雨センサD0は必ず3.3 V以下に
 なる3.3 V動作モジュールを用いる。TFT MISOはコネクタへ出すが、現行ドライバは
@@ -93,26 +96,25 @@ Pin 2がGNDである。
 
 ### 3.2 音響コネクタ
 
+ピン単位の正本は[`AUDIO_SHIELD_PIN_MAPPING.md`](AUDIO_SHIELD_PIN_MAPPING.md)とする。
+J14/J15の表裏ミラーを考慮し、外形上の左右ではなくパッド番号で照合する。
+
 | Ref | 極数 | XH2.54のピン順 | Carrier接続／既定値 |
 |---|---:|---|---|
-| J_AMP_SIG | 4 | LRC, BCLK, DIN, GAIN | J15-34, J15-32, J15-38, R_GAIN |
-| J_AMP_PWR | 3 | SD, GND, VIN | R_SD/JP_MUTE, GND, J14-7 (+5V) |
-| J_MIC | 6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, R_LR |
+| J_AMP_SIG | 4 | LRC, BCLK, DIN, GAIN | J15-34, J15-32, J15-38, J15-40 (GND) |
+| J_AMP_PWR | 3 | SD, GND, VIN | J14-7 (+5V), J15-40 (GND), J14-7 (+5V) |
+| J_MIC | 6 | GND, VCC, SD, SCK, WS, L/R | J15-40 (GND), J14-19 (+1V8), J15-36, J15-32, J15-34, J15-40 (GND) |
 
 - MI2S0 BCLK = SOC_GPIO_98 = J15-32、WS/LRCLK = SOC_GPIO_99 = J15-34。
 - マイクデータ候補 = SOC_GPIO_100 = J15-36。
 - アンプデータ候補 = SOC_GPIO_101 = J15-38。
 - 上記4信号はすべてQRB2210の1.8 Vドメインである。
 - マイクVCCはJ14-19の+1.8 V、MAX98357A VINはJ14-7の+5 Vを使う。
-- `R_GAIN`と`R_LR`は実装時0 ΩでGNDへ接続し、既定状態を固定する。変更時は
-  0 Ω抵抗を取り外して所望のストラップ抵抗へ置換する。
-- `R_SD`は100 kΩで3.3 Vへプルアップし、MAX98357Aを既定で有効にする。
-  `JP_MUTE`に2.54 mmジャンパシャントを挿すとSDをGNDへ落としてミュートできる。
-- `R_GAIN`、`R_LR`、`R_SD`はリードピッチ10.16 mmのアキシャル抵抗、C2/C3は
-  リードピッチ5.00 mmのラジアル積層セラミック、C1はラジアル電解、
-  JP_MUTEは2.54 mmスルーホールピンヘッダとする。すべてスルーホール実装とする。
-- C1は10 uF / 10 V以上で+5 Vをデカップリングし、C2=100 nFを並列配置する。
-  C3=100 nFは+1.8 Vをデカップリングする。C1の極性はPin 1=+5 V、Pin 2=GND。
+- MAX98357Aの`GAIN`はGNDへ直結して12 dB、`SD`はVIN (+5 V)へ直結して常時有効・
+  左チャンネル選択とする。マイクの`L/R`はGNDへ直結して左チャンネルとする。
+- Audio shieldはブレークアウトモジュール接続専用とし、抵抗、ジャンパ、電解・
+  セラミックコンデンサを実装しない。必要なデカップリングを搭載済みのMAX98357A／
+  I2Sマイクモジュールを使用する。裸ICにはこの省略構成を使用しない。
 - DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
   までは、音響モジュールを接続・通電しない。
 
@@ -141,7 +143,7 @@ Board AからBoard Bへ電源を渡すXHケーブルは現仕様では不要で�
 - 回路図のDevice／FootprintはPCBと同じプロジェクト内レコードへ関連付ける。
   カスタムDRCの124番`Schematic Netlist`を含む全項目を有効にし、`All (0)`を必須とする。
   Ref、Unique ID、ピン／パッド番号、ネット名の対応監査はUNOシールド19部品／70ピン、
-  Audioシールド12部品／107ピンを対象とし、差分0件を必須とする。UNOシールドの取付穴4個は
+  Audioシールド5部品／93ピンを対象とし、差分0件を必須とする。UNOシールドの取付穴4個は
   直径3.2 mmの独立した非メッキ穴として扱い、電気部品のネットリストには含めない。
 - 製造前にEasyEDAの回路図DRCも両Boardで実行し、各部品のRef、Unique ID、ピン／
   パッド番号、ネットが対応することを確認する。回路接続は本仕様書、
@@ -157,8 +159,7 @@ UNOシールドと音響シールドは、次の実装方式だけを正規設�
 | UNO／キャリア接続ヘッダ、XH2.54、ジャンパなど全コネクタ | スルーホール |
 | 極性付き電解コンデンサ | ラジアル・スルーホール |
 | UNOシールドの`C_PWR_HF` | 100 nFラジアル・スルーホール、5.00 mmピッチ |
-| Audioシールドの固定抵抗 | アキシャル・スルーホール、10.16 mmピッチ |
-| Audioシールドの無極性コンデンサ | ラジアル・スルーホール、5.00 mmピッチ |
+| Audioシールド | J14/J15ソケットおよび3個のXH2.54のみ。補助受動部品なし |
 
 - 正規設計は`uno_shield/`と`audio_shield/`だけに保存し、実装方式別の派生版は作らない。
 - 外形、Ref、ネット名、コネクタのピン番号と2.54 mm中心間隔を維持する。

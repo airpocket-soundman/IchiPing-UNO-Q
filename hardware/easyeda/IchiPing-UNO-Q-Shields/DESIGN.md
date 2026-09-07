@@ -93,6 +93,9 @@ dedicated top-header I2C pins D20/D21, as required by the UNO Q.
 | J_PWR_IN | XH-2 | +5V, GND | UNO Q +5V pin, GND (never VIN) |
 | J_SERVO_5V_OUT | XH-2 | +5V, GND | Direct branch from J_PWR_IN for PCA9685 V+ |
 
+The display-module-side names and exact harness order are defined in
+[TFT_PIN_MAPPING.md](TFT_PIN_MAPPING.md).
+
 `C_PWR_BULK` is a polarized 470 uF / 10 V low-ESR input capacitor in an
 8.0 mm radial footprint with 3.50 mm lead spacing. It sits on the 5 V rail
 beside `J_PWR_IN`; `C_PWR_HF` is a 100 nF radial through-hole ceramic
@@ -110,17 +113,23 @@ headers using bottom-side female sockets. The J14/J15 coordinates and official
 to the right of the previous outline, and all three XH connectors are placed
 to the right of J15.
 
+The authoritative, pin-by-pin routing table is
+[AUDIO_SHIELD_PIN_MAPPING.md](AUDIO_SHIELD_PIN_MAPPING.md). Route by the J14/J15
+pad numbers rather than apparent left/right position because the mating view is
+mirrored between the carrier and the bottom-mounted sockets.
+
 | Reference | Connector | Pin order | Breakout Carrier nets |
 |---|---|---|---|
-| J_AMP_SIG | XH-4 | LRC, BCLK, DIN, GAIN | J15-34, J15-32, J15-38, gain selector |
-| J_AMP_PWR | XH-3 | SD, GND, VIN | SD selector, GND, J14-7 (+5V) |
-| J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | GND, J14-19 (+1V8), J15-36, J15-32, J15-34, channel selector |
+| J_AMP_SIG | XH-4 | LRC, BCLK, DIN, GAIN | J15-34, J15-32, J15-38, J15-40 (GND) |
+| J_AMP_PWR | XH-3 | SD, GND, VIN | J14-7 (+5V), J15-40 (GND), J14-7 (+5V) |
+| J_MIC | XH-6 | GND, VCC, SD, SCK, WS, L/R | J15-40 (GND), J14-19 (+1V8), J15-36, J15-32, J15-34, J15-40 (GND) |
 
-`GAIN` and `L/R` default to GND through 0-ohm axial through-hole resistors.
-`SD` has a 100 kOhm axial through-hole pull-up to 3.3 V and a normally open
-through-hole 2.54 mm `JP_MUTE` header to GND. C1 is a radial through-hole
-10 uF / 10 V electrolytic; C2/C3 are 100 nF radial through-hole ceramic
-capacitors.
+`GAIN` and microphone `L/R` connect directly to GND. `SD` connects directly to
+VIN (+5 V). This fixes the amplifier at 12 dB, enables its left channel, and
+fixes the microphone at the left channel without configuration parts. The
+audio shield contains only J14, J15, and the three XH connectors; it has no
+resistors, jumpers, or capacitors. Both external audio boards must be breakout
+modules with their required local supply decoupling already fitted.
 
 The PCB nets, connector table, configuration components, and board-specific BOM
 define the complete electrical implementation.

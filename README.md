@@ -69,6 +69,7 @@ TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --
 | `uno_q/app/` | UNO Q用Arduino App Labアプリ |
 | `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
 | `docs/uno_q_port.html` | 開発方針、配線、GPIO、ILI9341表示規約 |
+| `hardware/easyeda/IchiPing-UNO-Q-Shields/PIN_MAPPING.html` | 両シールドの全機能・全コネクタのピン接続対応表 |
 | `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
 | `board/Ichiping uno q.eprj2` | 2枚のシールドを収録したEasyEDA設計正本（回路図とPCBをBoard単位で関連付け済み） |
 | `hardware/easyeda/IchiPing-UNO-Q-Shields/` | 基板仕様、基板別BOM、EasyEDA設計ノート |

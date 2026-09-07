@@ -18,7 +18,7 @@
 </header>
 <main>
 <h1 id="ichiping-uno-q">IchiPing UNO Q シールド基板仕様書</h1>
-<p>版: Rev A 設計入力 / 2026-08-24</p>
+<p>版: Rev B 配線修正版設計入力 / 2026-09-07</p>
 <p>本書は、EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準の正本とする。GPIOの正本
 <code>docs/uno_q_port.html</code>、元IchiPingの<code>docs/pins.xlsx</code>、UNO QおよびUNO
 Breakout Carrierの公式資料を突き合わせた結果を記載する。</p>
@@ -160,6 +160,8 @@ Pin 2がGNDである。</p>
 </tr>
 </tbody>
 </table>
+<p>TFTモジュール端子までのピン単位の対応は
+<a href="TFT_PIN_MAPPING.md"><code>TFT_PIN_MAPPING.md</code></a>を正本とする。</p>
 <p><code>J_SERVO_CTRL</code>の<code>VIN</code>表記はPCA9685モジュールのロジック電源入力を意味し、3.3 Vで
 ある。サーボ電源V+は<code>J_SERVO_5V_OUT</code>から別配線する。雨センサD0は必ず3.3 V以下に
 なる3.3 V動作モジュールを用いる。TFT MISOはコネクタへ出すが、現行ドライバは
@@ -184,6 +186,8 @@ Pin 2がGNDである。</p>
 <li>J_AMP_SIG、J_AMP_PWR、J_MICはすべてJ15ヘッダより右側へ配置する。</li>
 </ul>
 <h3 id="section-4">3.2 音響コネクタ</h3>
+<p>ピン単位の正本は<a href="AUDIO_SHIELD_PIN_MAPPING.md"><code>AUDIO_SHIELD_PIN_MAPPING.md</code></a>とする。
+J14/J15の表裏ミラーを考慮し、外形上の左右ではなくパッド番号で照合する。</p>
 <table>
 <thead>
 <tr>
@@ -198,19 +202,19 @@ Pin 2がGNDである。</p>
 <td>J_AMP_SIG</td>
 <td style="text-align: right;">4</td>
 <td>LRC, BCLK, DIN, GAIN</td>
-<td>J15-34, J15-32, J15-38, R_GAIN</td>
+<td>J15-34, J15-32, J15-38, J15-40 (GND)</td>
 </tr>
 <tr>
 <td>J_AMP_PWR</td>
 <td style="text-align: right;">3</td>
 <td>SD, GND, VIN</td>
-<td>R_SD/JP_MUTE, GND, J14-7 (+5V)</td>
+<td>J14-7 (+5V), J15-40 (GND), J14-7 (+5V)</td>
 </tr>
 <tr>
 <td>J_MIC</td>
 <td style="text-align: right;">6</td>
 <td>GND, VCC, SD, SCK, WS, L/R</td>
-<td>GND, J14-19 (+1V8), J15-36, J15-32, J15-34, R_LR</td>
+<td>J15-40 (GND), J14-19 (+1V8), J15-36, J15-32, J15-34, J15-40 (GND)</td>
 </tr>
 </tbody>
 </table>
@@ -220,15 +224,11 @@ Pin 2がGNDである。</p>
 <li>アンプデータ候補 = SOC_GPIO_101 = J15-38。</li>
 <li>上記4信号はすべてQRB2210の1.8 Vドメインである。</li>
 <li>マイクVCCはJ14-19の+1.8 V、MAX98357A VINはJ14-7の+5 Vを使う。</li>
-<li><code>R_GAIN</code>と<code>R_LR</code>は実装時0 ΩでGNDへ接続し、既定状態を固定する。変更時は
-0 Ω抵抗を取り外して所望のストラップ抵抗へ置換する。</li>
-<li><code>R_SD</code>は100 kΩで3.3 Vへプルアップし、MAX98357Aを既定で有効にする。
-<code>JP_MUTE</code>に2.54 mmジャンパシャントを挿すとSDをGNDへ落としてミュートできる。</li>
-<li><code>R_GAIN</code>、<code>R_LR</code>、<code>R_SD</code>はリードピッチ10.16 mmのアキシャル抵抗、C2/C3は
-リードピッチ5.00 mmのラジアル積層セラミック、C1はラジアル電解、
-JP_MUTEは2.54 mmスルーホールピンヘッダとする。すべてスルーホール実装とする。</li>
-<li>C1は10 uF / 10 V以上で+5 Vをデカップリングし、C2=100 nFを並列配置する。
-C3=100 nFは+1.8 Vをデカップリングする。C1の極性はPin 1=+5 V、Pin 2=GND。</li>
+<li>MAX98357Aの<code>GAIN</code>はGNDへ直結して12 dB、<code>SD</code>はVIN (+5 V)へ直結して常時有効・
+左チャンネル選択とする。マイクの<code>L/R</code>はGNDへ直結して左チャンネルとする。</li>
+<li>Audio shieldはブレークアウトモジュール接続専用とし、抵抗、ジャンパ、電解・
+セラミックコンデンサを実装しない。必要なデカップリングを搭載済みのMAX98357A／
+I2Sマイクモジュールを使用する。裸ICにはこの省略構成を使用しない。</li>
 <li>DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
 までは、音響モジュールを接続・通電しない。</li>
 </ul>
@@ -255,7 +255,7 @@ PCBパッド番号、ネット、外形、配線、シルクを一体管理す�
 <li>回路図のDevice／FootprintはPCBと同じプロジェクト内レコードへ関連付ける。
 カスタムDRCの124番<code>Schematic Netlist</code>を含む全項目を有効にし、<code>All (0)</code>を必須とする。
 Ref、Unique ID、ピン／パッド番号、ネット名の対応監査はUNOシールド19部品／70ピン、
-Audioシールド12部品／107ピンを対象とし、差分0件を必須とする。UNOシールドの取付穴4個は
+Audioシールド5部品／93ピンを対象とし、差分0件を必須とする。UNOシールドの取付穴4個は
 直径3.2 mmの独立した非メッキ穴として扱い、電気部品のネットリストには含めない。</li>
 <li>製造前にEasyEDAの回路図DRCも両Boardで実行し、各部品のRef、Unique ID、ピン／
 パッド番号、ネットが対応することを確認する。回路接続は本仕様書、
@@ -285,12 +285,8 @@ Audioシールド12部品／107ピンを対象とし、差分0件を必須とす
 <td>100 nFラジアル・スルーホール、5.00 mmピッチ</td>
 </tr>
 <tr>
-<td>Audioシールドの固定抵抗</td>
-<td>アキシャル・スルーホール、10.16 mmピッチ</td>
-</tr>
-<tr>
-<td>Audioシールドの無極性コンデンサ</td>
-<td>ラジアル・スルーホール、5.00 mmピッチ</td>
+<td>Audioシールド</td>
+<td>J14/J15ソケットおよび3個のXH2.54のみ。補助受動部品なし</td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IchiPing UNO Q — 全機能ピン接続対応表</title>
+<link rel="stylesheet" href="../../../docs/style.css">
+<script src="../../../docs/embed.js"></script>
+<style>
+  main { max-width: 1180px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; }
+  th, td { border: 1px solid var(--border, #39414f); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: rgba(89, 189, 255, .10); }
+  .warn { border-left: 4px solid var(--warn, #f2cc60); padding: 10px 14px; margin: 16px 0; }
+  .ok { border-left: 4px solid var(--accent-2, #7ee787); padding: 10px 14px; margin: 16px 0; }
+  .bad { color: #ff7b72; font-weight: 700; }
+  .review { color: #f2cc60; font-weight: 700; }
+  .pin { white-space: nowrap; font-weight: 700; }
+  code { white-space: nowrap; }
+</style>
+</head>
+<body>
+<header class="page">
+  <div class="crumb"><a href="../../../index.html">← IchiPing UNO Qトップ</a> ／ <a href="SPECIFICATION.html">基板仕様書</a></div>
+  <div class="sub">UNOレイアウト・シールドとUNO Breakout Carrier Audio shieldの全使用ピン</div>
+</header>
+<main>
+<h1>IchiPing UNO Q 全機能ピン接続対応表</h1>
+<p>版: Rev B / 2026-09-07。XHのPin番号は、基板上面から見てシルクのPin 1マーク側から数える。</p>
+
+<div class="warn"><b>通電前の注意:</b> UNOレイアウト・シールド装着時にUNO Qの電源断が発生したため、
+現物の<code>+5V–GND</code>、<code>3V3–GND</code>、ヘッダ向き、はんだブリッジを無通電で確認するまで
+再装着しない。外部安定化5 VはUNO Qの<code>+5V</code>端子へ接続し、<code>VIN</code>へは接続しない。</div>
+
+<h2>1. 全機能の概要</h2>
+<table>
+<thead><tr><th>機能</th><th>UNO Q／Carrier側</th><th>シールド側コネクタ</th><th>接続先</th></tr></thead>
+<tbody>
+<tr><td>窓a～c、扉AB/BC</td><td>D3～D7</td><td>J_WIN_A～J_DOOR_BC</td><td>トグルスイッチ</td></tr>
+<tr><td>実行ボタン</td><td>D8</td><td>J_EXEC</td><td>モーメンタリスイッチ</td></tr>
+<tr><td>雨入力</td><td>D9</td><td>J_RAIN</td><td>3.3 V雨センサ D0</td></tr>
+<tr><td>サーボ制御</td><td>D20/SDA、D21/SCL</td><td>J_SERVO_CTRL</td><td>PCA9685ロジック側</td></tr>
+<tr><td>サーボ電源</td><td>外部+5 V</td><td>J_PWR_IN、J_SERVO_5V_OUT</td><td>PCA9685 V+</td></tr>
+<tr><td>表示</td><td>D11～D13、A2～A5</td><td>J_TFT_SIG、J_TFT_PWR</td><td>ILI9341 SPI TFT</td></tr>
+<tr><td>音声入力</td><td>J15-32/34/36、J14-19</td><td>J_MIC</td><td>INMP441等のI2Sマイク</td></tr>
+<tr><td>音声出力</td><td>J15-32/34/38、J14-7</td><td>J_AMP_SIG、J_AMP_PWR</td><td>MAX98357A</td></tr>
+</tbody>
+</table>
+
+<h2>2. スイッチ</h2>
+<p>全入力はUNO Qの内部プルアップを使用するアクティブLow。スイッチON／押下で信号をGNDへ落とす。</p>
+<table>
+<thead><tr><th>コネクタ</th><th>Pin 1</th><th>Pin 2</th><th>状態bit／用途</th></tr></thead>
+<tbody>
+<tr><td>J_WIN_A</td><td class="pin">D3 / WIN_A</td><td>GND</td><td>bit 0、窓a</td></tr>
+<tr><td>J_WIN_B</td><td class="pin">D4 / WIN_B</td><td>GND</td><td>bit 1、窓b</td></tr>
+<tr><td>J_WIN_C</td><td class="pin">D5 / WIN_C</td><td>GND</td><td>bit 2、窓c</td></tr>
+<tr><td>J_DOOR_AB</td><td class="pin">D6 / DOOR_AB</td><td>GND</td><td>bit 3、扉AB</td></tr>
+<tr><td>J_DOOR_BC</td><td class="pin">D7 / DOOR_BC</td><td>GND</td><td>bit 4、扉BC</td></tr>
+<tr><td>J_EXEC</td><td class="pin">D8 / EXEC</td><td>GND</td><td>推論実行</td></tr>
+</tbody>
+</table>
+
+<h2>3. 雨センサ J_RAIN（3極）</h2>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>UNO Q接続</th><th>雨センサ端子</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>VCC</td><td class="pin">3V3</td><td>VCC</td></tr>
+<tr><td>2</td><td>GND</td><td class="pin">GND</td><td>GND</td></tr>
+<tr><td>3</td><td>D0</td><td class="pin">D9</td><td>D0</td></tr>
+</tbody>
+</table>
+<p>D0が3.3 Vを超えない3.3 V動作モジュールを使用する。</p>
+
+<h2>4. PCA9685サーボコントローラ</h2>
+<h3>J_SERVO_CTRL（4極、ロジック）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>UNO Q接続</th><th>PCA9685端子</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>GND</td><td class="pin">GND</td><td>GND</td></tr>
+<tr><td>2</td><td>SCL</td><td class="pin">D21 / SCL</td><td>SCL</td></tr>
+<tr><td>3</td><td>SDA</td><td class="pin">D20 / SDA</td><td>SDA</td></tr>
+<tr><td>4</td><td>VIN</td><td class="pin">3V3</td><td>VCC（ロジック電源）</td></tr>
+</tbody>
+</table>
+<p>このコネクタの<code>VIN</code>表示はPCA9685モジュールのロジック電源端子を意味し、3.3 Vである。
+サーボ用V+へは接続しない。</p>
+
+<h3>J_PWR_IN／J_SERVO_5V_OUT（2極、サーボ電源）</h3>
+<table>
+<thead><tr><th>コネクタ</th><th>Pin 1</th><th>Pin 2</th><th>接続先</th></tr></thead>
+<tbody>
+<tr><td>J_PWR_IN</td><td class="pin">+5V_IN</td><td>GND</td><td>外部安定化5 V入力 → UNO Qの+5V端子</td></tr>
+<tr><td>J_SERVO_5V_OUT</td><td class="pin">+5V_SERVO</td><td>GND</td><td>PCA9685のV+。J_PWR_INから直接分岐</td></tr>
+</tbody>
+</table>
+<p>PCA9685のGND、UNO QのGND、外部5 V電源GNDを共通化する。サーボPWMのch 0～4は
+窓a、窓b、窓c、扉AB、扉BCの順。</p>
+
+<h2>5. ILI9341 TFT</h2>
+<h3>J_TFT_SIG（5極）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>UNO Q端子</th><th>ディスプレイ端子</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>MISO</td><td class="pin">D12</td><td>MISO / SDO</td></tr>
+<tr><td>2</td><td>LED</td><td class="pin">A5</td><td>LED / BL</td></tr>
+<tr><td>3</td><td>SCK</td><td class="pin">D13</td><td>SCK / CLK</td></tr>
+<tr><td>4</td><td>MOSI</td><td class="pin">D11</td><td>MOSI / SDI / SDA</td></tr>
+<tr><td>5</td><td>DC</td><td class="pin">A4</td><td>DC / D-C / RS</td></tr>
+</tbody>
+</table>
+
+<h3>J_TFT_PWR（4極）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>UNO Q端子</th><th>ディスプレイ端子</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>RST</td><td class="pin">A3</td><td>RST / RESET</td></tr>
+<tr><td>2</td><td>CS</td><td class="pin">A2</td><td>CS</td></tr>
+<tr><td>3</td><td>GND</td><td class="pin">GND</td><td>GND</td></tr>
+<tr><td>4</td><td>VCC</td><td class="pin">3V3</td><td>VCC / 3V3</td></tr>
+</tbody>
+</table>
+<p>タッチパネル用のT_CS/T_CLK/T_DIN等には接続しない。現行ドライバは書き込み専用だが、
+ハーネス互換性のためD12をMISO/SDOへ配線する。</p>
+
+<h2>6. Audio shield — UNO Breakout Carrier使用端子</h2>
+<div class="warn"><b>1.8 V専用:</b> J15-32/34/36/38はQRB2210の1.8 Vロジック。
+3.3 Vまたは5 V信号を入力しない。2x20ソケットは表裏で左右が反転して見えるため、位置ではなく
+Pin 1表示とパッド番号で照合する。</div>
+<table>
+<thead><tr><th>Carrier端子</th><th>公式信号名</th><th>MI2S0機能</th><th>方向</th><th>接続先</th></tr></thead>
+<tbody>
+<tr><td>J15-32</td><td>SOC_GPIO_98</td><td>MI2S0_CLK</td><td>UNO Q出力</td><td>AMP BCLK、MIC SCK</td></tr>
+<tr><td>J15-34</td><td>SOC_GPIO_99</td><td>MI2S0_WS</td><td>UNO Q出力</td><td>AMP LRC、MIC WS</td></tr>
+<tr><td>J15-36</td><td>SOC_GPIO_100</td><td>MI2S0_DATA0</td><td>UNO Q入力</td><td>MIC SD/DOUT</td></tr>
+<tr><td>J15-38</td><td>SOC_GPIO_101</td><td>MI2S0_DATA1</td><td>UNO Q出力</td><td>AMP DIN</td></tr>
+<tr><td>J14-7</td><td>+5V USB OUT</td><td>—</td><td>電源出力</td><td>AMP VIN、SD</td></tr>
+<tr><td>J14-19</td><td>+1V8 OUT</td><td>—</td><td>電源出力</td><td>MIC VCC</td></tr>
+<tr><td>J15-40</td><td>GND</td><td>—</td><td>—</td><td>全GND、AMP GAIN、MIC L/R</td></tr>
+</tbody>
+</table>
+
+<h3>MAX98357A: J_AMP_SIG（4極）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>Carrier接続</th><th>MAX98357A端子</th><th>設定</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>LRC</td><td>J15-34</td><td>LRC</td><td>MI2S0_WS</td></tr>
+<tr><td>2</td><td>BCLK</td><td>J15-32</td><td>BCLK</td><td>MI2S0_CLK</td></tr>
+<tr><td>3</td><td>DIN</td><td>J15-38</td><td>DIN</td><td>MI2S0_DATA1</td></tr>
+<tr><td>4</td><td>GAIN</td><td>J15-40 / GND</td><td>GAIN</td><td>GND直結、12 dB</td></tr>
+</tbody>
+</table>
+
+<h3>MAX98357A: J_AMP_PWR（3極）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>Carrier接続</th><th>MAX98357A端子</th><th>設定</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>SD</td><td>J14-7 / +5V</td><td>SD / MODE</td><td>VIN直結、常時有効・左ch</td></tr>
+<tr><td>2</td><td>GND</td><td>J15-40 / GND</td><td>GND</td><td>共通GND</td></tr>
+<tr><td>3</td><td>VIN</td><td>J14-7 / +5V</td><td>VIN</td><td>アンプ電源</td></tr>
+</tbody>
+</table>
+
+<h3>I2Sマイク: J_MIC（6極）</h3>
+<table>
+<thead><tr><th>XH Pin</th><th>表示</th><th>Carrier接続</th><th>マイク端子</th><th>設定</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>GND</td><td>J15-40 / GND</td><td>GND</td><td>共通GND</td></tr>
+<tr><td>2</td><td>VCC</td><td>J14-19 / +1V8</td><td>VDD / VCC</td><td>1.8 V</td></tr>
+<tr><td>3</td><td>SD</td><td>J15-36</td><td>SD / DOUT</td><td>MI2S0_DATA0</td></tr>
+<tr><td>4</td><td>SCK</td><td>J15-32</td><td>SCK / BCLK</td><td>MI2S0_CLK</td></tr>
+<tr><td>5</td><td>WS</td><td>J15-34</td><td>WS / LRCLK</td><td>MI2S0_WS</td></tr>
+<tr><td>6</td><td>L/R</td><td>J15-40 / GND</td><td>L/R / SEL</td><td>GND直結、左ch</td></tr>
+</tbody>
+</table>
+
+<div class="ok"><b>Audio shieldの最小構成:</b> J14、J15、J_AMP_SIG、J_AMP_PWR、J_MICのみ。
+抵抗、ジャンパ、追加コンデンサは置かず、必要なデカップリングを搭載済みのMAX98357A／
+I2Sマイク・ブレークアウトモジュールを使用する。</div>
+
+<h2>7. EasyEDA保存データ監査</h2>
+<p>2026-09-07に<code>board/Ichiping uno q.eprj2</code>の回路図・PCBネット・部品属性を読み取り検査した結果。
+異なるネットの配線中心線が同一銅箔面で交差する箇所は、UNOシールド、Audio shieldとも0件だった。
+ただし、これはEasyEDAの正式なDRC、フットプリント実寸、現物の導通検査を代替しない。</p>
+<table>
+<thead><tr><th>重要度</th><th>対象</th><th>監査結果</th><th>必要な対応</th></tr></thead>
+<tbody>
+<tr><td class="bad">P0</td><td>UNOシールド現物</td><td>装着時の電源断は設計データ上の異ネット配線交差では説明できない。+5VはJ1-5、GNDはJ1-6/7、VINはJ1-8で、ネット名上は分離している。</td><td>再装着せず、無通電で+5V–GND、3V3–GND、VIN–GNDを測定する。XHハーネスを全て外した状態から確認し、はんだブリッジ、ヘッダの裏表、現物のPin 1を調べる。</td></tr>
+<tr><td class="bad">P0</td><td>全外部コネクタ</td><td>EasyEDA部品属性は<code>2044-1X...</code>の汎用ピンヘッダ、または<code>PinSocket_1x03</code>であり、XH垂直コネクタの部品・フットプリントになっていない。</td><td>全コネクタを指定のXH垂直・2.54 mmフットプリントへ交換し、Pin 1位置と実部品の嵌合方向を確定する。</td></tr>
+<tr><td class="review">P1</td><td>Audio shield</td><td>MAX98357Aのデータシート上のデジタル入力High最小値は1.3 Vであり、QRB2210の1.8 V MI2S0とは電圧上互換。ただしJ15-32/34/36/38のPinMux、DATA0/1方向、Device Tree、ALSA経路は実機未確定。</td><td>ブレークアウトモジュール固有回路も確認し、Device TreeとALSA経路を確定するまで接続・製造しない。MI2S0を利用できない場合はUSB Audioへ切り替える。</td></tr>
+<tr><td class="bad">P1</td><td>Audio shield部品</td><td>現在のPCBは12部品で、<code>C1</code>～<code>C3</code>、<code>R_GAIN</code>、<code>R_LR</code>、<code>R_SD</code>、<code>JP_MUTE</code>が残っている。最小構成5部品という現行仕様と不一致。</td><td>受動部品を削除し、GAIN→GND、SD→+5V、MIC L/R→GNDへ直結して回路図からPCBを更新する。</td></tr>
+<tr><td class="bad">P1</td><td>UNOシールド電解コンデンサ</td><td><code>C_PWR_BULK</code>は「470u」、<code>C_SERVO_BULK</code>は「1000u」と表示されるが、部品属性は両方とも<code>CL21B104KCFNNNE</code>（100 nF系MLCC）で、極性付き電解コンデンサのBOMになっていない。</td><td>容量、耐圧、極性、DIPリード間隔、外径が一致する電解コンデンサのシンボル・フットプリント・BOMへ修正する。</td></tr>
+<tr><td class="review">P1</td><td>サーボ5 V配線</td><td>J_PWR_INからJ_SERVO_5V_OUTの一部が約0.41 mm、UNO +5V／バルク部への配線が約0.64 mmで、+5V層間接続に小径ビアも使われている。複数SG90の突入電流には細い。</td><td>サーボ電流経路は可能なら同一面で短くし、銅箔幅とビア本数を想定ピーク電流に合わせて増やす。UNOへ向かう分岐とサーボV+分岐をスター配線にする。</td></tr>
+<tr><td class="review">P1</td><td>USBと外部5 V</td><td>外部5 V入力はUNO Qの+5Vへ直結され、逆流防止・電源選択・ヒューズがない。</td><td>USB給電と外部5 Vを同時接続する条件を禁止するか、ジャンパ、ショットキー／理想ダイオード、ポリヒューズ等で競合と逆流を防ぐ。</td></tr>
+<tr><td class="review">P2</td><td>TFT LED</td><td>A5からTFTのLED/BLへ直接接続している。使用するILI9341モジュールのLED端子がロジック入力ではなく生のバックライト電源ならGPIO過電流になる。</td><td>対象モジュールの回路を確認し、生LED端子なら抵抗とトランジスタ／MOSFETで駆動する。</td></tr>
+<tr><td class="ok">OK</td><td>UNO外形・ヘッダ</td><td>PCB外形は約68.58 × 53.34 mm。J1～J4の並びとネット割当はUNO R3配置に一致し、+5VをVINへ接続する配線はない。</td><td>フットプリントのPin 1表示と、実際に下面へ差し込む長ピンの向きだけを現物で最終照合する。</td></tr>
+<tr><td class="ok">OK</td><td>Audio配置</td><td>J_AMP_SIG、J_AMP_PWR、J_MICはJ15より右側に配置されている。</td><td>部品削除・XH化後も右側配置を維持する。</td></tr>
+</tbody>
+</table>
+
+<div class="warn"><b>DRCについて:</b> EasyEDA画面に表示されていた<code>All (0)</code>だけでは、保存後に正式なDRCが再実行されたことや、論理的に間違ったネット名を検出したことは保証できない。
+上記P0/P1を修正後、回路図ERC、回路図からPCB更新、未配線、PCB DRCを順に再実行して全項目0件を確認する。</div>
+
+<h2>8. 製造前チェック</h2>
+<ol>
+  <li>USBと外部5 Vを外し、シールド単体で+5V–GNDおよび3V3–GNDが短絡していないことを測る。</li>
+  <li>UNOヘッダ、J14/J15、全XHのPin 1位置を回路図・PCB・現物で照合する。</li>
+  <li>EasyEDAの回路図DRC、PCB DRC、未配線チェックをすべて0件にする。</li>
+  <li>最初はサーボを外し、UNO Q単体 → シールドのみ → PCA9685ロジック → TFT → スイッチの順で接続する。</li>
+  <li>PCA9685の0x40 ACK確認後も、外部5 V、共通GND、機械端を確認するまでPWMを有効にしない。</li>
+</ol>
+
+<h2>9. 関連資料</h2>
+<ul>
+  <li><a href="SPECIFICATION.html">シールド基板仕様書</a></li>
+  <li><a href="TFT_PIN_MAPPING.md">TFTピン対応表</a></li>
+  <li><a href="AUDIO_SHIELD_PIN_MAPPING.md">Audio shieldピン対応表</a></li>
+  <li><a href="../../../docs/uno_q_port.html">UNO Q移植方針・GPIO正本</a></li>
+  <li><a href="https://docs.arduino.cc/resources/datasheets/ASX00085-datasheet.pdf">Arduino UNO Breakout Carrier datasheet</a></li>
+  <li><a href="https://docs.arduino.cc/resources/schematics/ASX00085-schematics.pdf">Arduino UNO Breakout Carrier schematic</a></li>
+</ul>
+</main>
+</body>
+</html>
