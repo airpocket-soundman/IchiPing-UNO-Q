@@ -39,14 +39,25 @@ def loop() -> None:
         time.sleep(2)
         hardware_status = int(Bridge.call("get_hardware_status"))
         physical_state = int(Bridge.call("get_physical_state")) & 0x1F
+        switch_states = int(Bridge.call("get_switch_states")) & 0x3F
         logger.info(
             f"bring-up status=0x{hardware_status:02x} physical=0b{physical_state:05b}"
+        )
+        logger.info(
+            "switches "
+            f"WIN_A={(switch_states >> 0) & 1} "
+            f"WIN_B={(switch_states >> 1) & 1} "
+            f"WIN_C={(switch_states >> 2) & 1} "
+            f"DOOR_AB={(switch_states >> 3) & 1} "
+            f"DOOR_BC={(switch_states >> 4) & 1} "
+            f"EXEC={(switch_states >> 5) & 1}"
         )
         Bridge.call("run_display_self_test")
         for state_mask in (0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x15):
             Bridge.call("show_prediction", state_mask, 87)
             time.sleep(0.35)
         logger.info("smoke test PASS: bridge calls and ILI9341 sequence completed")
+        Bridge.call("show_prediction", physical_state, 100)
         _smoke_test_complete = True
     time.sleep(5)
 

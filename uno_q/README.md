@@ -22,6 +22,10 @@ and `GND`; `D12/MISO` is not connected for the write-only driver. Five tiles are
 ordered `a, b, c, AB, BC`, followed by a confidence meter. The onboard LED
 Matrix is not used.
 
+The bridge also exposes `get_switch_states`: bits 0..4 are window a, window b,
+window c, door AB, and door BC; bit 5 is EXEC. A set bit means the active-low
+input is asserted.
+
 ## Verified hardware result
 
 On 2026-08-21, USB-connected UNO Q serial `2261748543` compiled and uploaded
@@ -30,6 +34,12 @@ usage is 6,588 bytes. Router Bridge returned hardware status `0x01` and
 physical state `0b00000`; the ILI9341 command and pixel-write sequence
 completed. A visual test still needs the TFT connected. No PCA9685 was
 connected, the rain input was inactive, and servo PWM was not enabled.
+
+On 2026-09-08, the same board (USB serial `2261748543`) was retested with the
+ILI9341 and six switches connected. D3-D8 all read inactive. The full-screen
+color sequence and final physical-state display completed; backlight and color
+output still require visual confirmation. PCA9685, servos, rain, and audio were
+not connected, and no servo PWM was enabled.
 
 When the CLI is launched through ADB, set `TMPDIR=/tmp`; ADB otherwise exports
 the Android-style `/data/local/tmp`, which does not exist on the UNO Q Debian

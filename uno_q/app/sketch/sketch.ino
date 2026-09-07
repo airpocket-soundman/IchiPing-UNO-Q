@@ -70,6 +70,12 @@ int getPhysicalState() {
   return static_cast<int>(readPhysicalState());
 }
 
+int getSwitchStates() {
+  int states = static_cast<int>(readPhysicalState());
+  if (digitalRead(kExecPin) == LOW) states |= (1 << 5);
+  return states;
+}
+
 void pollExecButton() {
   const bool raw = digitalRead(kExecPin);
   const uint32_t now = millis();
@@ -108,6 +114,7 @@ void setup() {
   Bridge.provide("run_display_self_test", runDisplaySelfTest);
   Bridge.provide("get_hardware_status", getHardwareStatus);
   Bridge.provide("get_physical_state", getPhysicalState);
+  Bridge.provide("get_switch_states", getSwitchStates);
 
   physicalState = readPhysicalState();
   displayedState = physicalState;

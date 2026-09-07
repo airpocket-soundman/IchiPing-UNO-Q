@@ -150,6 +150,19 @@
         <tr><th>判定</th><td><b>Bridge / GPIO / ILI9341 SPI software smoke test PASS</b>。ILI9341の色・向き・バックライトは実機接続後の目視確認が必要。</td></tr>
       </tbody>
     </table>
+    <h3 id="test-result-2026-09-08">実機結果 — 2026-09-08 06:33 JST</h3>
+    <table>
+      <tbody>
+        <tr><th>接続</th><td>USB serial <code>2261748543</code>、VID:PID <code>2341:0078</code>、COM10 + ADB。ILI9341、D3–D8のスイッチ6個、外部5 Vを接続。</td></tr>
+        <tr><th>ソフトウェア</th><td>UNO Q Debian 13、kernel 6.16.7。STM32U585へOpenOCD書き込み成功。</td></tr>
+        <tr><th>使用量</th><td>program 25,228 bytes / 1,966,080 bytes、global RAM 6,588 bytes / 523,624 bytes</td></tr>
+        <tr><th>読み取り</th><td><code>WIN_A=0</code>、<code>WIN_B=0</code>、<code>WIN_C=0</code>、<code>DOOR_AB=0</code>、<code>DOOR_BC=0</code>、<code>EXEC=0</code>。全入力High／非アクティブ。</td></tr>
+        <tr><th>TFT出力</th><td>A5をHighにして、赤・緑・青・白・黒の全面テスト、状態パターン、実状態<code>0b00000</code>と100%メーターを送信。SPI／Bridgeシーケンスは完走したが、色とバックライトの目視結果は未確認。</td></tr>
+        <tr><th>未接続機器</th><td>PCA9685、サーボ、雨センサ、マイク、MAX98357A。サーボPWMは未出力。</td></tr>
+        <tr><th>判定</th><td><b>USB / upload / Bridge / D3–D8 read / TFT write sequence PASS</b>。バックライトが点灯しない場合はJ_TFT_SIG Pin 2（A5）とJ_TFT_PWR Pin 4（3V3）を無通電配線確認後に電圧測定する。</td></tr>
+      </tbody>
+    </table>
+    <p class="warn"><b>給電注意:</b> 現行シールドは外部5 VとUNO Qの+5Vを直結し、USBとの逆流防止を持たない。USBと外部5 Vの同時接続を常用しない。</p>
     <p class="muted">ADBシェルでは<code>TMPDIR=/data/local/tmp</code>が設定される一方、そのパスがDebian上に存在しないため、CLI実行時は<code>TMPDIR=/tmp</code>を明示する。</p>
   </section>
 
