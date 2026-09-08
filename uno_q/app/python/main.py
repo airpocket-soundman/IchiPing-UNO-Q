@@ -12,6 +12,7 @@ from arduino.app_utils import App, Bridge, Logger
 
 logger = Logger("ichiping-uno-q")
 _smoke_test_complete = False
+_last_switch_states = None
 
 
 def on_runtime_status(stage: str, hardware_status: int) -> None:
@@ -34,7 +35,7 @@ Bridge.provide("on_infer_request", on_infer_request)
 
 
 def loop() -> None:
-    global _smoke_test_complete
+    global _smoke_test_complete, _last_switch_states
     if not _smoke_test_complete:
         time.sleep(2)
         hardware_status = int(Bridge.call("get_hardware_status"))
@@ -56,10 +57,18 @@ def loop() -> None:
         for state_mask in (0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x15):
             Bridge.call("show_prediction", state_mask, 87)
             time.sleep(0.35)
-        logger.info("smoke test PASS: bridge calls and ILI9341 sequence completed")
+        logger.info("Transport test PASS: Bridge calls completed; LCD image and backlight still need visual confirmation")
         Bridge.call("show_prediction", physical_state, 100)
         _smoke_test_complete = True
-    time.sleep(5)
+    switch_states = int(Bridge.call("get_switch_states")) & 0x3F
+    if switch_states != _last_switch_states:
+        labels = ("WIN_A", "WIN_B", "WIN_C", "DOOR_AB", "DOOR_BC", "EXEC")
+        logger.info("INPUT " + " ".join(
+            f"{label}={(switch_states >> bit) & 1}"
+            for bit, label in enumerate(labels)
+        ))
+        _last_switch_states = switch_states
+    time.sleep(0.1)
 
 
 App.run(user_loop=loop)
