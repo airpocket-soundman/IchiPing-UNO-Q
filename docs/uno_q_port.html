@@ -168,6 +168,19 @@
       </tbody>
     </table>
     <p class="warn"><b>給電注意:</b> 現行シールドは外部5 VとUNO Qの+5Vを直結し、USBとの逆流防止を持たない。USBと外部5 Vの同時接続を常用しない。</p>
+    <h3 id="test-result-2026-09-08-actuator">実機結果 — 2026-09-08 23:05 JST（表示・入力・アクチュエータ）</h3>
+    <table>
+      <tbody>
+        <tr><th>ボード識別</th><td>USB serial <code>2261748543</code>、VID:PID <code>2341:0078</code>。試験時はUSBを切断し、Wi-Fiホスト<code>unoQ4G</code>経由で操作。</td></tr>
+        <tr><th>ソフトウェア</th><td>UNO Q Debian 13、kernel 6.16.7。STM32U585 program 27,488 bytes、global RAM 6,588 bytes。</td></tr>
+        <tr><th>表示・入力</th><td>ILI9341の表示とバックライト、D3–D8の状態スイッチ5個＋実行ボタンをユーザー目視で動作確認。</td></tr>
+        <tr><th>サーボ接続</th><td>PCA9685 <code>0x40</code>、SG90 ×5。ch 0–4 = 窓a、窓b、窓c、扉AB、扉BC。外部5 Vのみ、共通GND。</td></tr>
+        <tr><th>座標</th><td>元IchiPing現行実装<code>firmware/shared/source/servo_config.c</code>と<code>pca9685.h</code>に準拠し、開=0° / tick 102、閉=180° / tick 553。</td></tr>
+        <tr><th>試験</th><td>各chの中央±約9°小角度試験後、BC→AB→c→b→aで全閉、a→b→c→AB→BCで全開、逆順で全閉。全15終端指令の戻り値0、各500 ms後にPWM解放。</td></tr>
+        <tr><th>判定</th><td><b>PCA9685 ACK / I²C command sequence PASS</b>。最終状態は全閉・PWM解放。個々の物理終端と異音の目視確認は継続。</td></tr>
+        <tr><th>未接続機器</th><td>雨センサ、マイク、MAX98357A。</td></tr>
+      </tbody>
+    </table>
     <p class="muted">ADBシェルでは<code>TMPDIR=/data/local/tmp</code>が設定される一方、そのパスがDebian上に存在しないため、CLI実行時は<code>TMPDIR=/tmp</code>を明示する。</p>
   </section>
 

@@ -14,7 +14,7 @@ IchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の
 - D20/D21のI²CでPCA9685（0x40）を非破壊検出
 - Router BridgeでLinux PythonとMCUスケッチを接続
 - 2026-08-21実機smoke test PASS（Bridge往復、GPIO読取、I²C未接続処理、ILI9341 SPIシーケンス）。ILI9341実画面は未確認
-- 2026-09-08にILI9341とD3–D8のスイッチ6個を接続して再試験。6入力は全て非アクティブ、TFT色テストと状態表示の送信シーケンスはPASS。バックライト・表示色の目視確認は継続
+- 2026-09-08にILI9341とD3–D8のスイッチ6個を接続して再試験し、表示・バックライト・6入力を目視確認。PCA9685とSG90 ×5も接続し、ch 0–4の小角度試験と元実装準拠の全閉→全開→全閉シーケンスをI²Cエラーなしで完走
 
 音響推論はまだloopbackです。既存INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。信号は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。
 Debian上ではALSAデバイスが列挙されますが、外部音響機器なしの16 kHzモノラル録音プローブは`EINVAL`となるため、音響経路は未合格です。

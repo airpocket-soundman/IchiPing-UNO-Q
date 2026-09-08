@@ -26,6 +26,12 @@ The bridge also exposes `get_switch_states`: bits 0..4 are window a, window b,
 window c, door AB, and door BC; bit 5 is EXEC. A set bit means the active-low
 input is asserted.
 
+Servo bring-up exposes `test_servo_channel(channel)` for a small center sweep
+and `move_servo_deg(channel, degrees)` for a raw mechanical angle. Both calls
+validate the PCA9685, drive only one channel, then release PWM. The original
+IchiPing implementation currently maps channels 0..4 to `a, b, c, AB, BC` and
+uses 180 degrees / tick 553 for closed and 0 degrees / tick 102 for open.
+
 ## Verified hardware result
 
 On 2026-08-21, USB-connected UNO Q serial `2261748543` compiled and uploaded
@@ -36,10 +42,11 @@ completed. A visual test still needs the TFT connected. No PCA9685 was
 connected, the rain input was inactive, and servo PWM was not enabled.
 
 On 2026-09-08, the same board (USB serial `2261748543`) was retested with the
-ILI9341 and six switches connected. D3-D8 all read inactive. The full-screen
-color sequence and final physical-state display completed; backlight and color
-output still require visual confirmation. PCA9685, servos, rain, and audio were
-not connected, and no servo PWM was enabled.
+ILI9341 and six switches connected. Display, backlight, and all six inputs were
+visually confirmed. With USB removed and external 5 V applied, PCA9685 address
+0x40 and five SG90 servos on channels 0..4 were tested one at a time. The small
+sweep and closed-open-closed endpoint command sequence completed without I2C
+errors; PWM was released after every move. Rain and audio remained disconnected.
 
 When the CLI is launched through ADB, set `TMPDIR=/tmp`; ADB otherwise exports
 the Android-style `/data/local/tmp`, which does not exist on the UNO Q Debian

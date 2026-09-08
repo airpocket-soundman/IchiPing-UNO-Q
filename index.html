@@ -48,7 +48,8 @@
   <section>
     <h2>実機テスト</h2>
     <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>Bridge往復、GPIO読取、PCA9685未接続時の継続動作、ILI9341 SPIシーケンスを確認しました。プログラム25,160 bytes、RAM 6,588 bytesです。ILI9341実画面は未確認で、サーボPWMは未出力です。</p>
-    <p><b>2026-09-08 display / switch test PASS（目視を除く）。</b>USB serial 2261748543へ再書き込みし、D3–D8の6入力は全て非アクティブ。ILI9341へ全面色テスト、状態パターン、実状態と100%メーターを送信しました。バックライトと表示色は目視確認待ちです。</p>
+    <p><b>2026-09-08 display / switch test PASS。</b>USB serial 2261748543へ再書き込みし、ILI9341の表示・バックライトとD3–D8の6入力を実機で目視確認しました。</p>
+    <p><b>2026-09-08 PCA9685 / servo transport test PASS。</b>外部5 Vのみ、USB未接続でPCA9685（0x40）を検出。SG90 ×5をch 0–4へ接続し、小角度試験と元実装準拠の全閉（180°）→全開（0°）→全閉を1台ずつ実行しました。全15指令がI²C結果0で完走し、各動作後にPWMを解放しています。</p>
     <p>ALSAデバイスは列挙されますが、外部音響機器なしの16 kHzモノラル録音は<code>EINVAL</code>で、音響経路は未合格です。</p>
     <p>実機は通常時約3.0 GiBのavailable RAMを持ち、現行XLモデルは約0.7 MiBです。精度優先でモデルを段階拡張し、実機資源と外部評価を同時に測定します。</p>
   </section>
