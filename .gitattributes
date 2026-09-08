@@ -11,3 +11,8 @@ firmware/projects/*/CMakePresets.json text eol=lf
 firmware/projects/*/*/Kconfig.trace   text eol=lf
 firmware/projects/*/*/board_files.cmake text eol=lf
 firmware/projects/*/*/prj.conf        text eol=lf
+
+# Preserve exact manufacturing and review artifact bytes on Windows.
+*.pdf binary
+*.png binary
+*.eprj2 binary
