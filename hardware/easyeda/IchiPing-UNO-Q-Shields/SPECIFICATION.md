@@ -2,6 +2,8 @@
 
 版: Rev B 配線修正版設計入力 / 2026-09-07
 
+2026-09-08追記: 現行PCBはユーザー指定のローカル版を正とする。Rev Bの外形拡張案は未適用。0Ω抵抗は回路図・PCBともJP_GAIN/JP_LRへ置換し、通常短絡の2.54 mmジャンパとした。部品表は `hardware/bom.html` と対応CSVを参照。
+
 本書は、EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準の正本とする。GPIOの正本
 `docs/uno_q_port.html`、元IchiPingの`docs/pins.xlsx`、UNO QおよびUNO
 Breakout Carrierの公式資料を突き合わせた結果を記載する。
@@ -110,11 +112,10 @@ J14/J15の表裏ミラーを考慮し、外形上の左右ではなくパッド�
 - アンプデータ候補 = SOC_GPIO_101 = J15-38。
 - 上記4信号はすべてQRB2210の1.8 Vドメインである。
 - マイクVCCはJ14-19の+1.8 V、MAX98357A VINはJ14-7の+5 Vを使う。
-- MAX98357Aの`GAIN`はGNDへ直結して12 dB、`SD`はVIN (+5 V)へ直結して常時有効・
-  左チャンネル選択とする。マイクの`L/R`はGNDへ直結して左チャンネルとする。
-- Audio shieldはブレークアウトモジュール接続専用とし、抵抗、ジャンパ、電解・
-  セラミックコンデンサを実装しない。必要なデカップリングを搭載済みのMAX98357A／
-  I2Sマイクモジュールを使用する。裸ICにはこの省略構成を使用しない。
+- 現行ローカルPCBでは`GAIN`はJP_GAIN、マイク`L/R`はJP_LRを介してGNDへ接続する。両ジャンパは通常短絡（CLOSED）。0Ω抵抗は使わない。
+- `SD`はR_SD 100 kΩで+3V3へプルアップする。JP_MUTEはSDとGNDの間にあり通常開放（OPEN）。
+- ジャンパ機能シルク: JP_GAINは`OPEN=9dB / SHORT=12dB`（MAX98357A I²S、モジュール側追加GAIN抵抗なし）、JP_MUTEは`OPEN=ON / SHORT=MUTE`、JP_LRは`OPEN=UNDEF / SHORT=L`。JP_LR開放時はシールド側にバイアス抵抗がないため左右未確定であり、R選択とは扱わない。通常は短絡する。表示詳細は[基板リビジョン](../../../board/REVISIONS.html)。
+- C1 10 µF / 10 V、C2/C3 100 nFを実装する。抵抗・コンデンサ・ジャンパはすべてスルーホール。現行品の穴間隔と数量は部品表に記載する。
 - DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
   までは、音響モジュールを接続・通電しない。
 

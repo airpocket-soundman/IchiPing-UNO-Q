@@ -19,6 +19,7 @@
 <main>
 <h1 id="ichiping-uno-q">IchiPing UNO Q シールド基板仕様書</h1>
 <p>版: Rev B 配線修正版設計入力 / 2026-09-07</p>
+<p>2026-09-08追記: 現行PCBはユーザー指定のローカル版を正とする。Rev Bの外形拡張案は未適用。0Ω抵抗は回路図・PCBともJP_GAIN/JP_LRへ置換し、通常短絡の2.54 mmジャンパとした。部品表は<a href="../../bom.html">BOM HTML</a>と対応CSVを参照。</p>
 <p>本書は、EasyEDAネイティブ回路図・PCBの設計入力とレビュー基準の正本とする。GPIOの正本
 <code>docs/uno_q_port.html</code>、元IchiPingの<code>docs/pins.xlsx</code>、UNO QおよびUNO
 Breakout Carrierの公式資料を突き合わせた結果を記載する。</p>
@@ -224,11 +225,10 @@ J14/J15の表裏ミラーを考慮し、外形上の左右ではなくパッド�
 <li>アンプデータ候補 = SOC_GPIO_101 = J15-38。</li>
 <li>上記4信号はすべてQRB2210の1.8 Vドメインである。</li>
 <li>マイクVCCはJ14-19の+1.8 V、MAX98357A VINはJ14-7の+5 Vを使う。</li>
-<li>MAX98357Aの<code>GAIN</code>はGNDへ直結して12 dB、<code>SD</code>はVIN (+5 V)へ直結して常時有効・
-左チャンネル選択とする。マイクの<code>L/R</code>はGNDへ直結して左チャンネルとする。</li>
-<li>Audio shieldはブレークアウトモジュール接続専用とし、抵抗、ジャンパ、電解・
-セラミックコンデンサを実装しない。必要なデカップリングを搭載済みのMAX98357A／
-I2Sマイクモジュールを使用する。裸ICにはこの省略構成を使用しない。</li>
+<li>現行ローカルPCBではGAINはJP_GAIN、マイクL/RはJP_LRを介してGNDへ接続する。両ジャンパは通常短絡（CLOSED）。0Ω抵抗は使わない。</li>
+<li>SDはR_SD 100 kΩで+3V3へプルアップする。JP_MUTEはSDとGNDの間にあり通常開放（OPEN）。</li>
+<li>機能シルク: JP_GAINはOPEN=9dB / SHORT=12dB（MAX98357A I²S、モジュール側追加GAIN抵抗なし）、JP_MUTEはOPEN=ON / SHORT=MUTE、JP_LRはOPEN=UNDEF / SHORT=L。JP_LR開放時はシールドにバイアス抵抗がなく左右未確定。R選択ではなく、通常短絡します。<a href="../../../board/REVISIONS.html">版管理・表示詳細</a>。</li>
+<li>C1 10 µF / 10 V、C2/C3 100 nFを実装する。抵抗・コンデンサ・ジャンパはすべてスルーホール。現行品の穴間隔と数量は部品表に記載する。</li>
 <li>DATA0/1のcapture/playback方向、Device Tree、codec DAI、ALSA routeが実機確定する
 までは、音響モジュールを接続・通電しない。</li>
 </ul>

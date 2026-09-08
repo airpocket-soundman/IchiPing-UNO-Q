@@ -44,3 +44,25 @@ not connected, and no servo PWM was enabled.
 When the CLI is launched through ADB, set `TMPDIR=/tmp`; ADB otherwise exports
 the Android-style `/data/local/tmp`, which does not exist on the UNO Q Debian
 image used for this test.
+
+### Retest: 2026-09-08 11:21 JST
+
+The saved on-board LCD header still used CS=D10, RST=A0, DC=A1 and BL=A2.
+The earlier test therefore did not establish that A5 was driven. Redeployed
+the local CS=A2, RST=A3, DC=A4 and BL=A5 configuration to board `2261748543`.
+Compilation, MCU upload and application start succeeded: 25,220 bytes program,
+6,588 bytes global RAM. Bridge status was 0x01; the five state inputs initially
+read active/Low and EXEC inactive/High. Individual press/release testing and LCD
+visual confirmation remain pending. Input changes are now logged every 100 ms.
+No servo PWM was enabled. PCA9685 was not detected; rain and audio were not tested.
+
+Wi-Fi connected at 192.168.101.14; gateway, external IP, DNS and HTTPS tests passed.
+The requested existing profile was made secondary with autoconnect priority -10,
+preserving the other profiles. Credentials are not recorded here.
+
+At 11:26 JST the user confirmed LCD operation. Logs independently confirmed
+changes on all six inputs: WIN_A, WIN_B, WIN_C, DOOR_AB, DOOR_BC and EXEC.
+EXEC press/release was observed twice. However, the EXEC notification callback
+called `show_prediction` synchronously from `Bridge.read_loop` and timed out
+after 10 seconds, followed by an unknown-message-ID warning. Thus GPIO input
+operation is confirmed, but the complete EXEC-to-result flow has not passed.

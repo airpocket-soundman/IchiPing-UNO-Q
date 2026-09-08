@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>基板リビジョン・シルク確認</title><link rel="stylesheet" href="../docs/style.css"><script src="../docs/embed.js"></script><style>main{max-width:1100px;margin:auto;padding:24px}figure{margin:20px 0;padding:16px;background:#15372f;border-radius:12px}figure img{width:100%;max-height:750px}figcaption{color:#f8d766}table{width:100%}.note{padding:16px;border:1px solid #dbaf56;border-radius:10px}</style></head><body><main>
+<p><a href="../hardware/bom.html">部品表</a> ／ <a href="REVISIONS.md">Markdown版</a></p>
+<h1>基板リビジョン・シルク確認</h1><p>更新: 2026-09-08。正本は <code>board/Ichiping uno q.eprj2</code>（EasyEDA）。元のIchiPingは変更していません。</p>
+<table><thead><tr><th>基板</th><th>PCB文書</th><th>旧表記</th><th>現在</th></tr></thead><tbody><tr><td>UNO Q Shield</td><td>uno_q_shield<br>484a25750631f0fe</td><td>REV A / 2026-08-24</td><td>REV B / 2026-09-08</td></tr><tr><td>Audio Shield</td><td>analog_shield<br>86c9249a00f4733c</td><td>REV C / 2026-08-25</td><td>REV D / 2026-09-08</td></tr></tbody></table>
+<p>表面にREV、裏面にREVと日付を印刷。旧版表記は置換済みです。</p>
+<p class="note">設計検査済み・製造未リリース。仕様書の「Rev B 設計入力」は過去の外形拡張案の文書番号で、このUNO基板REV Bとは別です。外形拡張案は適用していません。</p>
+<h2>今回の変更</h2><ul><li>26種類のフットプリントでカスタム層の部品枠・極性マークを表面シルク層へ移動。組立層・配置確認用の枠は保持し、印刷枠は部品に追従します。</li><li>文字は原則50 mil（1.27 mm）、密集部45 mil（1.143 mm）。従来30〜31.5 milだった説明・容量表示を拡大。新版番号60 mil（1.524 mm）。</li><li>文字線幅7 mil（0.178 mm）、表面新版番号8 mil（0.203 mm）、枠線6 mil（0.152 mm）以上。部品番号・容量表示の配置も調整。</li><li>Audio J14/J15に1番ピン目印。ジャンパには単なるOPEN/CLOSEDでなく次表の機能を表示。</li><li>今回のシルク修正では部品位置・配線・ビア・パッド・ネット・ベタを変更していません。</li><li>同日のJ14/J15列方向修正、0Ω抵抗のジャンパ化、配線修正もこの版に含みます。詳細は <a href="REPAIR_STATUS.md">修正記録</a>。</li></ul>
+<h2>ジャンパの機能表示</h2><p>REV D内の未リリース調整。45 mil文字をジャンパ脇・下側へ配置し、部品位置・配線を変えずに収めました。</p>
+<table><thead><tr><th>ジャンパ</th><th>開放時のシルク</th><th>短絡時のシルク</th></tr></thead><tbody><tr><td>JP_GAIN</td><td>OPEN=9dB</td><td>SHORT=12dB</td></tr><tr><td>JP_MUTE</td><td>OPEN=ON</td><td>SHORT=MUTE</td></tr><tr><td>JP_LR</td><td>OPEN=UNDEF</td><td>SHORT=L</td></tr></tbody></table>
+<p>GAINはMAX98357AのI²Sモードで、モジュール側に追加のGAIN設定抵抗がない場合。JP_LRにはシールド側のプルアップ／プルダウンがなく、モジュール側の設定がなければ開放時は入力が浮きます。UNDEFは左右未確定でありRではありません。通常は短絡してLを選択。開放／短絡で左右を確実に切り替えるには別途回路変更が必要です。</p>
+<p>根拠: <a href="https://www.analog.com/media/en/technical-documentation/data-sheets/MAX98357A-MAX98357B.pdf">MAX98357A Table 8 / Shutdown</a>、<a href="https://invensense.tdk.com/wp-content/uploads/2015/02/INMP441.pdf">INMP441 L/R</a>。</p>
+<h2>確認結果</h2><p>両PCBの厳密DRCは0件。保存済みPCBネットリストは変更前と一致（UNO 19部品70ピン、Audio 12部品107ピン）。変更前に回路図との一致も確認済み。配線・ビア・パッド・部品位置・ネット割当・ベタ定義の比較も一致しています。</p>
+<p>以下は画面の補助線ではなく、EasyEDAが出力した実際のガーバーのシルク層です。エディタ専用十字マークは含まれません。裏面はガーバーの上面基準表示なので文字が鏡像になります。</p>
+<h2>UNO Q Shield — REV B</h2><figure><img src="previews/uno-rev-b-top-silk.svg" alt="UNO REV B 表面シルク"><figcaption>表面: 部品枠・部品番号・容量・REV B</figcaption></figure><figure><img src="previews/uno-rev-b-bottom-silk.svg" alt="UNO REV B 裏面シルク"><figcaption>裏面: REV B / 2026-09-08</figcaption></figure>
+<h2>Audio Shield — REV D</h2><figure><img src="previews/audio-rev-d-top-silk.svg" alt="Audio REV D 表面シルク"><figcaption>表面: 部品枠・部品番号・容量・端子説明・REV D</figcaption></figure><figure><img src="previews/audio-rev-d-bottom-silk.svg" alt="Audio REV D 裏面シルク"><figcaption>裏面: REV D / 2026-09-08</figcaption></figure>
+<h2>更新ルール</h2><ol><li>製造用データを改訂する際、変更した基板のみ次の英字REVへ進めます（UNO B→C、Audio D→E）。途中保存ごとには進めません。</li><li>表裏シルク・本履歴を揃え、部品変更時はBOM・仕様書も更新。</li><li>リリース前にDRC、回路図・PCBネットリスト、ガーバー／ドリル、コネクタの上面・嵌合面を確認。DRC合格だけで製造承認にしません。</li><li>リリース時のGitコミットを記録し、製造データ名に基板名とREVを付与。今回の確認ZIPは作業キャッシュ内の検査用で、注文用リリースではありません。</li></ol>
+<p>未解決の製造・購入確認は修正記録を参照。本ページの更新は実機動作確認・製造リリース・GitHubへのプッシュを意味しません。</p>
+</main></body></html>

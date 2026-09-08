@@ -150,7 +150,12 @@
         <tr><th>判定</th><td><b>Bridge / GPIO / ILI9341 SPI software smoke test PASS</b>。ILI9341の色・向き・バックライトは実機接続後の目視確認が必要。</td></tr>
       </tbody>
     </table>
-    <h3 id="test-result-2026-09-08">実機結果 — 2026-09-08 06:33 JST</h3>
+    <h3 id="test-result-2026-09-08-1121">再検証 — 2026-09-08 11:21 JST</h3>
+    <p>USB serial <code>2261748543</code>（VID:PID 2341:0078）、Linux kernel 6.16.7。UNO Q内の保存済みLCD設定がCS=D10、RST=A0、DC=A1、BL=A2の旧配置だったため、ローカル正本のCS=A2、RST=A3、DC=A4、BL=A5を再配備した。以下の06:33の記録は、A5が実機で駆動されていた証拠としては扱わない。</p>
+    <p>コンパイル・STM32書き込み・アプリ起動に成功（program 25,220 bytes、global RAM 6,588 bytes）。Bridge応答は0x01、初期入力は窓a/b/c・扉AB/BCすべてLow（active=1）、EXECはHigh（active=0）。これは読み取り結果であり、6入力の押下・解放試験合格ではない。100 ms間隔の入力変化ログを有効化した。LCD送信シーケンスは完走、実表示とバックライトは目視待ち。サーボPWMは出力していない。PCA9685は未検出、雨・音声系は今回未検証。</p>
+    <p>Wi-Fiは指定済みプロファイルで接続、IP 192.168.101.14。既存プロファイルを残し自動接続優先度を-10へ変更してセカンダリ化。ゲートウェイ・外部IP・DNS・HTTPS疎通を確認済み。認証情報は記録しない。</p>
+    <p><b>11:26 JST追試:</b> ユーザーがLCD動作を確認。ログでもWIN_A、WIN_B、WIN_C、DOOR_AB、DOOR_BC、EXECの6入力すべての変化を確認し、EXECは押下・解放を2回検出した。ただしEXEC通知処理内の同期<code>show_prediction</code>呼び出しが10秒でタイムアウトし、続いてunknown msgid警告が発生した。GPIO入力は確認済みだが、EXECから結果表示までの一連の処理は未合格。</p>
+    <h3 id="test-result-2026-09-08">実機結果 — 2026-09-08 06:33 JST（上記の訂正を参照）</h3>
     <table>
       <tbody>
         <tr><th>接続</th><td>USB serial <code>2261748543</code>、VID:PID <code>2341:0078</code>、COM10 + ADB。ILI9341、D3–D8のスイッチ6個、外部5 Vを接続。</td></tr>

@@ -15,3 +15,8 @@ Audio Shield,Female socket header,"J14,J15",2,2x20 2.54 mm,2x20 vertical socket,
 Audio Shield,JST XH vertical connector,J_MIC,1,1x06 nominal 2.50 mm,XH2.54_Vertical_1x06,THT,Akizuki 112251; approved for the current 2.54 mm design holes; test-fit this longest connector,YES
 Audio Shield,JST XH vertical connector,J_AMP_SIG,1,1x04 nominal 2.50 mm,XH2.54_Vertical_1x04,THT,Akizuki 112249; approved for the current 2.54 mm design holes,YES
 Audio Shield,JST XH vertical connector,J_AMP_PWR,1,1x03 nominal 2.50 mm,XH2.54_Vertical_1x03,THT,Akizuki 112248; approved for the current 2.54 mm design holes,YES
+Audio Shield,Electrolytic capacitor,C1,1,10 uF 10 V or higher,Radial P2.00 mm,THT,Verify body diameter; pin 1 +5V; pin 2 GND,YES
+Audio Shield,Radial ceramic capacitor,"C2,C3",2,100 nF,Radial P5.00 mm,THT,Akizuki 117059; verify selected voltage rating,YES
+Audio Shield,Axial resistor,R_SD,1,100 kohm,Axial P10.16 mm,THT,SD pull-up; retain resistor; supplier code not yet selected,YES
+Audio Shield,Jumper pin header,"JP_GAIN,JP_LR,JP_MUTE",3,1x02 2.54 mm,P2.54 mm drill 1.00 mm,THT,GAIN and LR normally CLOSED; MUTE normally OPEN; supplier code not yet selected,YES
+Audio Shield,Jumper shunt,"JP_GAIN,JP_LR",2,2.54 mm shunt,2-pin jumper shunt,Plug-in,Replaces the two former 0-ohm resistors; supplier code not yet selected,YES

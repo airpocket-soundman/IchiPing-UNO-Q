@@ -66,6 +66,7 @@ firmware/projects/*/.vscode/
 firmware/projects/*/mcux_include.json
 
 # Editor / OS detritus
+.cache/
 .DS_Store
 Thumbs.db
 *.swp

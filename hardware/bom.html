@@ -26,6 +26,7 @@
 <main>
 <section>
   <h2>対象範囲</h2>
+  <p>現在の基板版: UNO Q Shield <b>REV B</b>、Audio Shield <b>REV D</b>（2026-09-08）。<a href="../board/REVISIONS.html">版管理・印刷シルクの確認はこちら</a>。</p>
   <div class="scope">
     <div><b>Board A — UNO Q Shield</b><br>Arduinoヘッダ、TFT・サーボ・状態入力コネクタ、電源コンデンサ。</div>
     <div><b>Board B — Audio Shield</b><br>UNO Breakout Carrier J14/J15、MI2Sマイク・アンプ端子、設定抵抗、デカップリング。</div>
@@ -56,6 +57,7 @@
 
 <section>
   <h2>Board B — Audio Shield</h2>
+  <div class="callout"><strong>2026-09-08 ローカル基板に合わせて更新:</strong> R_GAIN/R_LRの0Ω抵抗は回路図・PCBともJP_GAIN/JP_LRへ置換済み。シルクはCLOSED。通常はこの2個にショートピンを装着し、JP_MUTEは開放する。HTML・CSVとも実装部品を反映。両PCBのDRCは0件、回路図とPCBの部品・ピン接続照合は差分0件。追加部品の未選定販売コードは、下記に明記する。</div>
   <p>個別CSV: <a href="easyeda/IchiPing-UNO-Q-Shields/audio_shield/bom.csv">audio_shield/bom.csv</a></p>
   <table class="bom-table">
     <thead><tr><th>部品</th><th>Ref</th><th>数量</th><th>値・仕様</th><th>実装 / フットプリント</th><th>備考</th></tr></thead>
@@ -65,6 +67,11 @@
       <tr><td>JST XH 1×6</td><td>J_MIC</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x06</td><td>マイク接続、2.54 mm設計穴へ実装</td></tr>
       <tr><td>JST XH 1×4</td><td>J_AMP_SIG</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x04</td><td>アンプ信号、同上</td></tr>
       <tr><td>JST XH 1×3</td><td>J_AMP_PWR</td><td>1</td><td>垂直、公称2.50 mm</td><td>THT / XH2.54_Vertical_1x03</td><td>アンプ電源・SD、同上</td></tr>
+      <tr><td>電解コンデンサ</td><td>C1</td><td>1</td><td>10 µF、10 V以上</td><td>THT / 実測穴間隔2.00 mm</td><td>Pin 1が+5V、Pin 2がGND。ケース径を現物確認</td></tr>
+      <tr><td>ラジアルセラミックコンデンサ</td><td>C2, C3</td><td>2</td><td>100 nF</td><td>THT / 実測穴間隔5.00 mm</td><td>電源デカップリング</td></tr>
+      <tr><td>アキシャル抵抗</td><td>R_SD</td><td>1</td><td>100 kΩ</td><td>THT / 実測穴間隔10.16 mm</td><td>SDプルアップ。0Ωではないため抵抗を維持</td></tr>
+      <tr><td>ジャンパ用ピンヘッダ 1×2</td><td>JP_GAIN, JP_LR, JP_MUTE</td><td>3</td><td>2.54 mm</td><td>THT / 穴径1.00 mm</td><td>GAIN/LRは通常短絡、MUTEは通常開放</td></tr>
+      <tr><td>ショートピン</td><td>JP_GAIN, JP_LR</td><td>2</td><td>2.54 mmジャンパ用</td><td>ピンヘッダへ装着</td><td>旧R_GAIN/R_LRの0Ω抵抗は購入不要</td></tr>
     </tbody>
   </table>
 </section>
@@ -82,10 +89,14 @@
       <tr><td>JST XH 4P（Board A/B、計3個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112249/">XHコネクター ベース付ポスト トップ型 4P B4B-XH-A</a></td><td><b>112249</b></td></tr>
       <tr><td>JST XH 5P（Board A、1個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112250/">XHコネクター ベース付ポスト トップ型 5P B5B-XH-A</a></td><td><b>112250</b></td></tr>
       <tr><td>JST XH 6P（Board B、1個）</td><td><a href="https://akizukidenshi.com/catalog/g/g112251/">XHコネクター ベース付ポスト トップ型 6P B6B-XH-A</a></td><td><b>112251</b></td></tr>
-      <tr><td>C_PWR_HF 100 nF</td><td><a href="https://akizukidenshi.com/catalog/g/g117059/">積層セラミックコンデンサー 0.1 µF 50 V C0G 5 mm</a></td><td><b>117059</b></td></tr>
+      <tr><td>C_PWR_HF, C2, C3 100 nF（計3個）</td><td><a href="https://akizukidenshi.com/catalog/g/g117059/">積層セラミックコンデンサー 0.1 µF 50 V C0G 5 mm</a></td><td><b>117059</b></td></tr>
       <tr><td>C_PWR_BULK 470 µF</td><td><a href="https://akizukidenshi.com/catalog/g/g108426/">電解コンデンサー 470 µF 16 V 105 ℃</a></td><td><b>108426</b></td></tr>
       <tr><td>C_SERVO_BULK 1000 µF</td><td><a href="https://akizukidenshi.com/catalog/g/g108424/">電解コンデンサー 1000 µF 10 V 105 ℃</a></td><td><b>108424</b></td></tr>
       <tr><td>Carrier接続ソケット J14/J15</td><td><a href="https://akizukidenshi.com/catalog/g/g100085/">ピンソケット（メス）2×20（40P）</a></td><td><b>100085</b></td></tr>
+      <tr><td>C1 10 µF / 10 V以上</td><td>穴間隔2.00 mmの電解コンデンサ（ケース径を確認して選定）</td><td>未選定</td></tr>
+      <tr><td>R_SD 100 kΩ</td><td>リード型抵抗（穴間隔10.16 mmに成形）</td><td>未選定</td></tr>
+      <tr><td>JP_GAIN, JP_LR, JP_MUTE（3個）</td><td>2.54 mmピンヘッダ 1×2</td><td>未選定</td></tr>
+      <tr><td>JP_GAIN, JP_LR用（2個）</td><td>2.54 mmショートピン</td><td>未選定</td></tr>
     </tbody>
   </table>
 
