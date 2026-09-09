@@ -18,6 +18,9 @@
   </style>
 </head>
 <body>
+  <p>2026-09-10 06:55 JSTまで試験し、ユーザーの指示で作業終了。録音の100ms区間の小音量再生と、同条件の生成440Hz音を実行。最終の「OK」は作業終了の合意として記録し、クリーンなsin波の聴感合格とは断定しない。直前までの聴感報告はノイズ風。詳細は<a href="../uno_q/audio/INVESTIGATION.md">調査記録</a>参照。</p>
+  <p>MI2Sクロック終了処理、7680バイト録音周期、DATA0内部プルダウン、再生先行・100ms立ち上がり待ち、DSP上位24bitを表すS32_LE対応を配備。最後の比較は発音100ms・ピーク約0.01%FS、経路有効化前から500msの直接リセット期限。実音停止時間の厳密な測定と起動安定性は未検証。音響はbring-up段階で推論アプリ本統合は未完了。</p>
+  <p>外部配線は変更していない。MAX98357AのGAIN=GNDは12dBであり、コピー元の参照資料にある3dB表記は適用しない。SD未接続のため、ソフトウェア期限をハードウェアの消音保証として扱わない。</p>
 <main>
   <header>
     <p><a href="../index.html">← IchiPing UNO Q</a></p>
@@ -136,6 +139,20 @@
       <li>D3–D7、D8、D9を安全に読み取れる。</li>
       <li>PCA9685接続時は0x40を検出し、未接続時もアプリが継続する。</li>
     </ul>
+    <h3 id="test-result-2026-09-09">実機結果 — 2026-09-09 20:50 JST（表示・入力・サーボ・音響プローブ）</h3>
+    <table>
+      <tbody>
+        <tr><th>ボード識別</th><td>既知のUSB serial <code>2261748543</code>。試験時はUSBを切断し、Wi-Fiホスト<code>unoQ4G</code>（192.168.50.160）経由で操作。</td></tr>
+        <tr><th>ソフトウェア</th><td>UNO Q Debian 13、kernel <code>6.16.7-g0dd6551ae96b</code>、Arduino App CLI 0.8.2。STM32U585 program 27,488 bytes、global RAM 6,588 bytes。</td></tr>
+        <tr><th>表示・入力</th><td>ILI9341のセルフテスト、状態表示、バックライトとD3–D8のボタンをユーザー目視で確認。ログでもWIN_A、WIN_B、WIN_C、DOOR_AB、DOOR_BC、EXECの6入力すべての変化を確認。EXEC押下後に既知の同期Bridge timeoutを再現。</td></tr>
+        <tr><th>サーボ</th><td>PCA9685 <code>0x40</code>を検出。SG90 ch 0–4をそれぞれ閉=180°→開=0°→閉=180°で実行し、全15指令が結果0。最終状態は全閉、各指令後にPWM解放。</td></tr>
+        <tr><th>音響接続</th><td>INMP441はL/R=GND、WS=GPIO99、SCK=GPIO98、SD=GPIO100、VDD=1.8 V、GND共通。MAX98357AブレイクアウトはLRC=GPIO99、BCLK=GPIO98、DIN=GPIO101、GAIN=GND、SD=未接続、GND共通、VIN=5 V。信号割当と電圧は正本に一致。実機のブレイクアウトは元IchiPingと同一品だが型番・SD–VIN間の基板上プルアップ値は未確認。SD未接続時のモードは回路確認または無通電抵抗測定後に確定する。</td></tr>
+        <tr><th>ALSA / Device Tree</th><td>card <code>Arduino-Imola-HPH-LOUT</code>、<code>PRI_MI2S_RX/TX</code> DAI、対応ミキサー制御を確認。ただし実行中Device Treeのsound nodeにはHPH、LineOut、HDMIとMultiMedia1–4のみがあり、PRI_MI2S DAI linkとGPIO98–101のPinMux参照がない。</td></tr>
+        <tr><th>音響試験</th><td>48 kHz stereo S16_LE・約1%振幅の1 kHz音を1秒再生、および48 kHz stereo S32_LEを1秒録音しようとしたが、どちらもPCM open時に<code>EINVAL</code>。I2Sデータ転送は開始されず、試験後に両ミキサールートをOFFへ復帰。</td></tr>
+        <tr><th>判定</th><td><b>表示 / GPIO / PCA9685 / SG90 PASS。MI2S0 audio BLOCKED。</b>次はPRI_MI2S用Device Tree DAI link、GPIO98–101 PinMux、ALSA routeを実装・再起動後に、低振幅再生、マイクRMS、16 kHz変換、同時再生録音の順で再試験する。</td></tr>
+        <tr><th>未接続・未完了</th><td>雨センサは未確認。音響は物理接続済みだがLinux経路未実装のため未合格。</td></tr>
+      </tbody>
+    </table>
     <h3 id="test-result">実機結果 — 2026-08-21 12:13 JST</h3>
     <table>
       <tbody>

@@ -1,0 +1,11 @@
+diff --git a/sound/soc/qcom/qdsp6/q6asm-dai.c b/sound/soc/qcom/qdsp6/q6asm-dai.c
+--- a/sound/soc/qcom/qdsp6/q6asm-dai.c
++++ b/sound/soc/qcom/qdsp6/q6asm-dai.c
+@@ -29,5 +29,5 @@
+ #define CAPTURE_MIN_NUM_PERIODS     8
+ #define CAPTURE_MAX_NUM_PERIODS     8
+-#define CAPTURE_MAX_PERIOD_SIZE	    6720
+-#define CAPTURE_MIN_PERIOD_SIZE     6720
++#define CAPTURE_MAX_PERIOD_SIZE	    7680
++#define CAPTURE_MIN_PERIOD_SIZE     7680
+ #define SID_MASK_DEFAULT	0xF

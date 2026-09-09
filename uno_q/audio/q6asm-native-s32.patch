@@ -1,0 +1,38 @@
+From: IchiPing UNO Q port
+Subject: [PATCH] ASoC: q6asm: expose native MSB-aligned 24-bit PCM as S32_LE
+
+ASM_MEDIA_FMT_MULTI_CHANNEL_PCM_V2 requires 24-bit samples in the most
+significant bits of a 32-bit word. ALSA S24_LE is LSB-aligned and is not that
+format. Advertise S32_LE with 24 significant bits; keep the DSP command at
+24 bits. S16_LE remains unchanged. Do not advertise misleading S24_LE.
+
+diff --git a/sound/soc/qcom/qdsp6/q6asm-dai.c b/sound/soc/qcom/qdsp6/q6asm-dai.c
+--- a/sound/soc/qcom/qdsp6/q6asm-dai.c
++++ b/sound/soc/qcom/qdsp6/q6asm-dai.c
+@@ -91,2 +91,2 @@
+ 	.formats =              (SNDRV_PCM_FMTBIT_S16_LE |
+-				SNDRV_PCM_FMTBIT_S24_LE),
++				SNDRV_PCM_FMTBIT_S32_LE),
+@@ -114,2 +114,2 @@
+ 	.formats =              (SNDRV_PCM_FMTBIT_S16_LE |
+-				SNDRV_PCM_FMTBIT_S24_LE),
++				SNDRV_PCM_FMTBIT_S32_LE),
+@@ -139,2 +139,2 @@
+ 			.formats = (SNDRV_PCM_FMTBIT_S16_LE |		\
+-					SNDRV_PCM_FMTBIT_S24_LE),	\
++					SNDRV_PCM_FMTBIT_S32_LE),	\
+@@ -152,2 +152,2 @@
+ 			.formats = (SNDRV_PCM_FMTBIT_S16_LE |		\
+-				    SNDRV_PCM_FMTBIT_S24_LE),		\
++				    SNDRV_PCM_FMTBIT_S32_LE),		\
+@@ -404,2 +404,4 @@
+ 
++	/* ASM PCM v2 stores its 24 significant bits at the MSB of a 32-bit word. */
++	snd_pcm_hw_constraint_msbits(runtime, 0, 32, 24);
+ 	/* Ensure that buffer size is a multiple of period size */
+@@ -505,3 +507,4 @@
+-	case SNDRV_PCM_FORMAT_S24_LE:
++	case SNDRV_PCM_FORMAT_S32_LE:
++		/* Container width is 32; DSP native sample precision is 24. */
+ 		prtd->bits_per_sample = 24;
+ 		break;

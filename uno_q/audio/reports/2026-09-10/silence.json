@@ -1,0 +1,69 @@
+{
+  "format": "S16_LE",
+  "rate": 48000,
+  "frames": 48000,
+  "seconds": 1.0,
+  "channels": [
+    {
+      "channel": 0,
+      "dc_fs": -0.006160954157511393,
+      "peak_fs": 0.267730712890625,
+      "rms_fs": 0.030945801550512964,
+      "clipped_samples": 0,
+      "zero_fraction": 0.049770833333333334,
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "rms_fs": 0.042243172741073975,
+          "tone_440_power_fraction": 0.0014780299921475133
+        },
+        {
+          "start_seconds": 0.1,
+          "rms_fs": 0.03347071527048993,
+          "tone_440_power_fraction": 0.0008376875312642106
+        },
+        {
+          "start_seconds": 0.2,
+          "rms_fs": 0.037758577811672925,
+          "tone_440_power_fraction": 0.003679897845561161
+        },
+        {
+          "start_seconds": 0.3,
+          "rms_fs": 0.0456635893696938,
+          "tone_440_power_fraction": 0.0012775686534878309
+        },
+        {
+          "start_seconds": 0.4,
+          "rms_fs": 0.04532017651905216,
+          "tone_440_power_fraction": 2.2785246029897647e-05
+        },
+        {
+          "start_seconds": 0.5,
+          "rms_fs": 0.010695448670565303,
+          "tone_440_power_fraction": 0.0007291141398530185
+        },
+        {
+          "start_seconds": 0.6,
+          "rms_fs": 0.010635553594632733,
+          "tone_440_power_fraction": 0.00032398687662319044
+        },
+        {
+          "start_seconds": 0.7,
+          "rms_fs": 0.01067838021033062,
+          "tone_440_power_fraction": 4.734261272196586e-05
+        },
+        {
+          "start_seconds": 0.8,
+          "rms_fs": 0.010423604143118936,
+          "tone_440_power_fraction": 5.260628222790534e-05
+        },
+        {
+          "start_seconds": 0.9,
+          "rms_fs": 0.010447668198982091,
+          "tone_440_power_fraction": 0.0007033654246528112
+        }
+      ]
+    }
+  ],
+  "acoustic_verdict": "UNVERIFIED: compare tone and silent windows"
+}

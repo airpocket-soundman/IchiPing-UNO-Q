@@ -1,0 +1,164 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/dts-v1/;
+/plugin/;
+
+/*
+ * IchiPing external audio for Arduino UNO Q / QRB2210.
+ *
+ * Board signal name       LPASS LPI pinctrl name
+ * GPIO98  MI2S0_CLK       gpio6 / i2s1_clk
+ * GPIO99  MI2S0_WS        gpio7 / i2s1_ws
+ * GPIO100 MI2S0_DATA0     gpio8 / i2s1_data (capture)
+ * GPIO101 MI2S0_DATA1     gpio9 / i2s1_data (playback)
+ */
+
+/ {
+	fragment@0 {
+		target-path = "/";
+
+		__overlay__ {
+			ichiping_max98357a: ichiping-max98357a {
+				compatible = "maxim,max98357a";
+				#sound-dai-cells = <0>;
+			};
+
+			/* INMP441 has no control bus; use the kernel's capture-only stub DAI. */
+			ichiping_i2s_receiver: ichiping-i2s-receiver {
+				compatible = "linux,spdif-dir";
+				#sound-dai-cells = <0>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&lpass_tlmm>;
+
+		__overlay__ {
+			ichiping_mi2s0_active: ichiping-mi2s0-active-state {
+				clk-pins {
+					pins = "gpio6";
+					function = "i2s1_clk";
+					bias-disable;
+					drive-strength = <8>;
+					output-high;
+				};
+
+				ws-pins {
+					pins = "gpio7";
+					function = "i2s1_ws";
+					bias-disable;
+					drive-strength = <8>;
+					output-high;
+				};
+
+				capture-data-pins {
+					pins = "gpio8";
+					function = "i2s1_data";
+					/* INMP441 releases SD outside its 24-bit left slot. */
+					bias-pull-down;
+					input-enable;
+				};
+
+				playback-data-pins {
+					pins = "gpio9";
+					function = "i2s1_data";
+					bias-disable;
+					drive-strength = <8>;
+					output-high;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&q6afedai>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			dai@16 {
+				reg = <16>; /* PRIMARY_MI2S_RX */
+				qcom,sd-lines = <1>; /* GPIO101 / DATA1 */
+			};
+
+			dai@17 {
+				reg = <17>; /* PRIMARY_MI2S_TX */
+				qcom,sd-lines = <0>; /* GPIO100 / DATA0 */
+			};
+		};
+	};
+
+	fragment@3 {
+		target-path = "/sound";
+
+		__overlay__ {
+			model = "Arduino-Imola-IchiPing-MI2S0";
+			pinctrl-0 = <&lpi_i2s2_active &ichiping_mi2s0_active>;
+			pinctrl-names = "default";
+
+			/*
+			 * fdtoverlay inserts new children before children in the base DTB.
+			 * Keep DPCM frontends ahead of the new backends: qcom_snd_parse_of()
+			 * preserves this order when it builds the card's dai_link array.
+			 */
+			ichiping-mi2s0-playback-dai-link {
+				link-name = "IchiPing MI2S0 Playback";
+
+				cpu {
+					sound-dai = <&q6afedai 16>;
+				};
+
+				platform {
+					sound-dai = <&q6routing>;
+				};
+
+				codec {
+					sound-dai = <&ichiping_max98357a>;
+				};
+			};
+
+			ichiping-mi2s0-capture-dai-link {
+				link-name = "IchiPing MI2S0 Capture";
+
+				cpu {
+					sound-dai = <&q6afedai 17>;
+				};
+
+				platform {
+					sound-dai = <&q6routing>;
+				};
+
+				codec {
+					sound-dai = <&ichiping_i2s_receiver>;
+				};
+			};
+
+			/* Declared in reverse: libfdt prepends overlay child nodes. */
+			ichiping-mm4-dai-link {
+				link-name = "MultiMedia4";
+				cpu { sound-dai = <&q6asmdai 3>; };
+			};
+
+			ichiping-mm3-dai-link {
+				link-name = "MultiMedia3";
+				cpu { sound-dai = <&q6asmdai 2>; };
+			};
+
+			ichiping-mm2-dai-link {
+				link-name = "MultiMedia2";
+				cpu { sound-dai = <&q6asmdai 1>; };
+			};
+
+			ichiping-mm1-dai-link {
+				link-name = "MultiMedia1";
+				cpu { sound-dai = <&q6asmdai 0>; };
+			};
+
+			mm1-dai-link { status = "disabled"; };
+			mm2-dai-link { status = "disabled"; };
+			mm3-dai-link { status = "disabled"; };
+			mm4-dai-link { status = "disabled"; };
+		};
+	};
+};

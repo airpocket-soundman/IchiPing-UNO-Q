@@ -1,0 +1,16 @@
+{
+  "source_sha256": "1c82b4bcd6468f8efecc4e1442e96563dbdc9ef7e8fc048063d6d367f432c788",
+  "source_segment_seconds": [
+    0.1,
+    0.2
+  ],
+  "source_format": "S16_LE stereo left",
+  "tone_440_power_fraction": 0.6825890074307984,
+  "harmonic_ratio_estimate": 0.013631825737943304,
+  "processing": "DC removal, peak reduction, 5 ms fades; no tone resynthesis or frequency filtering",
+  "output_format": "S32_LE with native 24 significant MSBs",
+  "output_seconds": 0.5,
+  "nonzero_audio_seconds_max": 0.1,
+  "output_peak_fs_max": 9.989738464355469e-05,
+  "verdict": "eligible for guarded quiet replay of this segment only"
+}

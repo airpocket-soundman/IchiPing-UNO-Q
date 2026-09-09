@@ -26,6 +26,9 @@
   </style>
 </head>
 <body>
+  <p>2026-09-10 06:55 JSTまで音響を試験し、ユーザーの指示で作業終了。録音の確認済み100ms区間を小音量で再生し、最後に同条件の生成440Hz音も実行した。最終発言「OK、いったんここまで」は作業終了の合意であり、音質合格とは断定しない。直前までの聴感報告はノイズ風で、クリーンなsin波の発音は未合格。</p>
+  <p>MI2Sクロック終了処理、7680バイト録音周期、DATA0プルダウン、再生先行・立ち上がり待ち、DSP上位24bitを正しく表すS32_LE対応を配備。録音の一部で440Hzを検出したが、周波数成分の検出と聴感の合格は区別する。<a href="uno_q/audio/INVESTIGATION.md">調査記録</a></p>
+  <p>試験開始前から500msの直接リセット期限を設定。最後の比較は発音100ms・ピーク約0.01%FS。厳密な実音停止時間と起動安定性は未検証。音響コードはbring-up用で、推論アプリへの本統合は未完了。</p>
 <main>
   <section class="hero">
     <p class="status">Arduino UNO Q port / Phase 0 bring-up</p>
@@ -50,7 +53,8 @@
     <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>Bridge往復、GPIO読取、PCA9685未接続時の継続動作、ILI9341 SPIシーケンスを確認しました。プログラム25,160 bytes、RAM 6,588 bytesです。ILI9341実画面は未確認で、サーボPWMは未出力です。</p>
     <p><b>2026-09-08 display / switch test PASS。</b>USB serial 2261748543へ再書き込みし、ILI9341の表示・バックライトとD3–D8の6入力を実機で目視確認しました。</p>
     <p><b>2026-09-08 PCA9685 / servo transport test PASS。</b>外部5 Vのみ、USB未接続でPCA9685（0x40）を検出。SG90 ×5をch 0–4へ接続し、小角度試験と元実装準拠の全閉（180°）→全開（0°）→全閉を1台ずつ実行しました。全15指令がI²C結果0で完走し、各動作後にPWMを解放しています。</p>
-    <p>ALSAデバイスは列挙されますが、外部音響機器なしの16 kHzモノラル録音は<code>EINVAL</code>で、音響経路は未合格です。</p>
+    <p><b>2026-09-09 display / switch / servo retest PASS。</b>Wi-Fiホスト<code>unoQ4G</code>からILI9341と入力を再確認し、PCA9685（0x40）経由でSG90 ×5を全閉→全開→全閉。全15指令が結果0で、最終状態は全閉・PWM解放です。</p>
+    <p><b>2026-09-09 MI2S0 audio probe BLOCKED。</b>正本どおり1.8 VのINMP441（DATA0）とMAX98357A（DATA1）を接続。ALSAには<code>PRI_MI2S_RX/TX</code>が列挙されますが、実行中Device TreeにPRI_MI2S DAI linkとGPIO98–101のPinMux参照がなく、低振幅再生と1秒録音はいずれもPCM open時に<code>EINVAL</code>となりました。I2S転送は開始されず、ルートはOFFへ復帰済みです。</p>
     <p>実機は通常時約3.0 GiBのavailable RAMを持ち、現行XLモデルは約0.7 MiBです。精度優先でモデルを段階拡張し、実機資源と外部評価を同時に測定します。</p>
   </section>
 

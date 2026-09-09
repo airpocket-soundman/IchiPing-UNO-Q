@@ -2,6 +2,9 @@
 .claude/
 
 # Python
+# Local test-board authentication (never publish private keys)
+uno_q/test_ssh/unoq_test_ed25519
+
 __pycache__/
 *.py[cod]
 *$py.class

@@ -1,0 +1,49 @@
+{
+  "format": "S16_LE",
+  "rate": 48000,
+  "frames": 14336,
+  "seconds": 0.2986666666666667,
+  "channels": [
+    {
+      "channel": 0,
+      "dc_fs": -2.8148293495178223e-05,
+      "peak_fs": 0.001068115234375,
+      "rms_fs": 0.0002281257368193125,
+      "clipped_samples": 0,
+      "zero_fraction": 0.10686383928571429,
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "rms_fs": 0.00030320881404838763,
+          "tone_440_power_fraction": 0.25713890546444435
+        },
+        {
+          "start_seconds": 0.1,
+          "rms_fs": 0.00018243419200102202,
+          "tone_440_power_fraction": 0.6825890074307986
+        }
+      ]
+    },
+    {
+      "channel": 1,
+      "dc_fs": 0.0,
+      "peak_fs": 0.0,
+      "rms_fs": 0.0,
+      "clipped_samples": 0,
+      "zero_fraction": 1.0,
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "rms_fs": 0.0,
+          "tone_440_power_fraction": 0
+        },
+        {
+          "start_seconds": 0.1,
+          "rms_fs": 0.0,
+          "tone_440_power_fraction": 0
+        }
+      ]
+    }
+  ],
+  "acoustic_verdict": "UNVERIFIED: compare tone and silent windows"
+}
