@@ -246,6 +246,16 @@ Rain sensor connection remains unconfirmed.
 
 ## Session close / repository handoff
 
+Subsequent local-only development (2026-09-10): added PC-reference playback /
+UNO Q capture orchestration at the user's request, explicitly without sounding
+either device. No SSH, hardware deployment, reset or capture was performed for
+this development. Added 30 ms pre-roll after capture-ready and a post-capture
+440 Hz envelope margin check to account for command-to-sound latency. The board
+500 ms reset deadline is unchanged; incomplete overlap is not a success. See
+PC_REFERENCE.md for the amplifier-zero-data limitation and future live workflow.
+Offline tests use mocked playback only; hardware identity/results from earlier
+experiments must not be attributed to this new, untested workflow.
+
 The 06:51 replay recapture retained 0.32 s: left peak 0.0610%FS, RMS 0.01508%FS,
 440 Hz fraction 7.14% in the first 100 ms, then 0.156% and 0.081%; right zero.
 Boot ID after that reset: 9c9b660c-d834-45a1-98fe-9be9f11f3f61.
@@ -258,3 +268,14 @@ No further hardware tests were performed for the commit/push request.
 Original analysis JSON reports are archived in reports/2026-09-10/; raw audio
 and private SSH key remain local. App integration, reliable boot recovery,
 calibrated acoustic quality, and measured hard stop timing remain unfinished.
+
+## 2026-09-10 instrument follow-up / handoff
+
+Later unloaded OWON measurements confirmed approximately 3.072 MHz BCLK,
+48 kHz WS and 64 clocks per frame. A 339-bit DIN subsequence matched the source;
+subsequent WS/DIN capture matched nine frames under standard I2S timing assumptions.
+These short digital captures do not establish full-stream or acoustic correctness.
+See reports/2026-09-10-owon-din.md for limitations and board/software identifiers.
+SLogic CLI release 1.1.0 is ready, but normal USB3 enumeration remains unsuccessful.
+DFU (359f:30f1, WinUSB, ProblemCode 0) works on the current hub. No firmware update
+was performed. User will try another PC; see reports/2026-09-10-slogic-usb.md.

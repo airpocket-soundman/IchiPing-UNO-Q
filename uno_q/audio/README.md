@@ -30,6 +30,24 @@ Do not infer output safety from the GAIN=GND connection.
 
 ## Files
 
+- [INSTRUMENT_TEST.md](INSTRUMENT_TEST.md): unloaded → amplifier → microphone
+  measurement sequence, offline reference generator and I2S CSV decoder.
+  `instrument-playback` is a serial-checked playback-only test mode using the
+  existing 500ms reset request. One unloaded zero-PCM trial was run on 2026-09-10;
+  OWON single triggering did not complete, so no waveform verdict is available.
+  ALSA card enumeration failed after reset. OWON API compensation capture and CSV
+  export now work, but voltage is inconsistent across ranges; see
+  [API report](reports/2026-09-10-owon-api.md). Subsequent armed API captures measured
+  GPIO98 at approximately 3.072 MHz. Triggering on GPIO99 then captured ~48 kHz WS,
+  with 64 BCLK edges per WS cycle; earlier BCLK-triggered windows missed WS startup. See the
+  [unloaded I2S report](reports/2026-09-10-owon-i2s.md). Acoustic quality is not established.
+  [DIN capture](reports/2026-09-10-owon-din.md) matches 339 bits of the transmitted PCM
+  as a subsequence; WS-relative framing and acoustic quality remain unverified.
+
+- [PC_REFERENCE.md](PC_REFERENCE.md): Windows PC reference playback with UNO Q
+  recording handshake, pre-roll and offline timing checks. Preparation is the
+  default; live deployment/playback requires explicit `--execute`. Not hardware-tested.
+
 - `ichiping-mi2s0.dtso` adds the LPASS pinmux, primary MI2S RX/TX DAIs,
   MAX98357A playback codec and a capture-only stub DAI for the INMP441.
 - `sm8250-primary-mi2s-duplex.patch` makes the QRB2210 machine driver configure
