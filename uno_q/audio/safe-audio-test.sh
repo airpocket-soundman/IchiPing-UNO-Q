@@ -6,11 +6,11 @@ model=$(tr -d '\000' </proc/device-tree/sound/model)
 failed=0
 
 case "${1:-}" in
-	speaker|cycle|replay-cycle|external-reference|instrument-playback) ;;
+	speaker|cycle|replay-cycle|external-reference|instrument-playback|instrument-duplex) ;;
 	microphone)
 		echo "refusing capture-only clocks: use ICHIPING_TONE_AMPLITUDE=0 $0 cycle" >&2
 		exit 2 ;;
-	*) echo "usage: $0 {speaker|cycle|replay-cycle FILE|instrument-playback FILE|external-reference ID}" >&2; exit 2 ;;
+	*) echo "usage: $0 {speaker|cycle|replay-cycle FILE|instrument-playback FILE|instrument-duplex FILE|external-reference ID}" >&2; exit 2 ;;
 esac
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -27,7 +27,7 @@ if [ "$model" != "Arduino-Imola-IchiPing-MI2S0" ]; then
 	exit 1
 fi
 
-if [ "${1:-}" = external-reference ] || [ "${1:-}" = instrument-playback ]; then
+if [ "${1:-}" = external-reference ] || [ "${1:-}" = instrument-playback ] || [ "${1:-}" = instrument-duplex ]; then
 	[ "$#" -eq 2 ] || exit 2
 	if [ "$1" = external-reference ]; then
 		case "$2" in ''|*[!0-9a-f]*) exit 2 ;; esac
@@ -75,7 +75,7 @@ emergency_stop() {
 "$script_dir/route-mi2s0.sh" verify-off
 trap 'emergency_stop' HUP INT TERM
 
-if [ "${1:-}" = replay-cycle ] || [ "${1:-}" = instrument-playback ]; then
+if [ "${1:-}" = replay-cycle ] || [ "${1:-}" = instrument-playback ] || [ "${1:-}" = instrument-duplex ]; then
 	[ "$#" -eq 2 ] || exit 2
 	python3 "$script_dir/audio-smoke-test.py" validate-native-replay --input "$2"
 	cp -- "$2" /var/tmp/ichiping-prepared-tone.raw
@@ -95,12 +95,26 @@ fi
 
 # Independent of this shell. Direct reboot bypasses service shutdown. This is
 # a tested idle reset fallback, not proof of acoustic shutdown under DSP faults.
+if [ "${1:-}" = instrument-duplex ]; then
+	capture=$(mktemp /var/tmp/ichiping-instrument-duplex-XXXXXX.raw)
+	echo "ICHIPING_INSTRUMENT_CAPTURE:$capture"
+fi
 sync
 systemd-run --quiet --unit=ichiping-audio-watchdog \
 	--on-active=500ms --timer-property=AccuracySec=1ms \
 	/usr/bin/systemctl reboot --force --force
 
 case "${1:-}" in
+	instrument-duplex)
+		# Unloaded measurement: same verified PCM, then capture after playback RUNNING.
+		"$script_dir/route-mi2s0.sh" playback-on
+		"$script_dir/route-mi2s0.sh" capture-on
+		if ! timeout --signal=TERM --kill-after=0.25 3.5 \
+			"$script_dir/audio-cycle-test.sh" "$capture"; then
+			emergency_stop
+			exit 1
+		fi
+		;;
 	instrument-playback)
 		# Measurement-only playback: never open the microphone/capture route.
 		# The reference file was validated and copied BEFORE arming the timer.

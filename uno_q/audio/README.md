@@ -30,6 +30,27 @@ Do not infer output safety from the GAIN=GND connection.
 
 ## Files
 
+- **Next environment:** [scope-only handoff and experiment plan](HANDOFF_SCOPE_TEST.md).
+  Amplifier/microphone tests will run on another setup with an oscilloscope but
+  no logic analyzer. Includes a two-channel scope sequence and explicit safety
+  gates. SD/start-stop fixes are still NOT implemented; diagnostics are not a
+  noise fix. Raw local captures are not included by Git pull.
+
+- [2026-09-11 signal audit](reports/2026-09-11-i2s-signal-audit.md): unloaded,
+  playback-only S32 test measured 3.072 MHz BCLK / 48 kHz WS and exact agreement
+  with 24,000 reference samples per channel, including negative values. This is
+  not an acoustic pass. BCLK continued for 1.2–1.4 ms after the last WS edge,
+  matching the manufacturer's warning condition for an enabled MAX98357A.
+  Reconsider always-enabled/open SD for this implementation before reconnecting
+  the amplifier. No SD wiring or driver changes were made by this audit.
+  Use explicit `logic_channels=4` and no trigger for the validated SLogic capture
+  configuration; the earlier 16-channel/triggered acquisition had artifacts.
+  `slogic-sr-to-csv.py` converts sample indices from SR files directly (numpy).
+  The subsequent unloaded `instrument-duplex FILE` trial also matched all
+  reference PCM samples. It uses a unique recording file and retains the reset
+  timer; the timer is not a 500ms physical cutoff (clock span measured ~1.02s).
+  See the audit for Windows capture warnings and an ADSP initialization failure.
+
 - [INSTRUMENT_TEST.md](INSTRUMENT_TEST.md): unloaded → amplifier → microphone
   measurement sequence, offline reference generator and I2S CSV decoder.
   `instrument-playback` is a serial-checked playback-only test mode using the

@@ -75,6 +75,16 @@ class InstrumentTests(unittest.TestCase):
         _, errors, _ = tool.decode(rows)
         self.assertGreater(errors['data_changes_on_rising_edge'], 0)
 
+    def test_duplex_measurement_keeps_reset_and_unique_capture(self):
+        script = Path(__file__).with_name('safe-audio-test.sh').read_text()
+        branch = script.split('\tinstrument-duplex)')[1].split(';;')[0]
+        self.assertLess(script.index('--on-active=500ms'), script.index('\tinstrument-duplex)'))
+        self.assertIn('mktemp /var/tmp/ichiping-instrument-duplex-', script)
+        self.assertIn('audio-cycle-test.sh', branch)
+        self.assertNotIn('rm ', branch)
+        cycle = Path(__file__).with_name('audio-cycle-test.sh').read_text()
+        self.assertLess(cycle.index('state: RUNNING'), cycle.index('arecord -D'))
+
     def test_empty_capture_not_pass(self):
         samples, _, timing = tool.decode([])
         self.assertEqual(samples, [])
