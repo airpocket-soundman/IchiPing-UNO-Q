@@ -150,8 +150,8 @@ App Lab アプリは評価用の命令を受け付けるので、PC から Wi-Fi
 
 1. 模型の家を作り、部品を配線します（4章）。
 2. MI2S0 の音声バスを1回だけ有効にします（Device Tree のオーバーレイと ALSA のモジュール、`uno_q/audio/README.md`）。
-3. `uno_q/app/` の App Lab アプリを配備し、音声の worker を起動します（`runtime-audio-worker.py --loop --excitation prbs16k --capture-format S32_LE --playback-rms 0.0088`）。
-4. スイッチをすべて CLOSE にして EXEC を1回押し、baseline を録ります。
+3. `uno_q/app/` の App Lab アプリを配備して既定アプリにし（`arduino-app-cli properties set default user:ichiping-uno-q`）、音声の worker を起動時に立ち上げます（`uno_q/audio/start-runtime-worker.sh` をユーザーの `@reboot` cron に登録）。
+4. 電源を入れます。アプリがサーボをすべて閉じ、全閉の baseline を録り直してから、サーボをスイッチに追従させます。PC は不要です。
 5. スイッチを倒して EXEC を押し、TFT を見ます。
 6. 自分の間取りで学習する：`pc/uno_q_collect.py` → `pc/uno_q_export_dataset.py` → `pc/training/train_32cls.py --baseline-jitter-dirs … --ambient-dirs … --freq-warp 0.03` → `pc/uno_q_evaluate_all.py`。
 

@@ -1,12 +1,4 @@
-# IchiPing UNO Q — One Speaker, One Microphone, Every Window and Door
-
-**Category:** Home Automation
-
-**Short description:** One speaker and one microphone on an Arduino UNO Q "ping" a home with a 2-second noise burst; a tiny neural network on the Linux side tells which of five windows and doors are open — and learns to hear even the rooms it cannot directly reach.
-
-**Code:** https://github.com/airpocket-soundman/IchiPing-UNO-Q — **Docs:** https://airpocket-soundman.github.io/IchiPing-UNO-Q/
-
-[PHOTO: COVER IMAGE — the model apartment with the UNO Q, the TFT showing a result, and the servos on the windows and doors]
+The Hackster story editor has no tables, so this version of `story_en.md` uses lists and images instead. Lines starting with "INSERT IMAGE" mark where an image from the repository must be uploaded with the editor's image button.
 
 ## 1. "Did I leave a window open?"
 
@@ -16,7 +8,7 @@ IchiPing asks a different question: **can the home itself be the sensor?** A spe
 
 > "Ichi" (一) is Japanese for "one": one speaker, one microphone, one ping.
 
-![One ping, 32 states — the use case](../img/hackster_one_ping_comic_en.png)
+**INSERT IMAGE: docs/img/hackster_one_ping_comic_en.png** — One ping, 32 states: the use case.
 
 ## 2. What it does
 
@@ -25,63 +17,39 @@ IchiPing asks a different question: **can the home itself be the sensor?** A spe
 - Runs entirely on the Arduino UNO Q: no cloud and no PC at inference time.
 - Knows its limits: it separates what is **acoustically observable** from what is only faintly audible (Section 6).
 
-![Model apartment: three rooms, three windows, two doors; speaker and microphone in room A](../img/house.png)
+**INSERT PHOTO: the physical model apartment from above, labelled a, b, c, AB, BC.**
 
-[PHOTO: the physical model apartment from above, with labels a, b, c, AB, BC]
-[VIDEO: 30–60 s demo — flip a switch, the servo opens a window, press EXEC, the TFT shows "Complete Success"]
+**INSERT VIDEO: 30–60 s demo — flip a switch, the servo opens a window, press EXEC, the TFT shows "Complete Success".**
 
 ## 3. Why the Arduino UNO Q: two brains in one App Lab app
 
 IchiPing started on an NXP FRDM-MCXN947. Moving it to the UNO Q put each half of the problem where it fits best:
 
-| Brain | Code | Job |
-|---|---|---|
-| **STM32U585 MCU** (Zephyr, Arduino sketch) | `uno_q/app/sketch/` | switches and EXEC button, PCA9685 servo driver (5 × SG90), ILI9341 TFT |
-| **Qualcomm QRB2210 MPU** (Debian, App Lab Python) | `uno_q/app/python/` | MI2S0 audio (MAX98357A + INMP441), signal processing, ONNX Runtime inference, baseline storage |
-| **Arduino Router Bridge** | RPC between both | `on_infer_request`, `show_prediction`, `set_servo_armed`, `move_servo_deg`, … |
+- **STM32U585 MCU** (Zephyr, Arduino sketch, `uno_q/app/sketch/`): switches and EXEC button, PCA9685 servo driver (5 × SG90), ILI9341 TFT.
+- **Qualcomm QRB2210 MPU** (Debian, App Lab Python, `uno_q/app/python/`): MI2S0 audio (MAX98357A + INMP441), signal processing, ONNX Runtime inference, baseline storage.
+- **Arduino Router Bridge** connects both: `on_infer_request`, `show_prediction`, `set_servo_armed`, `move_servo_deg`, …
 
-![UNO Q architecture](../img/hackster_unoq_architecture.png)
+**INSERT IMAGE: docs/img/hackster_unoq_architecture.png** — UNO Q architecture: real-time I/O on the MCU, audio and AI on Linux.
 
 Sketch, Python runtime and model ship together as one **App Lab app**. A small host-side worker owns the ALSA routes and the amplifier shutdown pin, so the containerised app never touches the audio hardware directly and every stop path is verified. The model needs only **1.7 ms (p95)** on the Cortex-A53; the 2-second acoustic ping dominates the latency.
 
 ## 4. Hardware
 
-### Bill of materials
+The complete bill of materials is in the **Things** section. The key parts: an Arduino UNO Q with the UNO Breakout Carrier (for the 1.8 V MI2S0 audio pins), an INMP441 I²S microphone, a MAX98357A I²S amplifier with a small speaker, a PCA9685 driving five SG90 servos, a 2.4" ILI9341 SPI TFT, five toggle switches, an EXEC button, a 5 V supply and a model apartment with three rooms, three windows and two doors.
 
-| Qty | Part | Notes |
-|---|---|---|
-| 1 | Arduino UNO Q (4 GB) | QRB2210 MPU + STM32U585 MCU |
-| 1 | UNO Breakout Carrier (JMISC access) | 1.8 V MI2S0 audio pins |
-| 1 | INMP441 I²S MEMS microphone | DATA0, L/R = GND, VDD = 1.8 V |
-| 1 | MAX98357A I²S amplifier + small speaker | DATA1, GAIN = GND, SD = SoC GPIO 28 + 10 kΩ to GND |
-| 1 | PCA9685 PWM driver | I²C 0x40 (D20/D21) |
-| 5 | SG90 micro servos | windows a, b, c and doors AB, BC |
-| 1 | ILI9341 2.4" SPI TFT | D11, D13, A2–A5 |
-| 5 + 1 | toggle switches + push button | D3–D7 and EXEC on D8 |
-| 1 | 5 V supply | servos and amplifier, common GND |
-| 1 | model apartment | three rooms, three windows, two doors |
+**INSERT IMAGE: docs/img/unoq_wiring_en.png** — Wiring: switches, EXEC, PCA9685 and TFT on the 3.3 V UNO header; microphone and amplifier on the 1.8 V MI2S0 bus.
 
-Software: Arduino App Lab, Arduino Router Bridge, Debian ALSA, Python 3 with NumPy and ONNX Runtime; PyTorch on a PC for training.
+Important details:
 
-### Schematics and wiring
+- MI2S0 is a **1.8 V** interface reached through JMISC / the UNO Breakout Carrier: never connect 3.3 V or 5 V signals to it.
+- The amplifier's SD pin is driven by SoC GPIO 28 and pulled to GND with **10 kΩ**, so the amplifier stays off whenever audio is not running.
+- Servos and amplifier run from an external 5 V supply with a common ground; never power the servos from 3V3.
 
-![IchiPing UNO Q wiring: switches, EXEC, PCA9685 and TFT on the 3.3 V UNO header; microphone and amplifier on the 1.8 V MI2S0 bus](../img/unoq_wiring_en.png)
+Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs and pin maps are attached.
 
-| Signal | UNO Q | Device |
-|---|---|---|
-| BCLK / WS | SoC GPIO 98 / 99 | MAX98357A BCLK/LRC, INMP441 SCK/WS |
-| Mic data | SoC GPIO 100 (DATA0) | INMP441 SD |
-| Amp data | SoC GPIO 101 (DATA1) | MAX98357A DIN |
-| Amp shutdown | SoC GPIO 28 | MAX98357A SD (10 kΩ to GND) |
-| I²C | D20 / D21 | PCA9685 |
-| SPI TFT | D11, D13, A2 CS, A3 RST, A4 DC, A5 BL | ILI9341 |
-| Inputs | D3–D7, D8 | switches, EXEC |
+**INSERT IMAGE: board/easyeda-screen.png** — IchiPing AUDIO shield in EasyEDA Pro: 1.8 V I²S headers for the amplifier and the microphone.
 
-The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.html`). Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs and pin maps are attached.
-
-![IchiPing AUDIO shield in EasyEDA Pro: 1.8 V I²S headers for the amplifier (LRC, BCLK, DIN, GAIN, SD, VIN) and the microphone (SD, CK, WS, LR)](../../board/easyeda-screen.png)
-
-[PHOTO: wiring close-up — UNO Q, Breakout Carrier, PCA9685, TFT, microphone and amplifier]
+**INSERT PHOTO: wiring close-up — UNO Q, Breakout Carrier, PCA9685, TFT, microphone and amplifier.**
 
 ## 5. How the acoustic sensing works
 
@@ -90,7 +58,7 @@ The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.htm
 3. **Compare.** A 1024-bin log-power spectrum minus the **all-closed baseline** recorded on the device, normalised per frame.
 4. **Classify.** A 104k-parameter CNN outputs one of 32 states.
 
-![Spectrum difference against the all-closed baseline](../img/hackster_fft_diff_en.png)
+**INSERT IMAGE: docs/img/hackster_fft_diff_en.png** — The raw spectra look alike; the difference to the all-closed baseline shows the open window.
 
 **A porting detail that mattered.** The original model scored only 20.8 % on the UNO Q at first. The original firmware converted each I²S word with `>> 12`; ALSA 16-bit capture corresponds to `>> 16`. Reproducing the original scale exactly (×16 from the 24-bit capture) plus the original PRBS level matched the original dataset's recording energy within 0.02 dB. Without it, 39 % of the spectrum bins sat on the −80 dB floor.
 
@@ -102,11 +70,11 @@ One microphone in room A cannot hear every opening equally. With door **AB** clo
 - **B1–B4** — AB open, BC closed: a, b and AB observable; c hidden.
 - **C1–C8** — AB and BC open: all five observable.
 
-![Observability model](../img/hackster_observability_en.png)
+**INSERT IMAGE: docs/img/hackster_observability_en.png** — Observability: a closed door hides the rooms behind it.
 
 The TFT colours each digit as observable (bright) or hidden (dark) and shows **Complete Success** (blue, all 32-state bits right), **Conditional Success** (green, the observable part right) or **Failure** (red). The user always knows what the system guarantees and what is a best guess.
 
-[PHOTO: TFT showing the inf/act rows with the green "Conditional Success" or blue "Complete Success" banner]
+**INSERT PHOTO: the TFT showing the inf/act rows with the green "Conditional Success" or blue "Complete Success" banner.**
 
 ## 7. Collecting real data on the UNO Q — automatically
 
@@ -128,14 +96,7 @@ The result we are most proud of: with enough real data and the right augmentatio
 3. **Real ambient noise.** Room noise and crowd noise recorded through the same microphone, mixed in at 0–35 dB SNR.
 4. **Temperature augmentation (new).** In the evening every model got worse. The cause was the room itself: as the air conditioner cooled it, all resonances shifted by up to **−2.15 %** (the speed of sound changes by about 0.18 %/°C). Warping the sample spectrum by a random ±3 % *before* subtracting the baseline teaches the model this effect.
 
-| Model | 09:00 stable | 19:35 (−2.15 % drift) | 20:44 | 21:28 + crowd noise | Mean 32-state |
-|---|---|---|---|---|---|
-| Original FRDM model | 20.8 / 59.4 | 35.9 / 68.8 | 9.1 / 49.7 | 11.6 / 50.0 | 19.3 |
-| UNO Q, 4 sessions | 86.5 / 100 | 43.1 / 84.1 | 69.1 / 99.7 | 76.9 / 100 | 68.9 |
-| + frequency warp | 89.6 / 100 | 56.9 / 93.8 | 82.8 / 100 | 80.9 / 100 | 77.6 |
-| **8 sessions + warp + ambient (deployed)** | **91.7 / 100** | **81.9 / 100** | **74.7 / 100** | **81.9 / 100** | **82.5** |
-
-*(32-state / 14-class accuracy in %, held-out evaluation sessions.)*
+**INSERT IMAGE: docs/img/hackster_results_en.png** — Accuracy on held-out evaluation sessions (32-state / 14-class).
 
 - The **observable 14-class accuracy is 100 %** on every set — through crowd noise and a 2 % temperature shift.
 - The **32-state accuracy**, which needs the hidden windows, rose from 20.8 % to **82.5 %**. Window c behind closed doors — a cue of only 0.5–0.9 dB — went from 56 % to 86–90 %.
@@ -153,7 +114,7 @@ The first UI repainted the whole 320 × 240 screen on every update. Now the stat
 5. Flip switches, press EXEC, read the TFT.
 6. Train your own floor plan: `pc/uno_q_collect.py` → `pc/uno_q_export_dataset.py` → `pc/training/train_32cls.py --baseline-jitter-dirs … --ambient-dirs … --freq-warp 0.03` → `pc/uno_q_evaluate_all.py`.
 
-The step-by-step guide is on the documentation site.
+The step-by-step guide, all documentation and the code are on GitHub: https://github.com/airpocket-soundman/IchiPing-UNO-Q (documentation site: https://airpocket-soundman.github.io/IchiPing-UNO-Q/).
 
 ## 11. Sustainability, user experience and scalability
 
@@ -166,7 +127,3 @@ The step-by-step guide is on the documentation site.
 - Sessions across several days and air-conditioner settings, with on-device temperature logging.
 - A web UI Brick to check the home from a phone.
 - A quantised model for the MCU/NPU path.
-
----
-
-*Built with Arduino UNO Q, Arduino App Lab, ONNX Runtime and PyTorch. Full code and documentation: https://github.com/airpocket-soundman/IchiPing-UNO-Q*
