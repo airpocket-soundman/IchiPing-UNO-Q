@@ -42,6 +42,10 @@ _baseline_metadata = None
 _next_model_retry = 0.0
 _request_sequence = 0
 _eval_servo_state = None  # evaluation-owned endpoint state, None = not armed/unknown
+AUTO_BOOT_RETRY_SECONDS = 10.0
+AUTO_BOOT_SETTLE_SECONDS = 0.5
+_auto_boot_done = False
+_next_auto_boot = 0.0
 
 
 def initialize_runtime() -> None:
@@ -343,10 +347,55 @@ def process_eval_command() -> None:
     logger.info(f"EVAL {op} status={result['status']} servo_state={_eval_servo_state}")
 
 
+def auto_boot_sequence() -> None:
+    """After power-on: drive all servos CLOSE, record a fresh baseline, then
+    follow the switches.  Retries until the model and audio worker are ready."""
+    global _auto_boot_done, _next_auto_boot, _eval_servo_state
+    if _auto_boot_done or time.monotonic() < _next_auto_boot:
+        return
+    _next_auto_boot = time.monotonic() + AUTO_BOOT_RETRY_SECONDS
+    broker = FileAudioBroker(AUDIO_SPOOL)
+    if _model_predictor is None or not broker.ready:
+        logger.info("AUTOBOOT waiting for model and audio worker")
+        Bridge.call("show_runtime_status", 1 if _model_predictor is not None else 6)
+        return
+    try:
+        Bridge.call("set_servo_automation", 0)
+        expected = int(Bridge.call("get_physical_state")) & 0x1F
+        armed = int(Bridge.call("set_servo_armed", 1, expected))
+        if armed != 0:
+            raise RuntimeError(f"set_servo_armed failed={armed}")
+        _eval_servo_state = None
+        if int(Bridge.call("get_servo_state")) != 0:  # a retry keeps the closed servos
+            closed = int(Bridge.call("close_all_servos"))
+            if closed != 0:
+                raise RuntimeError(f"close_all_servos failed={closed}")
+            time.sleep(AUTO_BOOT_SETTLE_SECONDS)
+        Bridge.call("set_inference_busy", 1)
+        try:
+            _calibrate_live_baseline(broker)
+        finally:
+            Bridge.call("set_inference_busy", 0)
+        expected = int(Bridge.call("get_physical_state")) & 0x1F
+        armed = int(Bridge.call("set_servo_armed", 1, expected))
+        if armed != 0:
+            raise RuntimeError(f"set_servo_armed failed={armed}")
+        automation = int(Bridge.call("set_servo_automation", 1))
+        if automation != 0:
+            raise RuntimeError(f"set_servo_automation failed={automation}")
+        _eval_servo_state = None
+        _auto_boot_done = True
+        logger.info(f"AUTOBOOT complete: baseline recorded, servos follow switches 0b{expected:05b}")
+    except Exception as error:
+        logger.error(f"AUTOBOOT failed; retrying error={error}")
+
+
 def loop_once() -> None:
     global _startup_complete, _last_switch_states
     initialize_runtime()
     process_eval_command()
+    if _startup_complete:
+        auto_boot_sequence()
     if not _startup_complete:
         time.sleep(2)
         hardware_status = int(Bridge.call("get_hardware_status"))

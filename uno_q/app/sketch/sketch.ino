@@ -255,6 +255,23 @@ int setServoAutomation(int enabled) {
   return 0;
 }
 
+// Boot sequence helper: drive every servo CLOSE (BC -> a, one at a time) and
+// mark the all-closed state as known, independent of the switch positions.
+int closeAllServos() {
+  if (!servoControlsArmed) return -6;
+  if (servoFaultLatched) return -7;
+  servoAutomationEnabled = false;
+  for (int channel = 4; channel >= 0; --channel) {
+    const int result = driveServoToAngle(channel, 180);
+    if (result != 0) return result;
+  }
+  servoState = 0;
+  servoStateKnown = true;
+  predictionValid = false;
+  renderState();
+  return 0;
+}
+
 int setInferenceBusy(int busy) {
   inferenceBusy = busy != 0;
   return inferenceBusy ? 1 : 0;
@@ -344,6 +361,7 @@ void setup() {
   Bridge.provide("get_hardware_status", getHardwareStatus);
   Bridge.provide("get_physical_state", getPhysicalState);
   Bridge.provide("get_servo_state", getServoState);
+  Bridge.provide("close_all_servos", closeAllServos);
   Bridge.provide("get_switch_states", getSwitchStates);
   Bridge.provide("test_servo_channel", testServoChannel);
   Bridge.provide("move_servo_deg", moveServoToAngle);

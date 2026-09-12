@@ -55,9 +55,16 @@ if [ "${1:-}" = external-reference ] || [ "${1:-}" = instrument-playback ] || [ 
 		case "$2" in ''|*[!0-9a-f]*) exit 2 ;; esac
 		[ "${#2}" -eq 32 ] || exit 2
 	fi
-	[ "$(cat /sys/kernel/config/usb_gadget/g1/idVendor)" = 0x2341 ] || exit 1
-	[ "$(cat /sys/kernel/config/usb_gadget/g1/idProduct)" = 0x0078 ] || exit 1
-	[ "$(cat /sys/kernel/config/usb_gadget/g1/strings/0x409/serialnumber)" = "${ICHIPING_EXPECTED_USB_SERIAL:?}" ] || exit 1
+	gadget=/sys/kernel/config/usb_gadget/g1
+	if [ -d "$gadget" ]; then
+		[ "$(cat "$gadget"/idVendor)" = 0x2341 ] || exit 1
+		[ "$(cat "$gadget"/idProduct)" = 0x0078 ] || exit 1
+		[ "$(cat "$gadget"/strings/0x409/serialnumber)" = "${ICHIPING_EXPECTED_USB_SERIAL:?}" ] || exit 1
+	else
+		# Standalone power-on (no USB host): the gadget is not created, but the
+		# SoC serial is the same number the gadget publishes.
+		[ "$(cat /sys/devices/soc0/serial_number)" = "${ICHIPING_EXPECTED_USB_SERIAL:?}" ] || exit 1
+	fi
 	printf 'ICHIPING_BOARD_VERIFIED:%s\n' "$ICHIPING_EXPECTED_USB_SERIAL"
 	date -Is
 	uname -r
