@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hackster 記事（日本語版）</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html">Hardware</a><a href="../../docs/uno_q/software.html">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html">Data &amp; training</a><a href="../../docs/uno_q/results.html">Results</a><a href="../../docs/uno_q/reproduce.html">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="ichiping-uno-q--1つのスピーカーと1つのマイクですべての窓と扉を">IchiPing UNO Q — 1つのスピーカーと1つのマイクで、すべての窓と扉を</h1>
+<blockquote><p>この文書は、Hackster に英語で掲載する記事（<code>story_en.md</code>）の日本語確認版です。内容は英語版と同じです。</p></blockquote>
+<p><strong>部門：</strong> Home Automation</p>
+<p><strong>短い説明：</strong> Arduino UNO Q に付けた1つのスピーカーと1つのマイクで、家の中に2秒間のノイズ「ping」を鳴らします。Linux 側で動く小さなニューラルネットワークが、5か所の窓と扉のどれが開いているかを判定します。マイクから直接は届きにくい部屋の変化まで、聞き分けられるように学習しました。</p>
+<p><strong>コード：</strong> <a href="https://github.com/airpocket-soundman/IchiPing-UNO-Q">https://github.com/airpocket-soundman/IchiPing-UNO-Q</a> — <strong>ドキュメント：</strong> <a href="https://airpocket-soundman.github.io/IchiPing-UNO-Q/">https://airpocket-soundman.github.io/IchiPing-UNO-Q/</a></p>
+<p class="placeholder">[PHOTO: カバー画像 — UNO Q、結果を表示した TFT、窓と扉に付けたサーボが写った模型全体]</p>
+<h2 id="1-窓開けっぱなしだったかも">1. 「窓、開けっぱなしだったかも？」</h2>
+<p>電車に乗っているときに雨が降り出して、窓を閉めたか不安になる。あるいは、窓を開けたまま午後じゅうエアコンが家を冷やしていたことに気づく。よくある対策は、窓や扉ごとに開閉センサーを付けることです。開口部が1か所増えるたびに、センサー、電池、ペアリングが1つずつ増えます。</p>
+<p>IchiPing は、別の問いから出発しました。<strong>家そのものをセンサーにできないか？</strong> スピーカーが、決まった短いノイズを鳴らします。窓や扉が開いているか閉まっているかで、部屋を通る音の響き方が変わります。それを1つのマイクで録音し、小さなニューラルネットワークがすべての開口部の状態を一度に読み取ります。</p>
+<blockquote><p>「Ichi（一）」は日本語の「1」。1つのスピーカー、1つのマイク、1回の ping。</p></blockquote>
+<p><img src="../img/hackster_one_ping_comic_en.png" alt="One ping, 32 states — 使いどころ" loading="lazy"></p>
+<h2 id="2-できること">2. できること</h2>
+<ul><li>模型の家の5か所（窓 <strong>a、b、c</strong> と、部屋の間の扉 <strong>AB、BC</strong>）の開閉、<strong>32通り</strong>の組み合わせを判定します。</li><li>1回の測定で PRBS を2秒鳴らし、EXEC ボタンを押してから約5秒で TFT に答えが出ます。</li><li>すべて Arduino UNO Q の中で動きます。推論にクラウドも PC も使いません。</li><li>自分の限界を知っています。<strong>音響的に観測できる</strong>ものと、かすかにしか聞こえないものを区別します（6章）。</li></ul>
+<p><img src="../img/house.png" alt="模型の間取り：3つの部屋、3つの窓、2つの扉。スピーカーとマイクは部屋 A" loading="lazy"></p>
+<p class="placeholder">[PHOTO: 模型を上から撮った写真。a、b、c、AB、BC のラベル入り] [VIDEO: 30〜60秒のデモ — スイッチを倒すとサーボが窓を開け、EXEC を押すと TFT に「Complete Success」が出る]</p>
+<h2 id="3-なぜ-arduino-uno-q-か1つの-app-lab-アプリに2つの頭脳">3. なぜ Arduino UNO Q か：1つの App Lab アプリに2つの頭脳</h2>
+<p>IchiPing は、最初は NXP FRDM-MCXN947 で作りました。UNO Q に移したことで、仕事をそれぞれ得意な側に置けるようになりました。</p>
+<div class="table-wrap"><table><thead><tr><th>頭脳</th><th>コード</th><th>担当</th></tr></thead><tbody><tr><td><strong>STM32U585 MCU</strong>（Zephyr、Arduino スケッチ）</td><td><code>uno_q/app/sketch/</code></td><td>スイッチと EXEC ボタン、PCA9685 サーボドライバ（SG90 × 5）、ILI9341 TFT</td></tr><tr><td><strong>Qualcomm QRB2210 MPU</strong>（Debian、App Lab の Python）</td><td><code>uno_q/app/python/</code></td><td>MI2S0 の音声（MAX98357A ＋ INMP441）、信号処理、ONNX Runtime での推論、baseline の保存</td></tr><tr><td><strong>Arduino Router Bridge</strong></td><td>両者の間の RPC</td><td><code>on_infer_request</code>、<code>show_prediction</code>、<code>set_servo_armed</code>、<code>move_servo_deg</code> など</td></tr></tbody></table></div>
+<p><img src="../img/hackster_unoq_architecture.png" alt="UNO Q の構成" loading="lazy"></p>
+<p>スケッチ、Python の処理、モデルは、1つの <strong>App Lab アプリ</strong>としてまとめて配備します。音声の経路とアンプの停止ピンは、ホスト側の小さな worker が受け持ちます。そのためコンテナ内のアプリは音響ハードウェアに直接触れず、停止処理も毎回確認されます。モデルの推論は Cortex-A53 で <strong>1.7 ms（p95）</strong> しかかからず、時間の大半は2秒の ping です。</p>
+<h2 id="4-ハードウェア">4. ハードウェア</h2>
+<h3 id="部品表bom">部品表（BOM）</h3>
+<div class="table-wrap"><table><thead><tr><th>数量</th><th>部品</th><th>備考</th></tr></thead><tbody><tr><td>1</td><td>Arduino UNO Q（4 GB）</td><td>QRB2210 MPU ＋ STM32U585 MCU</td></tr><tr><td>1</td><td>UNO Breakout Carrier（JMISC）</td><td>1.8 V の MI2S0 音声ピンを取り出す</td></tr><tr><td>1</td><td>INMP441 I²S MEMS マイク</td><td>DATA0、L/R = GND、VDD = 1.8 V</td></tr><tr><td>1</td><td>MAX98357A I²S アンプ ＋ 小型スピーカー</td><td>DATA1、GAIN = GND、SD = SoC GPIO 28 ＋ GND へ 10 kΩ</td></tr><tr><td>1</td><td>PCA9685 PWM ドライバ</td><td>I²C 0x40（D20/D21）</td></tr><tr><td>5</td><td>SG90 マイクロサーボ</td><td>窓 a、b、c と扉 AB、BC</td></tr><tr><td>1</td><td>ILI9341 2.4 インチ SPI TFT</td><td>D11、D13、A2〜A5</td></tr><tr><td>5 + 1</td><td>トグルスイッチ ＋ 押しボタン</td><td>D3〜D7 と、D8 の EXEC</td></tr><tr><td>1</td><td>5 V 電源</td><td>サーボとアンプ用、GND 共通</td></tr><tr><td>1</td><td>模型の家</td><td>部屋3つ、窓3つ、扉2つ</td></tr></tbody></table></div>
+<p>ソフトウェア：Arduino App Lab、Arduino Router Bridge、Debian の ALSA、Python 3（NumPy、ONNX Runtime）。学習は PC の PyTorch で行います。</p>
+<h3 id="回路図と配線">回路図と配線</h3>
+<div class="table-wrap"><table><thead><tr><th>信号</th><th>UNO Q</th><th>接続先</th></tr></thead><tbody><tr><td>BCLK / WS</td><td>SoC GPIO 98 / 99</td><td>MAX98357A BCLK/LRC、INMP441 SCK/WS</td></tr><tr><td>マイクのデータ</td><td>SoC GPIO 100（DATA0）</td><td>INMP441 SD</td></tr><tr><td>アンプのデータ</td><td>SoC GPIO 101（DATA1）</td><td>MAX98357A DIN</td></tr><tr><td>アンプの停止</td><td>SoC GPIO 28</td><td>MAX98357A SD（GND へ 10 kΩ）</td></tr><tr><td>I²C</td><td>D20 / D21</td><td>PCA9685</td></tr><tr><td>SPI TFT</td><td>D11、D13、A2 CS、A3 RST、A4 DC、A5 BL</td><td>ILI9341</td></tr><tr><td>入力</td><td>D3〜D7、D8</td><td>スイッチ、EXEC</td></tr></tbody></table></div>
+<p>ピン単位の配線図はドキュメントのサイト（<code>docs/gpio_wiring.html</code>）にあります。UNO Q 用のシールド基板2枚（音声と TFT）を EasyEDA Pro で設計しました。プロジェクトファイル、BOM、ピン対応表を添付しています。</p>
+<p><img src="../../board/easyeda-screen.png" alt="EasyEDA Pro で設計した IchiPing AUDIO シールド：アンプ（LRC、BCLK、DIN、GAIN、SD、VIN）とマイク（SD、CK、WS、LR）用の 1.8 V I²S 端子" loading="lazy"></p>
+<p class="placeholder">[PHOTO: 配線の近接写真 — UNO Q、Breakout Carrier、PCA9685、TFT、マイク、アンプ]</p>
+<h2 id="5-音で状態を読む仕組み">5. 音で状態を読む仕組み</h2>
+<ol><li><strong>鳴らす。</strong> スピーカーが、8 kHz 以下に帯域制限した ±1 の PRBS を 2.0 秒鳴らします。</li><li><strong>録る。</strong> INMP441 で 3 秒を 48 kHz、24 bit で録音します。PRBS との相互相関で発音の開始位置に合わせ、16 kHz に間引きます。</li><li><strong>比べる。</strong> 1024 点の対数パワースペクトルから、ボード上で録った<strong>全閉の baseline</strong> を引き、フレームごとに正規化します。</li><li><strong>判定する。</strong> パラメータ 10.4 万個の CNN が、32 通りのどれかを出力します。</li></ol>
+<p><img src="../img/hackster_fft_diff_en.png" alt="全閉の baseline とのスペクトル差" loading="lazy"></p>
+<p><strong>移植で効いた細部。</strong> 元のモデルは、最初は UNO Q で 20.8% しか当たりませんでした。元のファームは I²S のデータを <code>&gt;&gt; 12</code> で変換していましたが、ALSA の 16 bit 録音は <code>&gt;&gt; 16</code> に相当します。24 bit の録音から元と同じ倍率（×16）をビット単位で再現し、PRBS の音量も元と同じにしたところ、録音のエネルギーは元のデータセットと 0.02 dB 以内で一致しました。この倍率がないと、スペクトルの 39% が −80 dB の下限に張り付いてしまいます。</p>
+<h2 id="6-観測可能範囲という考え方">6. 観測可能範囲という考え方</h2>
+<p>部屋 A にある1つのマイクには、すべての開口部の音が同じようには届きません。扉 <strong>AB</strong> が閉まっていると、その奥の部屋は音響的に影になります。窓 b や c を開けても、マイクで聞こえる音はわずかしか変わりません。そこで IchiPing は、32 通りの状態を <strong>14 の観測可能クラス</strong>にまとめています。</p>
+<ul><li><strong>A1 / A2</strong> — 扉 AB が閉：観測できるのは窓 a だけ。</li><li><strong>B1〜B4</strong> — AB が開、BC が閉：a、b、AB が観測でき、c は隠れる。</li><li><strong>C1〜C8</strong> — AB と BC が開：5か所すべて観測できる。</li></ul>
+<p><img src="../img/hackster_observability_en.png" alt="観測可能範囲のモデル" loading="lazy"></p>
+<p>TFT は、各桁を観測できる（明るい色）か隠れている（暗い色）かで色分けし、<strong>Complete Success</strong>（青、32 状態すべて正解）、<strong>Conditional Success</strong>（緑、観測できる部分は正解）、<strong>Failure</strong>（赤）を表示します。システムが保証できることと、推測にすぎないことが、使う人に常に分かります。</p>
+<p class="placeholder">[PHOTO: inf/act の2段と、緑の「Conditional Success」または青の「Complete Success」の帯を表示した TFT]</p>
+<h2 id="7-uno-q-で実データを自動収集">7. UNO Q で実データを自動収集</h2>
+<p>App Lab アプリは評価用の命令を受け付けるので、PC から Wi-Fi 経由でサーボを動かしながら、UNO Q で鳴らして録音できます。</p>
+<ul><li><strong>グレイコード順：</strong> 1ステップで動くサーボは必ず1台（サーボの動作は 242 回ではなく 106 回）。</li><li><strong>一定の待ち時間：</strong> 最後のサーボが止まってから、ちょうど 0.5 秒後に録音を始めます。</li><li><strong>まとめ録り：</strong> 1つの状態の 50 フレームを、1本の再生と1本の録音で連続して録り、後から正確な間隔で切り出します（ずれ 0 サンプル、1 フレームあたり 2.3 秒）。</li><li><strong>sudo 不要、ボードに残さない：</strong> 音響ツールは <code>audio</code> と <code>gpiod</code> グループの一般ユーザーで動き、録音は PC にコピーした時点でボードから消します。</li></ul>
+<p>1日で、<strong>8 セッション × 1,650 フレーム</strong>、環境雑音の録音2本（部屋の雑音と雑踏）、評価用のセッション4本を録りました。</p>
+<h2 id="8-マイクにかすかにしか届かない音を聞き分ける">8. マイクにかすかにしか届かない音を聞き分ける</h2>
+<p>いちばん伝えたい成果はここです。十分な実データと適切なデータ拡張によって、モデルは<strong>観測可能範囲の外</strong>、つまり閉じた扉の奥の窓の、ごく小さな音響の手がかりまで学習しました。</p>
+<ol><li><strong>セッションを増やす。</strong> 学習に使っていないセッションでの正解率が、1セッションの 47% から、5セッションで 94% まで上がりました。</li><li><strong>元のレシピ。</strong> 強いデータ拡張と<strong>クロスベースライン</strong>学習。各録音を、ほかのすべてのセッションの baseline との差としても学習させ、1つの基準に依存しないようにします。</li><li><strong>実際の環境雑音。</strong> 同じマイクで録った部屋の雑音と雑踏の音を、SNR 0〜35 dB で重ねます。</li><li><strong>気温の水増し（新しく追加）。</strong> 夜になると、どのモデルも精度が落ちました。原因は部屋そのものでした。エアコンで部屋が冷えるにつれ、すべての共鳴が最大 <strong>−2.15%</strong> ずれていたのです（音速は 1 ℃ あたり約 0.18% 変わります）。baseline を引く*前に*、録音側のスペクトルだけをランダムに ±3% 周波数方向へ伸び縮みさせると、モデルはこの影響を学べます。</li></ol>
+<div class="table-wrap"><table><thead><tr><th>モデル</th><th>09:00 安定</th><th>19:35（−2.15% のずれ）</th><th>20:44</th><th>21:28 ＋ 雑踏</th><th>32 状態の平均</th></tr></thead><tbody><tr><td>元の FRDM のモデル</td><td>20.8 / 59.4</td><td>35.9 / 68.8</td><td>9.1 / 49.7</td><td>11.6 / 50.0</td><td>19.3</td></tr><tr><td>UNO Q、4 セッション</td><td>86.5 / 100</td><td>43.1 / 84.1</td><td>69.1 / 99.7</td><td>76.9 / 100</td><td>68.9</td></tr><tr><td>＋ 周波数の伸び縮み</td><td>89.6 / 100</td><td>56.9 / 93.8</td><td>82.8 / 100</td><td>80.9 / 100</td><td>77.6</td></tr><tr><td><strong>8 セッション ＋ 伸び縮み ＋ 環境雑音（配備中）</strong></td><td><strong>91.7 / 100</strong></td><td><strong>81.9 / 100</strong></td><td><strong>74.7 / 100</strong></td><td><strong>81.9 / 100</strong></td><td><strong>82.5</strong></td></tr></tbody></table></div>
+<p><em>（32 状態 / 14 クラスの正解率、%。学習に使っていない評価用セッション）</em></p>
+<ul><li><strong>観測可能な 14 クラスの正解率は、すべての評価データで 100%</strong> です。雑踏の中でも、2% の気温によるずれがあっても変わりません。</li><li>隠れた窓まで当てる必要がある <strong>32 状態の正解率</strong>は、20.8% から <strong>82.5%</strong> まで上がりました。閉じた扉の奥の窓 c（手がかりはわずか 0.5〜0.9 dB）は、56% から 86〜90% になりました。</li></ul>
+<h2 id="9-ちらつかない-tft">9. ちらつかない TFT</h2>
+<p>最初の画面表示は、更新のたびに 320 × 240 の画面全体を描き直していました。今は、固定部分を1回だけ描き、変わった桁だけを描き直します。数字1桁と結果の帯は、1つの SPI の描画範囲に流し込む<strong>計算で作るスプライト</strong>として描くので、途中の状態が画面に出ず、MCU に 150 KB の画面バッファも要りません。</p>
+<h2 id="10-自分で作るには">10. 自分で作るには</h2>
+<ol><li>模型の家を作り、部品を配線します（4章）。</li><li>MI2S0 の音声バスを1回だけ有効にします（Device Tree のオーバーレイと ALSA のモジュール、<code>uno_q/audio/README.md</code>）。</li><li><code>uno_q/app/</code> の App Lab アプリを配備し、音声の worker を起動します（<code>runtime-audio-worker.py --loop --excitation prbs16k --capture-format S32_LE --playback-rms 0.0088</code>）。</li><li>スイッチをすべて CLOSE にして EXEC を1回押し、baseline を録ります。</li><li>スイッチを倒して EXEC を押し、TFT を見ます。</li><li>自分の間取りで学習する：<code>pc/uno_q_collect.py</code> → <code>pc/uno_q_export_dataset.py</code> → <code>pc/training/train_32cls.py --baseline-jitter-dirs … --ambient-dirs … --freq-warp 0.03</code> → <code>pc/uno_q_evaluate_all.py</code>。</li></ol>
+<p>詳しい手順は、ドキュメントのサイトにあります。</p>
+<h2 id="11-持続可能性使いやすさ拡張性">11. 持続可能性、使いやすさ、拡張性</h2>
+<ul><li><strong>持続可能性：</strong> 開口部ごとのセンサーではなく、1つのセンサーで済みます。「エアコンを動かしたまま窓が開いている」状態を見つけて、エネルギーの無駄を防げます。</li><li><strong>使いやすさ：</strong> 窓に何も貼る必要がありません。画面にはっきり答えが出て、観測できる / 隠れているの区別も正直に示します。</li><li><strong>拡張性：</strong> 収集、書き出し、学習、評価はスクリプトになっているので、別の間取りでも同じ手順で学習し直せます。App Lab が、スケッチ、Python、モデルを1つのアプリにまとめます。</li></ul>
+<h2 id="12-今後">12. 今後</h2>
+<ul><li>複数の日やエアコンの設定にまたがるセッションを録り、ボード上で気温も記録する。</li><li>スマートフォンから家の状態を確認できる Web UI の Brick。</li><li>MCU / NPU で動かすための量子化モデル。</li></ul>
+<hr>
+<p><em>Arduino UNO Q、Arduino App Lab、ONNX Runtime、PyTorch で作りました。コードとドキュメントのすべて：<a href="https://github.com/airpocket-soundman/IchiPing-UNO-Q</em>">https://github.com/airpocket-soundman/IchiPing-UNO-Q*</a></p>
+</main>
+<footer class="site-footer">Generated from <code>docs/hackster/story_ja.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>

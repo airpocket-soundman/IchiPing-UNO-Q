@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data collection and training</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html">Hardware</a><a href="../../docs/uno_q/software.html">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html" class="current">Data &amp; training</a><a href="../../docs/uno_q/results.html">Results</a><a href="../../docs/uno_q/reproduce.html">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="data-collection-and-training">Data collection and training</h1>
+<p>All UNO Q data was recorded on the real device, commanded from a PC over Wi-Fi. Raw captures stay on the PC (<code>pc/captures/</code>, not in Git); the board deletes each capture after it is copied.</p>
+<h2 id="collection-protocol">Collection protocol</h2>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Setting</th></tr></thead><tbody><tr><td>State order</td><td>Gray code: every step moves exactly one servo</td></tr><tr><td>Settle</td><td>capture starts 0.5 s after the last servo stopped</td></tr><tr><td>Frames per state</td><td>50 in one batch: one continuous PCM (2.0 s PRBS + 0.3 s gap) and one continuous capture, split offline at the exact frame pitch</td></tr><tr><td>Capture format</td><td>S32_LE (24-bit) raw kept; exported to the original int16 scale for training</td></tr><tr><td>Baseline</td><td>50 all-closed frames at the start of each session</td></tr></tbody></table></div>
+<p>One session = 50 baseline + 32 × 50 frames = 1,650 frames, about 72 minutes.</p>
+<pre><code class="language-bash">python pc/uno_q_collect.py pc/captures/&lt;session&gt; --batch --rounds 1 --repeats 50 \
+    --baseline 50 --order gray --format S32_LE --settle 0.5 --gap 0.3
+python pc/uno_q_export_dataset.py pc/captures/&lt;session&gt; pc/captures/&lt;session&gt;_wav</code></pre>
+<h2 id="sessions-recorded-on-2026-09-12">Sessions recorded on 2026-09-12</h2>
+<div class="table-wrap"><table><thead><tr><th>Data</th><th>Time</th><th>Notes</th></tr></thead><tbody><tr><td>Sessions 1–6</td><td>08:48–16:34</td><td>PRBS ±0.0088, 1,650 frames each</td></tr><tr><td>Sessions 7–8</td><td>16:59–19:19</td><td>PRBS ±0.048 (louder test), exported at ×2.72</td></tr><tr><td>Ambient</td><td>16:34 and 21:05</td><td>speaker silent: room noise and crowd noise, 50 frames each</td></tr><tr><td>Evaluation sets</td><td>09:00, 19:35, 20:44, 21:28</td><td>never used for training; 21:28 with crowd noise playing</td></tr></tbody></table></div>
+<h2 id="training-recipe">Training recipe</h2>
+<p>Training runs on a PC (PyTorch, CUDA). The recipe follows the original IchiPing training and adds temperature augmentation:</p>
+<div class="table-wrap"><table><thead><tr><th>Option</th><th>Effect</th></tr></thead><tbody><tr><td><code>--feature-mode noise_diff_norm</code></td><td>baseline difference + per-frame normalisation</td></tr><tr><td><code>--aug-strong --feature-aug --spike-fix</code></td><td>time shift, level jitter, white noise, frequency masks, spectral jitter</td></tr><tr><td><code>--baseline-jitter-dirs &lt;all sessions&gt;</code></td><td>cross-baseline: each recording is also diffed against every other session's baseline</td></tr><tr><td><code>--ambient-dirs &lt;room&gt; &lt;crowd&gt;</code></td><td>real ambient noise from the same microphone mixed at 0–35 dB SNR</td></tr><tr><td><code>--freq-warp 0.03</code></td><td>warp the sample's log-spectrum by ±3 % in frequency before the baseline is subtracted (temperature)</td></tr><tr><td><code>--init-ckpt</code></td><td>additional training from an existing model</td></tr></tbody></table></div>
+<pre><code class="language-bash">python -m training.train_32cls --captures &lt;session wav dirs&gt; --baseline-jitter-dirs &lt;same&gt; \
+    --ambient-dirs &lt;ambient wav dirs&gt; --freq-warp 0.03 --feature-mode noise_diff_norm \
+    --feature-aug --spike-fix --aug-strong --arch neutron --size XL --epochs 80</code></pre>
+<h2 id="why-temperature-augmentation">Why temperature augmentation</h2>
+<p>In the evening the accuracy of every model dropped. The all-closed spectrum had drifted by 5.8 dB, and the drift was almost entirely a frequency scaling: the afternoon spectrum warped by −2.15 % matched the evening one (window-a opening pattern correlation 0.42 → 0.84). Resonances scale with the speed of sound, about 0.18 %/°C, so the air conditioner cooling the room shifted every resonance. The drift decayed over the night (−2.15 % → −1.05 % → −0.80 %). Warping only the sample, never the baseline, teaches the model that a baseline recorded at another temperature is normal.</p>
+<h2 id="evaluation">Evaluation</h2>
+<p><code>pc/uno_q_evaluate.py</code> evaluates one model on one set, <code>pc/uno_q_evaluate_all.py</code> evaluates every packaged model on all evaluation sets, and <code>pc/uno_q_model_table.py</code> builds the comparison table. Evaluation always uses each set's own all-closed baseline, as the device does.</p>
+</main>
+<footer class="site-footer">Generated from <code>docs/uno_q/data_and_training.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>

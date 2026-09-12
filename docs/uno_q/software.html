@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software architecture</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html">Hardware</a><a href="../../docs/uno_q/software.html" class="current">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html">Data &amp; training</a><a href="../../docs/uno_q/results.html">Results</a><a href="../../docs/uno_q/reproduce.html">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="software-architecture">Software architecture</h1>
+<p>IchiPing UNO Q is one <strong>Arduino App Lab app</strong> (<code>uno_q/app/</code>) plus a small host-side audio worker (<code>uno_q/audio/</code>).</p>
+<p><img src="../img/hackster_unoq_architecture.png" alt="UNO Q architecture: MCU, Bridge, Linux, audio" loading="lazy"></p>
+<h2 id="the-two-brains">The two brains</h2>
+<div class="table-wrap"><table><thead><tr><th>Part</th><th>Where</th><th>Responsibilities</th></tr></thead><tbody><tr><td>Arduino sketch</td><td>STM32U585, Zephyr (<code>uno_q/app/sketch/</code>)</td><td>debounced switches and EXEC, PCA9685 servo control with explicit arming and fault latch, ILI9341 rendering</td></tr><tr><td>Python app</td><td>QRB2210, Debian, App Lab container (<code>uno_q/app/python/</code>)</td><td>EXEC request mailbox, capture requests, preprocessing, ONNX Runtime inference, baseline storage, evaluation commands</td></tr><tr><td>Audio worker</td><td>QRB2210 host, user <code>arduino</code> (<code>uno_q/audio/runtime-audio-worker.py</code>)</td><td>owns ALSA routes and the amplifier shutdown pin; plays the PRBS and records the microphone</td></tr><tr><td>Router Bridge</td><td>between sketch and Python</td><td>typed RPC calls and notifications</td></tr></tbody></table></div>
+<p>The app container does not access the audio hardware. It writes a small request file into <code>runtime/audio/</code>; the worker runs <code>safe-audio-test.sh</code>, which checks the board identity and sound card, enables the routes, plays and records, then always turns the routes off and verifies the amplifier shutdown pin — also on errors and signals.</p>
+<h2 id="bridge-services-mcu">Bridge services (MCU)</h2>
+<div class="table-wrap"><table><thead><tr><th>Service</th><th>Purpose</th></tr></thead><tbody><tr><td><code>get_hardware_status</code>, <code>get_physical_state</code>, <code>get_servo_state</code>, <code>get_switch_states</code></td><td>status and inputs</td></tr><tr><td><code>set_servo_armed</code>, <code>set_servo_automation</code>, <code>move_servo_deg</code>, <code>test_servo_channel</code></td><td>servo control (disarmed and automation off after every reset)</td></tr><tr><td><code>show_prediction</code>, <code>show_runtime_status</code>, <code>show_inference_unavailable</code>, <code>run_display_self_test</code></td><td>TFT</td></tr><tr><td><code>set_inference_busy</code></td><td>blocks EXEC and servo sync while an inference runs</td></tr></tbody></table></div>
+<p>The Python side provides <code>on_infer_request</code> (EXEC pressed) and <code>on_runtime_status</code>.</p>
+<h2 id="inference-flow">Inference flow</h2>
+<ol><li>EXEC is pressed; the MCU notifies Python with the requested state.</li><li>Python asks the worker for one PRBS capture (2 s excitation, 3 s S32_LE recording).</li><li>The capture is health-checked (duration, silence, clipping, right-slot leakage).</li><li>The frame is aligned to the PRBS onset, decimated to 16 kHz and scaled ×16 to the original collector's int16 scale.</li><li>A 1024-bin log-power spectrum minus the stored all-closed baseline, normalised per frame, goes to the ONNX model.</li><li><code>show_prediction</code> updates the TFT; stale results (servo state changed during capture) are rejected.</li></ol>
+<p>On the first EXEC with all switches closed, the app records three all-closed captures as the baseline.</p>
+<h2 id="tft-rendering">TFT rendering</h2>
+<p>The TFT shows the predicted state (<code>inf</code>) and the actual commanded state (<code>act</code>) in the physical order c, BC, b, AB, a, coloured by observability, and a banner: <strong>Complete Success</strong> (blue), <strong>Conditional Success</strong> (green, the observable part is right) or <strong>Failure</strong> (red).</p>
+<p>The renderer avoids flicker: the static frame is painted once, only changed digits are redrawn, and each digit and the banner are generated as a procedural sprite streamed through one SPI address window.</p>
+<h2 id="evaluation-mailbox">Evaluation mailbox</h2>
+<p>For automated data collection the app accepts commands in <code>runtime/eval/command.json</code> (<code>arm</code>, <code>set_state</code>, <code>follow_switches</code>, <code>calibrate_baseline</code>, <code>disarm</code>, <code>status</code>) and answers in <code>result-&lt;id&gt;.json</code>. The PC collector uses it over SSH/Wi-Fi.</p>
+<h2 id="linux-audio-setup">Linux audio setup</h2>
+<p>The MI2S0 bus is not enabled by the stock image. <code>uno_q/audio/</code> contains the Device Tree overlay (<code>ichiping-mi2s0.dtso</code>), the kernel patches used for the ALSA front end (native S32_LE, capture period alignment), the route script, the safe test runner and the offline tests. <code>uno_q/audio/README.md</code> describes building and installing them; installation requires root once. After that, every capture runs as a normal user in the <code>audio</code> and <code>gpiod</code> groups.</p>
+</main>
+<footer class="site-footer">Generated from <code>docs/uno_q/software.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>

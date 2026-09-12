@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reproduce IchiPing UNO Q</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html">Hardware</a><a href="../../docs/uno_q/software.html">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html">Data &amp; training</a><a href="../../docs/uno_q/results.html">Results</a><a href="../../docs/uno_q/reproduce.html" class="current">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="reproduce-ichiping-uno-q">Reproduce IchiPing UNO Q</h1>
+<p>This guide assumes the parts in <a href="hardware.html">Hardware and wiring</a> and a UNO Q reachable over SSH.</p>
+<h2 id="1-build-the-model-apartment">1. Build the model apartment</h2>
+<p>Three rooms in a row (A, B, C), a window on each room (a, b, c) and inner doors AB and BC. Put the speaker and the microphone in room A. Attach one SG90 to each window and door so that 180° closes and 0° opens it.</p>
+<h2 id="2-wire-the-mcu-side">2. Wire the MCU side</h2>
+<p>Connect the switches (D3–D7), the EXEC button (D8), the PCA9685 (D20/D21, 0x40) with its servos on channels 0–4, and the ILI9341 (D11, D13, A2–A5). Use an external 5 V supply for the servos with a common ground.</p>
+<h2 id="3-enable-the-mi2s0-audio-bus-once-needs-root">3. Enable the MI2S0 audio bus (once, needs root)</h2>
+<p>Follow <code>uno_q/audio/README.md</code>: build the Device Tree overlay <code>ichiping-mi2s0.dtso</code>, build the patched ALSA modules for the running kernel, and install the test boot entry. After reboot, check:</p>
+<pre><code class="language-sh">cat /proc/device-tree/sound/model     # Arduino-Imola-IchiPing-MI2S0
+aplay -l &amp;&amp; arecord -l</code></pre>
+<p>Then wire the INMP441 and MAX98357A (1.8 V signals, 10 kΩ from SD to GND) with the board powered off.</p>
+<h2 id="4-install-the-audio-tools-normal-user">4. Install the audio tools (normal user)</h2>
+<pre><code class="language-sh">mkdir -p ~/ichiping-audio &amp;&amp; cp uno_q/audio/{safe-audio-test.sh,white-noise-cycle.sh,audio-cycle-test.sh,external-reference-capture.sh,route-mi2s0.sh,audio-smoke-test.py,runtime-audio-worker.py} ~/ichiping-audio/</code></pre>
+<p>The user must be in the <code>audio</code> and <code>gpiod</code> groups. A first safe test (quiet 440 Hz tone and capture):</p>
+<pre><code class="language-sh">ICHIPING_TONE_AMPLITUDE=0.0001 ~/ichiping-audio/safe-audio-test.sh cycle</code></pre>
+<h2 id="5-deploy-the-app-lab-app">5. Deploy the App Lab app</h2>
+<p>Copy <code>uno_q/app/</code> to <code>~/ArduinoApps/ichiping-uno-q/</code> and start it:</p>
+<pre><code class="language-sh">arduino-app-cli app start ~/ArduinoApps/ichiping-uno-q</code></pre>
+<p>The sketch is built and flashed to the STM32U585, and the Python app loads <code>models/manifest.json</code> and the ONNX model.</p>
+<h2 id="6-start-the-audio-worker">6. Start the audio worker</h2>
+<pre><code class="language-sh">cd ~/ichiping-audio &amp;&amp; setsid nohup python3 runtime-audio-worker.py \
+  --spool ~/ArduinoApps/ichiping-uno-q/runtime/audio --safe-script ~/ichiping-audio/safe-audio-test.sh \
+  --serial &lt;your UNO Q USB serial&gt; --playback-rms 0.0088 --excitation prbs16k \
+  --capture-format S32_LE --loop &gt; /tmp/ichiping-worker.log 2&gt;&amp;1 &amp;</code></pre>
+<h2 id="7-first-use">7. First use</h2>
+<ol><li>Set all five switches to CLOSE and press EXEC once: the app records the all-closed baseline.</li><li>Flip switches: the servos follow.</li><li>Press EXEC: after about 5 s the TFT shows the prediction.</li></ol>
+<p>Record the baseline again after large temperature changes.</p>
+<h2 id="8-train-your-own-model">8. Train your own model</h2>
+<ol><li>Collect sessions with <code>pc/uno_q_collect.py</code> (see <a href="data_and_training.html">Data collection and training</a>).</li><li>Export them with <code>pc/uno_q_export_dataset.py</code>.</li><li>Train with <code>pc/training/train_32cls.py</code> (cross-baseline, ambient, <code>--freq-warp 0.03</code>).</li><li>Export ONNX with <code>pc/export_neutron_4d.py --backend none</code>, write a manifest, and compare models with <code>pc/uno_q_evaluate_all.py</code>.</li><li>Copy the ONNX and <code>manifest.json</code> to <code>uno_q/app/models/</code> and restart the app.</li></ol>
+</main>
+<footer class="site-footer">Generated from <code>docs/uno_q/reproduce.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Results</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html">Hardware</a><a href="../../docs/uno_q/software.html">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html">Data &amp; training</a><a href="../../docs/uno_q/results.html" class="current">Results</a><a href="../../docs/uno_q/reproduce.html">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="results">Results</h1>
+<p>All numbers are on held-out UNO Q evaluation sets that were never used for training. Values are <strong>32-state / 14-class (observable)</strong> accuracy in %.</p>
+<h2 id="deployed-model">Deployed model</h2>
+<div class="table-wrap"><table><thead><tr><th>Evaluation set</th><th>Condition</th><th>32-state</th><th>14-class</th></tr></thead><tbody><tr><td>09:00</td><td>stable, same state as training</td><td>91.7</td><td>100</td></tr><tr><td>19:35</td><td>largest temperature drift (−2.15 % frequency warp)</td><td>81.9</td><td>100</td></tr><tr><td>20:44</td><td>drift −1.05 %</td><td>74.7</td><td>100</td></tr><tr><td>21:28</td><td>crowd noise playing, drift −0.80 %</td><td>81.9</td><td>100</td></tr></tbody></table></div>
+<p>The deployed model (sessions 1–8, cross-baseline, strong augmentation, room + crowd ambient, ±3 % frequency warp) keeps <strong>100 % on the observable classes</strong> on every set and reaches <strong>82.5 %</strong> mean 32-state accuracy.</p>
+<h2 id="going-beyond-the-observable-region">Going beyond the observable region</h2>
+<p>The observable-class model says a closed door AB hides window b, window c and door BC. The 32-state accuracy measures how well the model reads those hidden openings from the weak sound that still leaks through the door. It improved step by step:</p>
+<div class="table-wrap"><table><thead><tr><th>Step</th><th>Mean 32-state accuracy</th></tr></thead><tbody><tr><td>Original FRDM model on UNO Q</td><td>19.3</td></tr><tr><td>UNO Q data, 1 session</td><td>27–38</td></tr><tr><td>4 sessions + original recipe (cross-baseline, strong augmentation)</td><td>68.9</td></tr><tr><td>+ ambient noise</td><td>70.3</td></tr><tr><td>+ frequency warp (temperature)</td><td>77.6</td></tr><tr><td>8 sessions + warp + ambient (deployed)</td><td><strong>82.5</strong></td></tr></tbody></table></div>
+<p>Window c behind closed doors — the smallest cue, about 0.5–0.9 dB — rose from 56 % with the original model to 86–90 %.</p>
+<h2 id="all-models">All models</h2>
+<p>The full table (23 models, with training data, augmentation, ambient overlay and start point) is in <a href="../../pc/runs/model_comparison_20260912.html">pc/runs/model_comparison_20260912.md</a>. Key observations:</p>
+<ul><li>More sessions help most: 47 % → 94 % on an unseen session going from one to five sessions.</li><li>Cross-baseline training fixes session-to-session drift of door BC (58 % → 100 %).</li><li>Frequency warp gives the largest single gain under temperature drift (+12 points at 19:35 and 20:44) and costs nothing on stable data.</li><li>Mixing the original FRDM dataset into UNO Q training did not help once enough UNO Q sessions existed.</li><li>A louder excitation did not make window c easier to read; the level is kept at the original ±0.0088.</li></ul>
+<h2 id="latency-and-resources">Latency and resources</h2>
+<div class="table-wrap"><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>One inference, end to end</td><td>about 5 s (2 s PRBS + 3 s capture + processing)</td></tr><tr><td>Model inference (Cortex-A53, ONNX Runtime FP32)</td><td>1.7 ms p95</td></tr><tr><td>Inference process RSS</td><td>about 62 MiB</td></tr><tr><td>Sketch</td><td>31,992 bytes flash, 6,644 bytes RAM</td></tr></tbody></table></div>
+</main>
+<footer class="site-footer">Generated from <code>docs/uno_q/results.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>

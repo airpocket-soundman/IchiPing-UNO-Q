@@ -1,130 +1,35 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IchiPing UNO Q</title>
-  <link rel="stylesheet" href="docs/style.css">
-  <style>
-    main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
-    .hero { padding: 34px; border: 1px solid var(--accent, #59bdff); border-radius: 18px; background: rgba(89,189,255,.08); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 16px; margin: 24px 0; }
-    .card { padding: 20px; border: 1px solid var(--border, #39414f); border-radius: 12px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 9px 11px; border: 1px solid var(--border, #39414f); text-align: left; vertical-align: top; }
-    th { background: rgba(89,189,255,.1); }
-    .status { color: var(--accent-2, #7ee787); }
-    .shell-route-frame {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: var(--bg, #0f1115);
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IchiPing UNO Q</title>
+<link rel="stylesheet" href="docs/site.css">
 </head>
 <body>
-  <p>SLogic16U3はアプリ/CLI準備済みだが通常USB3モード未認識、現在のハブでUSB2/DFUのみ正常認識。測定未成立・ファーム変更なし。別PCで切り分け予定（<a href="uno_q/audio/reports/2026-09-10-slogic-usb.md">引き継ぎ記録</a>）。</p>
-  <p>PCの基準音をUNO Qマイクで録音する<a href="uno_q/audio/PC_REFERENCE.md">比較試験ツール</a>をローカル実装。通常実行は音源ファイルの準備のみで無発音。録音開始通知→先行録音→PC発音→回収・前後余白の解析を行う設計で、実機試験・配備は未実施。500ms安全期限は維持し、遅延で音が収まらなければタイミング未成立とする。</p>
-  <p><a href="uno_q/audio/INSTRUMENT_TEST.md">計測器によるI²S検証</a>は無負荷BCLK約3.072 MHz・WS約48 kHz、64クロック/WS周期を確認。GPIO101の339ビットが送信PCMの部分列と一致し、WS/DIN同時取得でも標準I²Sの1-bit delayに整合する9フレームが一致。次は3信号同時取得で負値・全周期・欠落を確認。電圧精度・全期間のフレーム整合・音響品質は未判定。再起動後のALSAカード未認識も再発。</p>
-  <p>2026-09-10 06:55 JSTまで音響を試験し、ユーザーの指示で作業終了。録音の確認済み100ms区間を小音量で再生し、最後に同条件の生成440Hz音も実行した。最終発言「OK、いったんここまで」は作業終了の合意であり、音質合格とは断定しない。直前までの聴感報告はノイズ風で、クリーンなsin波の発音は未合格。</p>
-  <p>MI2Sクロック終了処理、7680バイト録音周期、DATA0プルダウン、再生先行・立ち上がり待ち、DSP上位24bitを正しく表すS32_LE対応を配備。録音の一部で440Hzを検出したが、周波数成分の検出と聴感の合格は区別する。<a href="uno_q/audio/INVESTIGATION.md">調査記録</a></p>
-  <p>試験開始前から500msの直接リセット期限を設定。最後の比較は発音100ms・ピーク約0.01%FS。厳密な実音停止時間と起動安定性は未検証。音響コードはbring-up用で、推論アプリへの本統合は未完了。</p>
-<main>
-  <section class="hero">
-    <p class="status">Arduino UNO Q port / Phase 0 bring-up</p>
-    <h1>IchiPing UNO Q</h1>
-    <p>一発のpingを聴き、窓3枚と扉2枚の状態を推定するIchiPingを、Arduino UNO QのLinux + リアルタイムMCU構成へ移植する独立プロジェクトです。</p>
-    <p>元の<a href="https://github.com/airpocket-soundman/IchiPing">IchiPingリポジトリ</a>には変更を加えません。</p>
-  </section>
-
-  <section>
-    <h2>現在の到達点</h2>
-    <div class="grid">
-      <article class="card"><h3>UNO Q実機</h3><p>USB COMとADBを認識し、QRB2210 DebianとSTM32U585 / Zephyrの両方を確認。</p></article>
-      <article class="card"><h3>ILI9341 TFT</h3><p>元IchiPingと同じ外部2.4インチSPI TFTで5状態、信頼度、pingアニメーションを表現。オンボードMatrixは不使用。</p></article>
-      <article class="card"><h3>GPIO / I²C</h3><p>D3–D9の入力と、D20/D21上のPCA9685（0x40）検出を実装。</p></article>
-      <article class="card"><h3>MCU–Linux</h3><p>Arduino Router Bridgeで推論要求と結果表示を往復。現在の結果は明示的なloopback。</p></article>
-      <article class="card"><h3>精度優先AI</h3><p>QRB2210側ではFP32の大型モデルやensembleを許容し、未知条件の精度で選定。</p></article>
-    </div>
-  </section>
-
-  <section>
-    <h2>実機テスト</h2>
-    <p><b>2026-08-21 Phase 0 software smoke test PASS。</b>Bridge往復、GPIO読取、PCA9685未接続時の継続動作、ILI9341 SPIシーケンスを確認しました。プログラム25,160 bytes、RAM 6,588 bytesです。ILI9341実画面は未確認で、サーボPWMは未出力です。</p>
-    <p><b>2026-09-08 display / switch test PASS。</b>USB serial 2261748543へ再書き込みし、ILI9341の表示・バックライトとD3–D8の6入力を実機で目視確認しました。</p>
-    <p><b>2026-09-08 PCA9685 / servo transport test PASS。</b>外部5 Vのみ、USB未接続でPCA9685（0x40）を検出。SG90 ×5をch 0–4へ接続し、小角度試験と元実装準拠の全閉（180°）→全開（0°）→全閉を1台ずつ実行しました。全15指令がI²C結果0で完走し、各動作後にPWMを解放しています。</p>
-    <p><b>2026-09-09 display / switch / servo retest PASS。</b>Wi-Fiホスト<code>unoQ4G</code>からILI9341と入力を再確認し、PCA9685（0x40）経由でSG90 ×5を全閉→全開→全閉。全15指令が結果0で、最終状態は全閉・PWM解放です。</p>
-    <p><b>2026-09-09 MI2S0 audio probe BLOCKED。</b>正本どおり1.8 VのINMP441（DATA0）とMAX98357A（DATA1）を接続。ALSAには<code>PRI_MI2S_RX/TX</code>が列挙されますが、実行中Device TreeにPRI_MI2S DAI linkとGPIO98–101のPinMux参照がなく、低振幅再生と1秒録音はいずれもPCM open時に<code>EINVAL</code>となりました。I2S転送は開始されず、ルートはOFFへ復帰済みです。</p>
-    <p>実機は通常時約3.0 GiBのavailable RAMを持ち、現行XLモデルは約0.7 MiBです。精度優先でモデルを段階拡張し、実機資源と外部評価を同時に測定します。</p>
-  </section>
-
-  <section>
-    <h2>設計資料</h2>
-    <ul>
-      <li><a href="docs/uno_q_port.html">UNO Q移植方針・センサ接続・GPIO</a></li>
-      <li><a href="docs/gpio_wiring.html">UNO Q GPIO接続図</a></li>
-      <li><a href="hardware/easyeda/IchiPing-UNO-Q-Shields/PIN_MAPPING.html">両シールドの全機能ピン接続対応表</a></li>
-      <li><a href="hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html">UNO Qシールド基板仕様</a></li>
-      <li><a href="hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md">EasyEDA基板データ</a></li>
-      <li><code>board/Ichiping uno q.eprj2</code> — 2枚ともEasyEDAネイティブ回路図とPCBをBoard単位で関連付け済み</li>
-      <li><a href="docs/uno_q_ai_strategy.html">UNO Q精度優先AI方針</a></li>
-      <li><a href="docs/hackster_article.md">Hackster投稿用記事 — One Ping, 32 States</a></li>
-      <li><a href="uno_q/README.md">UNO Q bring-upアプリ</a></li>
-      <li><a href="docs/spec.html">元IchiPing仕様のコピー</a></li>
-      <li><a href="docs/nn_design.html">既存NN設計</a></li>
-      <li><a href="pc/README.html">既存データ採取・学習資産</a></li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>処理分担</h2>
-    <table>
-      <thead><tr><th>層</th><th>UNO Q側</th><th>担当</th></tr></thead>
-      <tbody>
-        <tr><td>リアルタイムI/O</td><td>STM32U585 / Zephyr</td><td>GPIO、I²C、サーボ、ILI9341 TFT、推論トリガ</td></tr>
-        <tr><td>アプリ・推論</td><td>QRB2210 / Debian</td><td>特徴量、モデル推論、保存、ネットワーク</td></tr>
-        <tr><td>MCU–Linux通信</td><td>Arduino Router Bridge</td><td>状態、推論要求、推論結果</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section>
-    <h2>移植ロードマップ</h2>
-    <ol>
-      <li>ILI9341・Bridge・GPIO・PCA9685検出のbring-up</li>
-      <li>PCA9685 + SG90 ×5と既存サーボ座標の移植</li>
-      <li>MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生</li>
-      <li>既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較</li>
-      <li>起動時実行、ログ、ネットワーク通知の統合</li>
-    </ol>
-    <p>INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。MI2S0は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。</p>
-  </section>
+<header class="site-header"><a class="brand" href="index.html">IchiPing UNO Q</a><nav><a href="index.html" class="current">Home</a><a href="docs/uno_q/hardware.html">Hardware</a><a href="docs/uno_q/software.html">Software</a><a href="docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="docs/uno_q/data_and_training.html">Data &amp; training</a><a href="docs/uno_q/results.html">Results</a><a href="docs/uno_q/reproduce.html">Reproduce</a><a href="docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="ichiping-uno-q">IchiPing UNO Q</h1>
+<p><strong>One speaker, one microphone, every window and door.</strong> IchiPing plays a 2-second noise "ping" into a home and classifies which of five windows and doors are open from the way the rooms filter that sound. This repository is the <strong>Arduino UNO Q</strong> port: real-time I/O on the STM32U585, audio and a 1D CNN on the Qualcomm QRB2210 Linux side, all in one Arduino App Lab app.</p>
+<p><img src="docs/img/hackster_one_ping_comic_en.png" alt="One ping, 32 states" loading="lazy"></p>
+<ul><li>Contest article (Hackster, Home Automation): <a href="docs/hackster/story_en.html">docs/hackster/story_en.md</a> — Japanese review copy: <a href="docs/hackster/story_ja.html">docs/hackster/story_ja.md</a></li><li>Documentation site (GitHub Pages): <a href="https://airpocket-soundman.github.io/IchiPing-UNO-Q/">https://airpocket-soundman.github.io/IchiPing-UNO-Q/</a></li></ul>
+<h2 id="results-at-a-glance">Results at a glance</h2>
+<p>Held-out UNO Q evaluation sets, 32-state / 14-class (observable) accuracy:</p>
+<div class="table-wrap"><table><thead><tr><th>Evaluation set</th><th>Condition</th><th>32-state</th><th>14-class</th></tr></thead><tbody><tr><td>09:00</td><td>stable</td><td>91.7 %</td><td>100 %</td></tr><tr><td>19:35</td><td>temperature drift (−2.15 % frequency warp)</td><td>81.9 %</td><td>100 %</td></tr><tr><td>20:44</td><td>drift −1.05 %</td><td>74.7 %</td><td>100 %</td></tr><tr><td>21:28</td><td>crowd noise playing</td><td>81.9 %</td><td>100 %</td></tr></tbody></table></div>
+<p>The original FRDM-MCXN947 model scored 20.8 % on the same hardware; real UNO Q sessions, cross-baseline training, ambient noise and a new temperature (frequency-warp) augmentation took it to 82.5 % mean, while the observable classes stay at 100 %.</p>
+<h2 id="documentation">Documentation</h2>
+<div class="table-wrap"><table><thead><tr><th>Page</th><th>Contents</th></tr></thead><tbody><tr><td><a href="docs/uno_q/hardware.html">Hardware and wiring</a></td><td>BOM, MCU pins, 1.8 V MI2S0 audio wiring, safety rules</td></tr><tr><td><a href="docs/uno_q/software.html">Software architecture</a></td><td>App Lab app, Bridge services, audio worker, TFT rendering</td></tr><tr><td><a href="docs/uno_q/signal_and_model.html">Acoustic sensing and model</a></td><td>PRBS excitation, features, model, observability</td></tr><tr><td><a href="docs/uno_q/data_and_training.html">Data collection and training</a></td><td>automated collection, sessions, training recipe, temperature augmentation</td></tr><tr><td><a href="docs/uno_q/results.html">Results</a></td><td>accuracy on held-out sets, beyond the observable region, resources</td></tr><tr><td><a href="docs/uno_q/reproduce.html">Reproduce</a></td><td>step-by-step build, deploy and training guide</td></tr><tr><td><a href="pc/runs/model_comparison_20260912.html">Model comparison</a></td><td>all 23 trained models with their augmentation</td></tr><tr><td><a href="hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html">Shield PCB design</a></td><td>EasyEDA audio and TFT shields, BOMs, pin maps</td></tr></tbody></table></div>
+<h2 id="repository-layout">Repository layout</h2>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>Contents</th></tr></thead><tbody><tr><td><code>uno_q/app/</code></td><td>Arduino App Lab app: <code>sketch/</code> (STM32U585), <code>python/</code> (Linux runtime), <code>models/</code> (deployed ONNX + manifest)</td></tr><tr><td><code>uno_q/audio/</code></td><td>MI2S0 Device Tree overlay, ALSA route and safe capture tools, audio worker, offline tests</td></tr><tr><td><code>pc/uno_q_*.py</code></td><td>data collection, dataset export, evaluation and comparison tools</td></tr><tr><td><code>pc/training/</code></td><td>dataset loader, augmentation (incl. <code>--freq-warp</code>), training script</td></tr><tr><td><code>docs/uno_q/</code></td><td>documentation (Markdown sources; HTML is generated by <code>tools/build_site.py</code>)</td></tr><tr><td><code>hardware/easyeda/</code>, <code>board/</code></td><td>UNO Q shield PCB design (EasyEDA Pro)</td></tr><tr><td><code>firmware/</code>, <code>hardware/</code>, other <code>docs/*.html</code></td><td>reference material from the original FRDM-MCXN947 IchiPing project</td></tr></tbody></table></div>
+<p>The original project lives at <a href="https://github.com/airpocket-soundman/IchiPing.">https://github.com/airpocket-soundman/IchiPing.</a></p>
+<h2 id="tests">Tests</h2>
+<pre><code class="language-bash">python -m unittest discover -s uno_q/app/python -p &quot;test_*.py&quot;
+python -m unittest discover -s uno_q/audio -p &quot;test_*.py&quot;</code></pre>
+<h2 id="license">License</h2>
+<p>Inherits the license conditions of the original IchiPing project. Code derived from Arduino examples follows the license of each file.</p>
+<hr>
+<p>日本語の概要：1つのスピーカーと1つのマイクで、住まいの5か所の窓・扉の開閉を音で推定するプロジェクト IchiPing の Arduino UNO Q 移植版です。記事の日本語確認版は <a href="docs/hackster/story_ja.html">docs/hackster/story_ja.md</a> にあります。</p>
 </main>
-
-<script>
-  /* docs/embed.js redirects standalone documentation pages here with
-   * ?p=<path-from-project-root>. Render that page in an iframe so its
-   * embedded mode can suppress duplicate navigation without redirecting
-   * back to the project landing page. */
-  (function () {
-    var page = null;
-    try {
-      page = new URLSearchParams(window.location.search).get("p");
-    } catch (e) { /* legacy browser: keep the landing page visible */ }
-    if (!page) return;
-
-    /* Only project-relative paths are accepted. */
-    if (/^(?:[a-z]+:|\/\/|\/)/i.test(page) || page.indexOf("..") !== -1) return;
-
-    var frame = document.createElement("iframe");
-    frame.className = "shell-route-frame";
-    frame.title = "IchiPing UNO Q document viewer";
-    frame.src = page + (window.location.hash || "");
-    document.body.appendChild(frame);
-  })();
-</script>
+<footer class="site-footer">Generated from <code>README.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
 </body>
 </html>

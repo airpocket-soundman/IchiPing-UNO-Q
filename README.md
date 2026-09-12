@@ -1,96 +1,63 @@
 # IchiPing UNO Q
 
-IchiPingをArduino UNO Qへ移植する独立プロジェクトです。元の
-[`airpocket-soundman/IchiPing`](https://github.com/airpocket-soundman/IchiPing)
-は変更せず、既存の信号処理、32状態ラベル、学習・評価資産をこのリポジトリへコピーして出発しています。
+**One speaker, one microphone, every window and door.** IchiPing plays a 2-second noise "ping" into a home and classifies which of five windows and doors are open from the way the rooms filter that sound. This repository is the **Arduino UNO Q** port: real-time I/O on the STM32U585, audio and a 1D CNN on the Qualcomm QRB2210 Linux side, all in one Arduino App Lab app.
 
-## 現在の到達点
+![One ping, 32 states](docs/img/hackster_one_ping_comic_en.png)
 
-SLogic16U3はアプリ/CLI準備済みだが通常USB3モード未認識、現在のハブでUSB2/DFUのみ正常認識。測定未成立・ファーム変更なし。別PCで切り分け予定（[引き継ぎ記録](uno_q/audio/reports/2026-09-10-slogic-usb.md)）。
+- Contest article (Hackster, Home Automation): [docs/hackster/story_en.md](docs/hackster/story_en.md) — Japanese review copy: [docs/hackster/story_ja.md](docs/hackster/story_ja.md)
+- Documentation site (GitHub Pages): https://airpocket-soundman.github.io/IchiPing-UNO-Q/
 
-PCの基準音をUNO Qマイクで録音する[比較試験ツール](uno_q/audio/PC_REFERENCE.md)をローカル実装。通常実行は音源ファイルの準備のみで無発音。録音開始通知→先行録音→PC発音→回収・前後余白の解析を行う設計で、実機試験・配備は未実施。500ms安全期限は維持し、遅延で音が収まらなければタイミング未成立とする。
+## Results at a glance
 
-[計測器によるI²S検証](uno_q/audio/INSTRUMENT_TEST.md)は無負荷BCLK約3.072 MHz・WS約48 kHz、64クロック/WS周期を確認。GPIO101の339ビットが送信PCMの部分列と一致し、WS/DIN同時取得でも標準I²Sの1-bit delayに整合する9フレームが一致。次は3信号同時取得で負値・全周期・欠落を確認。電圧精度・全期間のフレーム整合・音響品質は未判定。再起動後のALSAカード未認識も再発。
+Held-out UNO Q evaluation sets, 32-state / 14-class (observable) accuracy:
 
-2026-09-10 06:55 JSTまで音響を試験し、ユーザーの指示で作業終了。録音の確認済み100ms区間を小音量で再生し、最後に同条件の生成440Hz音も実行した。ユーザーの最終発言「OK、いったんここまで」は作業終了の合意として記録し、音質合格とは断定しない。直前までの聴感報告はノイズ風で、クリーンなsin波の発音は未合格。
+| Evaluation set | Condition | 32-state | 14-class |
+|---|---|---|---|
+| 09:00 | stable | 91.7 % | 100 % |
+| 19:35 | temperature drift (−2.15 % frequency warp) | 81.9 % | 100 % |
+| 20:44 | drift −1.05 % | 74.7 % | 100 % |
+| 21:28 | crowd noise playing | 81.9 % | 100 % |
 
-MI2Sクロック終了処理、7680バイト録音周期、DATA0プルダウン、再生先行・立ち上がり待ち、DSP上位24bitを正しく表すS32_LE対応を配備。録音の一部で440Hzを検出したが、周波数成分の検出と聴感の合格は区別する。詳細は[調査記録](uno_q/audio/INVESTIGATION.md)。
+The original FRDM-MCXN947 model scored 20.8 % on the same hardware; real UNO Q sessions, cross-baseline training, ambient noise and a new temperature (frequency-warp) augmentation took it to 82.5 % mean, while the observable classes stay at 100 %.
 
-試験開始前から500msの直接リセット期限を設定。最後の比較は発音100ms・ピーク約0.01%FS。厳密な実音停止時間と起動安定性は未検証。音響コードはbring-up用で、推論アプリへの本統合は未完了。
+## Documentation
 
-- UNO QをUSBのCOMポートとADBデバイスとして認識
-- QRB2210上のDebianとSTM32U585上のArduino/Zephyrを確認
-- Arduino App Lab形式のbring-upアプリを追加
-- 元IchiPingと同じILI9341 2.4インチSPI TFTへ5状態と信頼度を表示するドライバを追加し、実画面とバックライトを確認
-- D3–D7の状態入力、D8のEXEC、D9の雨入力を割り当て
-- D20/D21のI²CでPCA9685（0x40）を非破壊検出
-- Router BridgeでLinux PythonとMCUスケッチを接続
-- 2026-08-21実機smoke test PASS（Bridge往復、GPIO読取、I²C未接続処理、ILI9341 SPIシーケンス）。ILI9341実画面は未確認
-- 2026-09-08にILI9341とD3–D8のスイッチ6個を接続して再試験し、表示・バックライト・6入力を目視確認。PCA9685とSG90 ×5も接続し、ch 0–4の小角度試験と元実装準拠の全閉→全開→全閉シーケンスをI²Cエラーなしで完走
-- 2026-09-09にWi-Fi経由で表示・入力を再確認し、PCA9685 0x40とSG90 ×5の全閉→全開→全閉を再実行。全15指令が結果0で、最終状態は全閉・PWM解放
+| Page | Contents |
+|---|---|
+| [Hardware and wiring](docs/uno_q/hardware.md) | BOM, MCU pins, 1.8 V MI2S0 audio wiring, safety rules |
+| [Software architecture](docs/uno_q/software.md) | App Lab app, Bridge services, audio worker, TFT rendering |
+| [Acoustic sensing and model](docs/uno_q/signal_and_model.md) | PRBS excitation, features, model, observability |
+| [Data collection and training](docs/uno_q/data_and_training.md) | automated collection, sessions, training recipe, temperature augmentation |
+| [Results](docs/uno_q/results.md) | accuracy on held-out sets, beyond the observable region, resources |
+| [Reproduce](docs/uno_q/reproduce.md) | step-by-step build, deploy and training guide |
+| [Model comparison](pc/runs/model_comparison_20260912.md) | all 23 trained models with their augmentation |
+| [Shield PCB design](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.md) | EasyEDA audio and TFT shields, BOMs, pin maps |
 
-音響推論はまだloopbackです。既存INMP441/MAX98357AはQRB2210の1.8 V MI2S0を第一候補として再利用を評価します。信号は標準UNOヘッダではなくJMISC／UNO Breakout Carrier経由のため、Device TreeとALSA routeを確定してから接続します。USB Audioはフォールバックです。
-2026-09-09に正本どおり1.8 VのINMP441（DATA0）とMAX98357A（DATA1）を接続して確認したところ、ALSAには`PRI_MI2S_RX/TX` DAIとミキサー制御が列挙されましたが、実行中Device TreeにはPRI_MI2SのDAI linkとGPIO98–101のPinMux参照がありませんでした。低振幅再生と1秒録音はいずれもPCM open時に`EINVAL`となり、I2Sデータ転送は開始されていません。音響経路は未合格です。
+## Repository layout
 
-推論はQRB2210 / Debian側で精度を最優先します。現行XL（約0.7 MiB）に縛られず、FP32の大型モデルや2〜3モデルensembleも比較し、未知の収録条件で精度が上がった候補を採用します。
+| Path | Contents |
+|---|---|
+| `uno_q/app/` | Arduino App Lab app: `sketch/` (STM32U585), `python/` (Linux runtime), `models/` (deployed ONNX + manifest) |
+| `uno_q/audio/` | MI2S0 Device Tree overlay, ALSA route and safe capture tools, audio worker, offline tests |
+| `pc/uno_q_*.py` | data collection, dataset export, evaluation and comparison tools |
+| `pc/training/` | dataset loader, augmentation (incl. `--freq-warp`), training script |
+| `docs/uno_q/` | documentation (Markdown sources; HTML is generated by `tools/build_site.py`) |
+| `hardware/easyeda/`, `board/` | UNO Q shield PCB design (EasyEDA Pro) |
+| `firmware/`, `hardware/`, other `docs/*.html` | reference material from the original FRDM-MCXN947 IchiPing project |
 
-## 設計資料
+The original project lives at https://github.com/airpocket-soundman/IchiPing.
 
-- [UNO Q移植方針・センサ接続・GPIO](docs/uno_q_port.html)
-- [UNO Q GPIO接続図](docs/gpio_wiring.html)
-- [UNO Qシールド基板仕様](hardware/easyeda/IchiPing-UNO-Q-Shields/SPECIFICATION.html)
-- [EasyEDA基板データ](hardware/easyeda/IchiPing-UNO-Q-Shields/DESIGN.md)
-- [UNO Q精度優先AI方針](docs/uno_q_ai_strategy.html)
-- [Hackster投稿用記事 — One Ping, 32 States](docs/hackster_article.md)
-- [UNO Q bring-upアプリ](uno_q/README.md)
-- [元IchiPing仕様のコピー](docs/spec.html)
-- [既存NN設計](docs/nn_design.html)
-- [既存データ採取・学習資産](pc/README.md)
+## Tests
 
-## アーキテクチャ
-
-| 層 | UNO Q側 | 担当 |
-|---|---|---|
-| リアルタイムI/O | STM32U585 / Zephyr | GPIO、I²C、サーボ、ILI9341 TFT、推論トリガ |
-| アプリ・推論 | QRB2210 / Debian | 特徴量、モデル推論、保存、ネットワーク |
-| MCU–Linux通信 | Arduino Router Bridge | 状態・推論要求・推論結果 |
-
-## ILI9341 TFT表示
-
-元IchiPingと同じ2.4インチ240×320 ILI9341と既存シールド配線を使います。D11=MOSI、D13=SCK、A2=CS、A3=RST、A4=DC、A5=BLです。5個の状態タイル、信頼度バー、ping／推論中の枠アニメーションを表示します。オンボードLED Matrixは使用しません。
-
-## bring-upアプリの実行
-
-Arduino App Labで `uno_q/app` を開くか、USB接続したUNO Qへ同フォルダを転送し、UNO Q上で実行します。
-
-```sh
-TMPDIR=/tmp arduino-app-cli app start /home/arduino/ArduinoApps/ichiping-uno-q
-TMPDIR=/tmp arduino-app-cli app logs /home/arduino/ArduinoApps/ichiping-uno-q --all
+```bash
+python -m unittest discover -s uno_q/app/python -p "test_*.py"
+python -m unittest discover -s uno_q/audio -p "test_*.py"
 ```
 
-## 移植ロードマップ
+## License
 
-1. ILI9341・Bridge・GPIO・PCA9685検出のbring-up
-2. PCA9685 + SG90 ×5と既存サーボ座標の移植
-3. MI2S0（USB Audioをフォールバック）による16 kHzモノラル録音とping再生
-4. 既存モデルをbaselineに、精度優先の大型モデルとensembleをLinux側で比較
-5. 起動時実行、ログ、ネットワーク通知の統合
+Inherits the license conditions of the original IchiPing project. Code derived from Arduino examples follows the license of each file.
 
-## リポジトリ構成
+---
 
-| パス | 内容 |
-|---|---|
-| `uno_q/app/` | UNO Q用Arduino App Labアプリ |
-| `uno_q/tools/` | ONNX実機ベンチなどUNO Q評価ツール |
-| `docs/uno_q_port.html` | 開発方針、配線、GPIO、ILI9341表示規約 |
-| `hardware/easyeda/IchiPing-UNO-Q-Shields/PIN_MAPPING.html` | 両シールドの全機能・全コネクタのピン接続対応表 |
-| `docs/uno_q_ai_strategy.html` | 精度指標、モデル探索、実機資源上限 |
-| `board/Ichiping uno q.eprj2` | 2枚のシールドを収録したEasyEDA設計正本（回路図とPCBをBoard単位で関連付け済み） |
-| `hardware/easyeda/IchiPing-UNO-Q-Shields/` | 基板仕様、基板別BOM、EasyEDA設計ノート |
-| `firmware/` | 元FRDM-MCXN947実装（移植参照） |
-| `pc/` | データ採取、学習、評価、既存モデル資産 |
-| `hardware/` | 元ハードウェア参照資料とUNO Q用シールド基板データ |
-
-## ライセンス
-
-元IchiPingのライセンス条件を継承します。Arduino提供コードを参照した箇所は各ファイルのライセンス条件に従います。
+日本語の概要：1つのスピーカーと1つのマイクで、住まいの5か所の窓・扉の開閉を音で推定するプロジェクト IchiPing の Arduino UNO Q 移植版です。記事の日本語確認版は [docs/hackster/story_ja.md](docs/hackster/story_ja.md) にあります。

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hardware and wiring</title>
+<link rel="stylesheet" href="../../docs/site.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="../../index.html">IchiPing UNO Q</a><nav><a href="../../index.html">Home</a><a href="../../docs/uno_q/hardware.html" class="current">Hardware</a><a href="../../docs/uno_q/software.html">Software</a><a href="../../docs/uno_q/signal_and_model.html">Signal &amp; model</a><a href="../../docs/uno_q/data_and_training.html">Data &amp; training</a><a href="../../docs/uno_q/results.html">Results</a><a href="../../docs/uno_q/reproduce.html">Reproduce</a><a href="../../docs/hackster/story_en.html">Hackster story</a></nav></header>
+<main class="content">
+<h1 id="hardware-and-wiring">Hardware and wiring</h1>
+<p>IchiPing UNO Q uses one speaker and one microphone to classify five openings of a model apartment. The UNO Q MCU drives the switches, servos and TFT; the Linux side drives the audio bus.</p>
+<p><img src="../img/house.png" alt="Model apartment floor plan: rooms A, B, C, windows a, b, c and doors AB, BC" loading="lazy"></p>
+<h2 id="bill-of-materials">Bill of materials</h2>
+<div class="table-wrap"><table><thead><tr><th>Qty</th><th>Part</th><th>Role / notes</th></tr></thead><tbody><tr><td>1</td><td>Arduino UNO Q (4 GB)</td><td>Qualcomm QRB2210 MPU (Debian) + STM32U585 MCU (Zephyr)</td></tr><tr><td>1</td><td>UNO Breakout Carrier (or JMISC access)</td><td>exposes the 1.8 V MI2S0 audio pins, which are not on the UNO header</td></tr><tr><td>1</td><td>INMP441 I²S MEMS microphone</td><td>MI2S0 DATA0, L/R = GND, VDD = 1.8 V</td></tr><tr><td>1</td><td>MAX98357A I²S class-D amplifier</td><td>MI2S0 DATA1, GAIN = GND (12 dB), VIN = 5 V, SD = SoC GPIO 28</td></tr><tr><td>1</td><td>Small speaker (4–8 Ω)</td><td>driven by the MAX98357A (bridge-tied output)</td></tr><tr><td>1</td><td>10 kΩ resistor</td><td>MAX98357A SD to GND (keeps the amplifier off when GPIO 28 is not driven)</td></tr><tr><td>1</td><td>PCA9685 16-channel PWM driver</td><td>I²C address 0x40</td></tr><tr><td>5</td><td>SG90 micro servos</td><td>open/close window a, b, c and door AB, BC</td></tr><tr><td>1</td><td>ILI9341 2.4" SPI TFT, 320 × 240</td><td>inference / actual state display</td></tr><tr><td>5</td><td>Toggle switches</td><td>requested state of each opening (to GND)</td></tr><tr><td>1</td><td>Push button</td><td>EXEC (start one inference)</td></tr><tr><td>1</td><td>5 V supply for servos and amplifier</td><td>common GND with the UNO Q</td></tr><tr><td>1</td><td>Model apartment</td><td>three rooms in a row, three windows, two inner doors</td></tr></tbody></table></div>
+<h2 id="mcu-side-uno-header-33-v">MCU side (UNO header, 3.3 V)</h2>
+<div class="table-wrap"><table><thead><tr><th>UNO Q pin</th><th>Connection</th><th>Notes</th></tr></thead><tbody><tr><td>D3 / D4 / D5 / D6 / D7</td><td>switches for window a, b, c, door AB, BC</td><td><code>INPUT_PULLUP</code>; GND = CLOSE (0), open = OPEN (1)</td></tr><tr><td>D8</td><td>EXEC push button to GND</td><td>Low = pressed</td></tr><tr><td>D20 / SDA, D21 / SCL</td><td>PCA9685 SDA / SCL</td><td>address 0x40; channels 0–4 = a, b, c, AB, BC</td></tr><tr><td>D11 (MOSI), D13 (SCK)</td><td>ILI9341 SPI</td><td>write-only, D12/MISO not connected</td></tr><tr><td>A2 / A3 / A4 / A5</td><td>ILI9341 CS / RST / DC / BL</td><td>same wiring as the original IchiPing shield</td></tr><tr><td>3V3</td><td>ILI9341 VCC, PCA9685 VCC</td><td>logic only — never power servos from 3V3</td></tr></tbody></table></div>
+<p>Servo angles: 0° (PCA9685 tick 102) = OPEN, 180° (tick 553) = CLOSE. Servo power comes from the external 5 V rail; all grounds are common.</p>
+<p>The pin-level wiring diagram (switches, EXEC, PCA9685, TFT and the 5 V rail) is in <a href="../gpio_wiring.html">gpio_wiring.html</a>.</p>
+<p class="placeholder">[PHOTO: wiring close-up — UNO Q with the Breakout Carrier, PCA9685, TFT and the audio boards]</p>
+<h2 id="linux-side-mi2s0-audio-18-v">Linux side (MI2S0 audio, 1.8 V)</h2>
+<p>The QRB2210 primary MI2S bus runs at 48 kHz, stereo, 32-bit slots (24 significant bits). It is reached through JMISC or the UNO Breakout Carrier.</p>
+<div class="table-wrap"><table><thead><tr><th>Signal</th><th>SoC GPIO</th><th>Device pin</th></tr></thead><tbody><tr><td>BCLK / SCK</td><td>98</td><td>MAX98357A BCLK, INMP441 SCK</td></tr><tr><td>WS / LRC</td><td>99</td><td>MAX98357A LRC, INMP441 WS</td></tr><tr><td>DATA0 (capture)</td><td>100</td><td>INMP441 SD</td></tr><tr><td>DATA1 (playback)</td><td>101</td><td>MAX98357A DIN</td></tr><tr><td>Amplifier shutdown</td><td>28</td><td>MAX98357A SD, with 10 kΩ to GND</td></tr></tbody></table></div>
+<p>Safety rules used throughout the project:</p>
+<ul><li>MI2S0 is a 1.8 V interface: never connect 3.3 V or 5 V signals to it.</li><li>Power the microphone and amplifier before connecting their signal lines; change wiring only with power off.</li><li>The MAX98357A output is bridge-tied: never connect a grounded probe to OUT+/OUT−.</li></ul>
+<p>The audio bus needs a Device Tree overlay and ALSA routing on the Linux side; see <a href="software.html">Software architecture</a> and <code>uno_q/audio/README.md</code>.</p>
+</main>
+<footer class="site-footer">Generated from <code>docs/uno_q/hardware.md</code> by <code>tools/build_site.py</code> — edit the Markdown, not this file.</footer>
+</body>
+</html>
