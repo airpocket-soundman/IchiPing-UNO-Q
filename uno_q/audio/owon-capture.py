@@ -11,9 +11,9 @@ import sys
 import threading
 
 
-def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000, ch2_pin=99, trigger_ch=1, ch1_pin=98):
+def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000, ch2_pin=99, trigger_ch=1, ch1_pin=98, force=False, discard=0, edge='rise', sdmode_rate=250000):
     import numpy as np
-    from vds1022 import VDS1022, CH1, CH2, DC, EDGE, RISE, ONCE
+    from vds1022 import VDS1022, CH1, CH2, DC, EDGE, RISE, FALL, ONCE, AUTO
     from vds1022.vds1022 import CMD
 
     # Upstream checks a Linux-only kernel attachment API unconditionally.
@@ -39,16 +39,24 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
         def _save_calibration(self, *args):
             raise RuntimeError('Calibration writes disabled')
 
-    rate = i2s_rate if profile == 'i2s' else 1250000
-    level = 1.6 if profile == 'i2s' else 2.5
+    rate = sdmode_rate if profile == 'sdmode' else (1000000 if profile == 'gpio' else (i2s_rate if profile == 'i2s' else 1250000))
+    level = .9 if profile in ('gpio', 'sdmode') else (1.6 if profile == 'i2s' else 2.5)
     dev = None
     deadline = None
     report = {'created_utc': datetime.now(timezone.utc).isoformat(),
               'kind': 'physical_unloaded_I2S' if profile == 'i2s' else 'physical_scope_compensation_NOT_UNO_audio',
               'api_version': '1.1.5', 'probe_ratio': 10, 'coupling': 'DC',
-              'trigger': f'CH{trigger_ch} rising {level}V single (API scale)', 'requested_rate_hz': rate,
+              'trigger': f'CH{trigger_ch} {edge} {level}V single (API scale)', 'requested_rate_hz': rate,
               'requested_range_v': voltage_range, 'status': 'STARTED'}
-    if profile == 'i2s':
+    if profile == 'gpio':
+        report['kind'] = 'physical_GPIO28_or_SDMODE_NOT_audio'
+        report['wiring'] = {
+            'CH1': 'GPIO28/SD_MODE candidate node; external load recorded separately',
+            'CH2': 'unconfirmed; not evaluated'}
+    elif profile == 'sdmode':
+        report['kind'] = 'physical_SDMODE_PCM_trigger_timing'
+        report['wiring'] = {'CH1': 'GPIO28 / MAX98357A SD', 'CH2': 'GPIO99 / MI2S0 WS'}
+    elif profile == 'i2s':
         report['wiring'] = {'CH1': f'GPIO{ch1_pin}', 'CH2': f'GPIO{ch2_pin}'}
     try:
         dev = AcquisitionOnly()
@@ -59,9 +67,10 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
                       calibration_sha256=hashlib.sha256(
                           json.dumps(dev.calibration).encode()).hexdigest())
         dev.set_sampling(rate, roll=False, peak=False)
-        dev.set_channel(CH1, range=voltage_range, offset=.3, probe=10, coupling=DC)
-        dev.set_channel(CH2, range=voltage_range, offset=.3, probe=10, coupling=DC)
-        dev.set_trigger(CH1 if trigger_ch == 1 else CH2, EDGE, RISE, level=level, position=.5, sweep=ONCE)
+        channel_offset = 0 if profile in ('gpio', 'sdmode') else .3
+        dev.set_channel(CH1, range=voltage_range, offset=channel_offset, probe=10, coupling=DC)
+        dev.set_channel(CH2, range=voltage_range, offset=channel_offset, probe=10, coupling=DC)
+        dev.set_trigger(CH1 if trigger_ch == 1 else CH2, EDGE, RISE if edge == 'rise' else FALL, level=level, position=.5, sweep=AUTO if force else ONCE)
         dev.send(CMD.SET_RUNSTOP, 0)
         # wait() flushes the configuration/trigger queue under the API lock.
         dev.wait(.25)
@@ -70,12 +79,27 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
         (output / 'armed.json').write_text(json.dumps({
             'armed_utc': report['armed_utc'], 'serial': dev.serial,
             'already_triggered': triggered, 'profile': profile}), encoding='utf-8')
-        if profile == 'i2s' and triggered:
+        if profile in ('i2s', 'gpio', 'sdmode') and triggered and not force:
             raise RuntimeError('Triggered before external stimulus; discard acquisition')
+        if force:
+            report['trigger'] = 'AUTO static capture; no edge timing claim'
         deadline = threading.Timer(45, dev.stop)
         deadline.daemon = True
         deadline.start()
-        frames = dev.fetch()
+        iterator = dev.fetch_iter()
+        report['discarded_frames'] = []
+        for index in range(discard):
+            previous = next(iterator)
+            report['discarded_frames'].append({f.name: float(np.ptp(f.y())) for f in previous})
+            if profile == 'sdmode':
+                np.savez(output / f'discarded-{index + 1:02d}-adc.npz',
+                         **{f.name: np.array(f.buffer, copy=True) for f in previous})
+                with (output / f'discarded-{index + 1:02d}-waveform.csv').open(
+                        'w', newline='', encoding='utf-8') as stream:
+                    writer = csv.writer(stream)
+                    writer.writerow(['time_s'] + [f.name + '_v' for f in previous])
+                    writer.writerows(zip(previous.x(), *(f.y() for f in previous)))
+        frames = next(iterator)
         deadline.cancel()
         # Save ADC samples before API voltage conversion can clip buffers in place.
         np.savez(output / 'adc.npz', **{f.name: np.array(f.buffer, copy=True) for f in frames})
@@ -86,6 +110,8 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
         report['sampling_rate_hz'] = dev.sampling_rate
         report['channels'] = {}
         for frame in frames:
+            if profile == 'gpio' and frame.name != 'CH1':
+                continue
             y = frame.y()
             low, high = np.percentile(y, [10, 90])
             edges = np.flatnonzero((y[:-1] < (low + high)/2) & (y[1:] >= (low + high)/2))
@@ -103,7 +129,7 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
                 'bclk_undersampled_do_not_interpret': aliased_bclk,
                 'rising_edge_indices': edges.tolist() if high-low > 1 else [],
                 'note': (f'CH1=GPIO{ch1_pin}, CH2=GPIO{ch2_pin}; voltage scale UNVERIFIED'
-                         if profile == 'i2s' else 'Only CH1 confirmed on compensation output.')}
+                         if profile == 'i2s' else ('CH1=GPIO28, CH2=GPIO99; voltage scale UNVERIFIED' if profile == 'sdmode' else ('CH1=GPIO28; voltage scale UNVERIFIED' if profile == 'gpio' else 'Only CH1 confirmed on compensation output.')))}
         report['status'] = 'ACQUIRED; calibration accuracy not certified'
     except Exception as exc:
         report.update(status='FAILED', error=repr(exc))
@@ -111,6 +137,9 @@ def capture(output, voltage_range=20, profile='compensation', i2s_rate=100000000
     finally:
         if deadline is not None:
             deadline.cancel()
+            # cancel() does not wait for an already-running stop callback.
+            # Join before disposing USB to avoid racing the deadline thread.
+            deadline.join()
         if dev is None:
             dev = getattr(AcquisitionOnly, '_instance', None)
         if dev is not None:
@@ -127,27 +156,37 @@ def main():
     parser.add_argument('output', type=Path)
     parser.add_argument('--execute', action='store_true', help='Open the physical scope')
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('--range-v', type=int, choices=(20, 50), default=20)
-    parser.add_argument('--profile', choices=('compensation', 'i2s'), default='compensation')
+    parser.add_argument('--range-v', type=int, choices=(5, 10, 20, 50), default=20)
+    parser.add_argument('--profile', choices=('compensation', 'i2s', 'gpio', 'sdmode'), default='compensation')
     parser.add_argument('--i2s-rate', type=int, choices=(1000000, 25000000, 100000000), default=100000000)
+    parser.add_argument('--sdmode-rate', type=int, choices=(2500, 5000, 250000), default=250000)
     parser.add_argument('--ch2-pin', type=int, choices=(98, 99, 101), default=99)
     parser.add_argument('--ch1-pin', type=int, choices=(98, 99), default=98)
     parser.add_argument('--trigger-ch', type=int, choices=(1, 2), default=1)
+    parser.add_argument('--edge', choices=('rise', 'fall'), default='rise')
+    parser.add_argument('--force-static', action='store_true', help='GPIO only: force acquisition of a static level')
+    parser.add_argument('--discard-frames', type=int, choices=range(0, 11), default=0)
     args = parser.parse_args()
+    if args.force_static and args.profile not in ('gpio', 'sdmode', 'compensation'):
+        parser.error('--force-static requires gpio, sdmode, or compensation profile')
+    if args.discard_frames and not args.force_static:
+        parser.error('--discard-frames requires --force-static')
     if not args.execute:
         print('No hardware opened. Close OWON GUI, confirm profile wiring and x10, then use --execute.')
         return
     if args.worker:
-        capture(args.output, args.range_v, args.profile, args.i2s_rate, args.ch2_pin, args.trigger_ch, args.ch1_pin)
+        capture(args.output, args.range_v, args.profile, args.i2s_rate, args.ch2_pin, args.trigger_ch, args.ch1_pin, args.force_static, args.discard_frames, args.edge, args.sdmode_rate)
         return
     args.output.mkdir(parents=True, exist_ok=False)
     try:
         result = subprocess.run([sys.executable, __file__, str(args.output.resolve()),
                                  '--execute', '--worker', '--range-v', str(args.range_v),
                                  '--profile', args.profile, '--i2s-rate', str(args.i2s_rate),
+                                 '--sdmode-rate', str(args.sdmode_rate),
                                  '--ch2-pin', str(args.ch2_pin), '--trigger-ch', str(args.trigger_ch),
-                                 '--ch1-pin', str(args.ch1_pin)],
-                                capture_output=True, text=True, timeout=60 if args.profile == 'i2s' else 20)
+                                 '--ch1-pin', str(args.ch1_pin), '--discard-frames', str(args.discard_frames),
+                                 '--edge', args.edge] + (['--force-static'] if args.force_static else []),
+                                capture_output=True, text=True, timeout=60 if args.profile in ('i2s', 'gpio', 'sdmode') else 20)
     except subprocess.TimeoutExpired:
         (args.output / 'timeout.txt').write_text(
             'API worker timed out and was terminated. Scope stop NOT verified; this script does not operate UNO Q.\n')

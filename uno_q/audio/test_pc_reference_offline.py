@@ -28,9 +28,10 @@ class PCReferenceTests(unittest.TestCase):
 
     def test_reference_limits(self):
         data = pc.reference_pcm()
-        self.assertEqual(len(data), 4800 * 4)
+        self.assertEqual(len(data), round(pc.RATE * pc.DURATION) * 4)
         frames = list(struct.iter_unpack('<hh', data))
-        self.assertTrue(all(left == right and abs(left) <= 3 for left, right in frames))
+        self.assertTrue(all(left == right and abs(left) <= round(32767 * pc.AMPLITUDE)
+                            for left, right in frames))
         self.assertEqual(frames[0], (0, 0))
         self.assertEqual(frames[-1], (0, 0))
 
@@ -45,7 +46,7 @@ class PCReferenceTests(unittest.TestCase):
             report = json.loads((output / 'report.json').read_text())
             self.assertIn('NO sound', report['status'])
             with wave.open(str(output / 'reference.wav'), 'rb') as wav:
-                self.assertEqual(wav.getnframes(), 4800)
+                self.assertEqual(wav.getnframes(), round(pc.RATE * pc.DURATION))
                 self.assertEqual(wav.getframerate(), 48000)
 
     def test_exact_run_handshake_required(self):

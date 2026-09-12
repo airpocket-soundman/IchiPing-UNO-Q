@@ -139,6 +139,12 @@ def main(argv: list[str] | None = None) -> int:
                     help="hamming soft label の鋭さ (大 = hard 寄り、既定 2.0)")
     ap.add_argument("--size", choices=tuple(SIZE_PRESETS.keys()), default="S",
                     help="モデルサイズ S/M/L/XL (model_14cls と同じ preset)")
+    ap.add_argument("--freq-warp", type=float, default=0.0,
+                    help="temperature augmentation (noise_diff_norm): warp the sample log-PSD "
+                         "along frequency by up to +-this fraction before baseline subtraction "
+                         "(e.g. 0.03 = +-3%%; UNO Q evening drift was -2.15%%)")
+    ap.add_argument("--init-ckpt", type=Path, default=None,
+                    help="best.pt to start from (additional training / fine-tuning)")
     ap.add_argument("--seed", type=int, default=0,
                     help="乱数 seed (torch / numpy / random / split_indices)")
     ap.add_argument("--spike-fix", action="store_true",
@@ -190,7 +196,8 @@ def main(argv: list[str] | None = None) -> int:
             IchiPingDataset(captures_dirs=args.captures, transform=train_tf,
                             feature_mode=args.feature_mode,
                             feature_transform=feat_tf,
-                            baseline_override_dir=bl)
+                            baseline_override_dir=bl,
+                            freq_warp=args.freq_warp)
             for bl in args.baseline_jitter_dirs
         ]
         ds_eval_per_bl = [
@@ -212,7 +219,8 @@ def main(argv: list[str] | None = None) -> int:
         ds_all = IchiPingDataset(captures_dirs=args.captures, transform=train_tf,
                                   feature_mode=args.feature_mode,
                                   feature_transform=feat_tf,
-                                  baseline_override_dir=args.baseline_override_dir)
+                                  baseline_override_dir=args.baseline_override_dir,
+                                  freq_warp=args.freq_warp)
         ds_eval = IchiPingDataset(captures_dirs=args.captures, transform=None,
                                   feature_mode=args.feature_mode,
                                   feature_transform=None,
@@ -242,6 +250,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         model = IchiPingV1_32cls(IchiPingV1_32clsConfig(size=args.size)).to(args.device)
         arch_name = "IchiPingV1_32cls"
+    if args.init_ckpt is not None:
+        # Additional training: start from an existing best.pt (same arch/size),
+        # e.g. to add newly recorded ambient noise without retraining from zero.
+        state = torch.load(args.init_ckpt, map_location=args.device, weights_only=False)
+        model.load_state_dict(state["state_dict"])
+        print(f"init weights from {args.init_ckpt}")
     n_params = sum(p.numel() for p in model.parameters())
     print(f"{arch_name}[{args.size}]: {n_params} params, {N_CLASSES} classes")
 

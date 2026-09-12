@@ -18,11 +18,15 @@
   </style>
 </head>
 <body>
-  <p>PC基準音→UNO Qマイクの<a href="../uno_q/audio/PC_REFERENCE.md">独立音源による比較試験</a>をローカル実装。実機配備・発音・録音は未実施。録音RUNNING通知から30msの先行余白を置いてPCの100ms音を開始し、録音データで前後余白を検査する。命令と実音の遅延を考慮し、500ms安全期限内に収まらない場合は未成立とする。UNO Qは共有クロック用のゼロPCMのみを送るが、アンプの物理的な消音は保証されない。配線変更なし。</p>
+  <p><b>2026-09-11現在:</b> MAX98357Aの生成440 Hzサイン波再生と0.5秒停止、INMP441録音の440 Hz成分99.98%以上・2倍出力に対するレベル比1.985・クリップなしを確認し、スピーカー/マイクbring-upをPASSとする。代表WAV 160本の暫定再学習は、独立代表32本で32-class 30/32（93.75%）、14-class 32/32（macro-F1 1.0）。少数データの参考値であり、追加データで再評価する。</p>
+  <p>同モデルはUNO QアプリコンテナのONNX Runtime 1.30.0でload 194.83 ms、warm推論mean 1.394 ms、p95 1.659 ms、計測時RSS 61.8 MiBで予算内。2026-09-12にEXEC→権限分離音響worker→キャプチャ健全性検査→中央2秒前処理→モデル固定baseline→ONNX推論→TFT表示のソフト経路を統合した。ホワイトノイズ音量の実機校正値が未確定なためworkerは未有効化で、現在は発音しない。</p>
+  <p>元IchiPingの画面・操作を再監査し、5トグル＋EXECを備えるproject 10の実装を正本に採用した。横320×240の<code>inf</code>/<code>act</code>比較、物理順<code>c, BC, b, AB, a</code>、可観測性の色分け、3段階判定バナーを移植。音響worker・baseline未準備時は成功を装わず<code>Audio not ready</code>または<code>Close all first</code>を表示する。</p>
+  <p>PC基準音→UNO Qマイクの<a href="../uno_q/audio/PC_REFERENCE.md">独立音源による比較試験</a>も保持するが、現在の校正基準音は動作確認済みのUNO Qスピーカーから出す。決定的ホワイトノイズを0.5秒無音＋5秒発音＋1秒無音のS32_LEデータとして再生し、6秒録音の中央2秒を解析する。各音量を解析してから最大2倍刻みで次へ進み、終了処理でroute off/verifyとSD Lowを確認する。</p>
   <p>2026-09-10 06:55 JSTまで試験し、ユーザーの指示で作業終了。録音の100ms区間の小音量再生と、同条件の生成440Hz音を実行。最終の「OK」は作業終了の合意として記録し、クリーンなsin波の聴感合格とは断定しない。直前までの聴感報告はノイズ風。詳細は<a href="../uno_q/audio/INVESTIGATION.md">調査記録</a>参照。</p>
-  <p>出力検証は<a href="../uno_q/audio/INSTRUMENT_TEST.md">ロジアナ・オシロによる無負荷／接続後比較</a>。外部音響ボードなし→アンプのみ→マイク追加の順で、GPIO98/BCLK・99/WS・101/DIN・100/マイクSDを測る。2026-09-10にOWON APIで無負荷BCLK約3.072 MHz・WS約48 kHz、WS周期当たり64クロックを確認。WSはBCLKより遅れて開始しWS自身のトリガーで取得。GPIO101の339ビットとWS/DINの9フレームが送信PCMと一致。短区間のみの確認であり、次は3信号同時取得で負値・全周期・欠落を確認。電圧精度・音響品質は未判定。再起動後のALSAカード未認識も再発。配線定義と500msリセット期限は変更しない。</p>
-  <p>MI2Sクロック終了処理、7680バイト録音周期、DATA0内部プルダウン、再生先行・100ms立ち上がり待ち、DSP上位24bitを表すS32_LE対応を配備。最後の比較は発音100ms・ピーク約0.01%FS、経路有効化前から500msの直接リセット期限。実音停止時間の厳密な測定と起動安定性は未検証。音響はbring-up段階で推論アプリ本統合は未完了。</p>
-  <p>外部配線は変更していない。MAX98357AのGAIN=GNDは12dBであり、コピー元の参照資料にある3dB表記は適用しない。SD未接続のため、ソフトウェア期限をハードウェアの消音保証として扱わない。</p>
+  <p>出力検証は<a href="../uno_q/audio/INSTRUMENT_TEST.md">ロジアナ・オシロによる無負荷／接続後比較</a>。外部音響ボードなし→アンプのみ→マイク追加の順で、GPIO98/BCLK・99/WS・101/DIN・100/マイクSDを測る。2026-09-10にOWON APIで無負荷BCLK約3.072 MHz・WS約48 kHz、WS周期当たり64クロックを確認。GPIO101の339ビットとWS/DINの9フレームも送信PCMと一致。2026-09-11にはSD_MODE制御後の生成440 Hzサイン波をスピーカーで確認し、0.3%FSと0.6%FSの双方で、きれいな音と0.5秒停止がユーザー確認済み。さらに0.6%FSと1.2%FSのスピーカー出力をINMP441で録音し、440 Hz成分99.98%以上、入力2倍に対する録音レベル比1.985、クリップなしを確認した。通常試験の強制リセットは廃止し、発音中は緑LEDを点灯する。オンボードLED Matrixは使用しない。</p>
+  <p>MI2Sクロック終了処理、7680バイト録音周期、DATA0内部プルダウン、再生先行・100ms立ち上がり待ち、DSP上位24bitを表すS32_LE対応を配備。通常のサイン波試験は0.5秒以下、校正用ホワイトノイズは5秒とする。EXIT・シグナル・エラー時を含め、再生/録音プロセス停止、route off/verify、SD Low、LED消灯を行う。権限が必要な操作はsystemd path workerに分離し、App Labコンテナは固定スキーマのファイルスプールのみを使う。</p>
+  <p>MAX98357AのGAIN=GNDは12dBであり、コピー元の参照資料にある3dB表記は適用しない。SDはSOC_GPIO_28（1.8 V）へ接続し、SD–GNDに外付け10 kΩを置く。2026-09-11にアンプ接続・スピーカー切離しでLow/HighおよびPCM開始停止連動を確認し、その後スピーカー接続状態で生成サイン波の良好な聴感と0.5秒停止を確認した。</p>
+  <p><b>過去記録の扱い:</b> 上の2026-09-10のノイズ・未合格記録は修正前の履歴であり、現状判定は9月11日のPASSを正とする。直接リセットも現行の通常試験経路では使用しない。</p>
 <main>
   <header>
     <p><a href="../index.html">← IchiPing UNO Q</a></p>
@@ -38,7 +42,7 @@
       <rect x="20" y="38" width="230" height="170" rx="14" fill="#17202b" stroke="#59bdff"/>
       <text x="135" y="70" text-anchor="middle" fill="#fff" font-size="19">外部ハードウェア</text>
       <text x="42" y="105" fill="#d9e1ea" font-size="16">PCA9685 + SG90 ×5</text>
-      <text x="42" y="135" fill="#d9e1ea" font-size="16">トグル ×5 / EXEC / 雨</text>
+      <text x="42" y="135" fill="#d9e1ea" font-size="16">トグル ×5 / EXEC</text>
       <text x="42" y="165" fill="#f2cc60" font-size="16">音響I/O: 次段で確定</text>
       <rect x="405" y="18" width="250" height="210" rx="14" fill="#17202b" stroke="#7ee787"/>
       <text x="530" y="52" text-anchor="middle" fill="#fff" font-size="19">STM32U585 / Zephyr</text>
@@ -67,17 +71,17 @@
 
   <section>
     <h2>2. UNOヘッダ GPIO割り当て</h2>
-    <p><a href="gpio_wiring.html"><b>GPIO接続図を開く</b></a> — スイッチ、雨センサ、PCA9685、外部5 V電源を一枚にまとめている。</p>
+    <p><a href="gpio_wiring.html"><b>GPIO接続図を開く</b></a> — スイッチ、EXEC、PCA9685、外部5 V電源を一枚にまとめている。</p>
     <table>
       <thead><tr><th>UNO Qピン</th><th>STM32U585</th><th>IchiPing用途</th><th>接続・状態</th></tr></thead>
       <tbody>
-        <tr><td>D3</td><td>PB0</td><td>窓 a 真値</td><td>スイッチ → GND、<code>INPUT_PULLUP</code>、Low=開</td></tr>
+        <tr><td>D3</td><td>PB0</td><td>窓 a 真値</td><td>スイッチ → GND、<code>INPUT_PULLUP</code>、Low=閉(0)、High=開(1)</td></tr>
         <tr><td>D4</td><td>PA12</td><td>窓 b 真値</td><td>同上</td></tr>
         <tr><td>D5</td><td>PA11</td><td>窓 c 真値</td><td>同上</td></tr>
         <tr><td>D6</td><td>PB1</td><td>扉 AB 真値</td><td>同上</td></tr>
         <tr><td>D7</td><td>PB2</td><td>扉 BC 真値</td><td>同上</td></tr>
         <tr><td>D8</td><td>PB4</td><td>EXECボタン</td><td>ボタン → GND、<code>INPUT_PULLUP</code>、Low=押下</td></tr>
-        <tr><td>D9</td><td>PB8</td><td>降雨デジタル入力</td><td>YL-83等の3.3 Vロジック出力、Low=雨</td></tr>
+        <tr><td>D9</td><td>PB8</td><td>予約</td><td>未使用。スケッチで初期化・読み取りを行わない</td></tr>
         <tr><td>D20 / SDA</td><td>PB11</td><td>PCA9685 SDA</td><td>I²C <code>Wire</code>、アドレス0x40</td></tr>
         <tr><td>D21 / SCL</td><td>PB10</td><td>PCA9685 SCL</td><td>I²C <code>Wire</code>、初期bring-upは100 kHz</td></tr>
         <tr><td>D10</td><td>PB9</td><td>未使用</td><td>旧IchiPingシールドとの互換性のためTFT CSには使わない</td></tr>
@@ -101,8 +105,8 @@
         <tr><td>PCA9685</td><td>VCC→3V3、GND→GND、SDA→D20、SCL→D21、V+→外部5 V</td><td>Phase 0で0x40 ACKを検査。Phase 1で既存の5ch座標・校正を移植。</td></tr>
         <tr><td>SG90 ×5</td><td>PCA9685 ch 0–4</td><td>既存のa/b/c/AB/BC順を維持。外部5 V電源を使用。</td></tr>
         <tr><td>状態スイッチ ×5</td><td>D3–D7とGNDの間</td><td>既存の5-bitラベル順を維持。</td></tr>
-        <tr><td>EXEC</td><td>D8とGNDの間</td><td>ILI9341のpingアニメーション後、Linux側へ推論要求。</td></tr>
-        <tr><td>降雨入力</td><td>D9、GND、3V3</td><td>入力が5 Vになるモジュールは分圧またはレベル変換を追加。</td></tr>
+        <tr><td>EXEC</td><td>D8とGNDの間</td><td>押下エッジで直ちにLinux側へ推論要求。元実装にないTFTアニメーションは行わない。</td></tr>
+        <tr><td>予約入力</td><td>D9</td><td>雨検知は実装対象外。推論トリガには使用しない。</td></tr>
         <tr><td>INMP441</td><td>JMISC MI2S0（1.8 V）候補</td><td>1.8 V動作可能。Device Tree・ALSA capture routeとWS／DATA割当を実機検証後に確定。</td></tr>
         <tr><td>MAX98357A</td><td>JMISC MI2S0（1.8 V）候補</td><td>1.8 Vロジック入力に適合。Device Tree・ALSA playback route検証後に確定。</td></tr>
       </tbody>
@@ -112,23 +116,20 @@
 
   <section>
     <h2>4. ILI9341 TFTの表示規約</h2>
-    <p>ILI9341 240×320を横向きで使用する。左から5個のタイルが窓a、窓b、窓c、扉AB、扉BC。緑は開、暗色は閉。右端は下から伸びる信頼度バー。ping／推論中は画面内へ縮む枠アニメーションを表示する。オンボードLED Matrixは使用しない。</p>
+    <p>元IchiPing project 10の実装に合わせ、ILI9341をlandscape-flipの320×240で使用する。上段<code>inf</code>は推論、下段<code>act</code>は実状態で、左から<code>c, BC, b, AB, a</code>。推論前は<code>inf=-----</code>、サーボ同期完了前は<code>act=-----</code>。観測可能な一致/不一致は緑/赤、非観測は暗色、実状態は橙系。下段バナーは32状態完全一致=青、14クラス一致=緑、不一致=赤。固定時間では消さず、最後に成功したサーボ端点状態が変わると無効化する。<code>act</code>は5チャンネルすべての同期成功後にだけ表示するが、位置センサーのフィードバックではなく、最後に成功した指令端点を表す。</p>
     <svg class="diagram" viewBox="0 0 780 260" role="img" aria-label="ILI9341 TFT表示の意味">
       <rect x="22" y="22" width="520" height="208" rx="10" fill="#0b1118" stroke="#59bdff"/>
-      <g fill="#1c4f6b" stroke="#59bdff" stroke-width="1">
-        <rect x="62" y="82" width="56" height="92"/><rect x="142" y="82" width="56" height="92"/>
-        <rect x="222" y="82" width="56" height="92"/><rect x="302" y="82" width="56" height="92"/>
-        <rect x="382" y="82" width="56" height="92"/>
-      </g>
-      <g fill="#7ee787"><rect x="62" y="82" width="56" height="92"/><rect x="222" y="82" width="56" height="92"/><rect x="382" y="82" width="56" height="92"/></g>
-      <g fill="#d9e1ea" font-size="16" text-anchor="middle">
-        <text x="90" y="202">a</text><text x="170" y="202">b</text><text x="250" y="202">c</text>
-        <text x="330" y="202">AB</text><text x="410" y="202">BC</text>
-      </g>
-      <g fill="#59bdff"><rect x="480" y="150" width="24" height="24"/><rect x="480" y="122" width="24" height="24"/><rect x="480" y="94" width="24" height="24"/><rect x="480" y="66" width="24" height="24"/></g>
-      <text x="650" y="92" text-anchor="middle" fill="#7ee787" font-size="18">明 = 開</text>
-      <text x="650" y="130" text-anchor="middle" fill="#59bdff" font-size="18">暗 = 閉</text>
-      <text x="650" y="168" text-anchor="middle" fill="#d9e1ea" font-size="18">右端 = 信頼度</text>
+      <rect x="22" y="22" width="520" height="34" fill="#000040"/>
+      <text x="34" y="46" fill="#fff" font-size="20">IchiPing infer</text>
+      <text x="42" y="100" fill="#fff" font-size="18">inf</text>
+      <text x="42" y="154" fill="#fff" font-size="18">act</text>
+      <text x="150" y="104" fill="#7ee787" font-size="42">1</text><text x="215" y="104" fill="#7ee787" font-size="42">0</text><text x="280" y="104" fill="#ff6b6b" font-size="42">1</text><text x="345" y="104" fill="#357a38" font-size="42">0</text><text x="410" y="104" fill="#7ee787" font-size="42">1</text>
+      <text x="150" y="158" fill="#ff9f43" font-size="42">1</text><text x="215" y="158" fill="#7a501f" font-size="42">0</text><text x="280" y="158" fill="#ff9f43" font-size="42">0</text><text x="345" y="158" fill="#ff9f43" font-size="42">0</text><text x="410" y="158" fill="#ff9f43" font-size="42">1</text>
+      <rect x="28" y="178" width="508" height="42" fill="#087f23"/>
+      <text x="282" y="207" text-anchor="middle" fill="#fff" font-size="22">Conditional Success</text>
+      <text x="650" y="88" text-anchor="middle" fill="#d9e1ea" font-size="18">順序: c, BC, b, AB, a</text>
+      <text x="650" y="126" text-anchor="middle" fill="#7ee787" font-size="18">inf = 推論 / act = 実状態</text>
+      <text x="650" y="164" text-anchor="middle" fill="#d9e1ea" font-size="18">状態変更で推論を無効化</text>
     </svg>
   </section>
 
@@ -137,22 +138,32 @@
     <ul>
       <li>UNO QがUSBでCOM/ADBの両方として認識される。</li>
       <li>App Labアプリがビルドされ、STM32スケッチとLinux Pythonが起動する。</li>
-      <li>Router Bridge経由で状態値と信頼度をILI9341に表示できる。</li>
-      <li>D3–D7、D8、D9を安全に読み取れる。</li>
+      <li>Router Bridge経由で推論値と実状態をILI9341に比較表示できる。</li>
+      <li>D3–D7の状態入力とD8のEXECを安全に読み取れる。D9は読み取らない。</li>
       <li>PCA9685接続時は0x40を検出し、未接続時もアプリが継続する。</li>
     </ul>
-    <h3 id="test-result-2026-09-09">実機結果 — 2026-09-09 20:50 JST（表示・入力・サーボ・音響プローブ）</h3>
+    <h3 id="test-result-2026-09-11">実機結果 — 2026-09-11（音響・暫定推論）</h3>
+    <table>
+      <tbody>
+        <tr><th>音響</th><td><b>MAX98357A再生 / INMP441録音 PASS。</b>生成440 Hzの聴感、0.5秒停止、録音の周波数純度・線形性・非クリップを確認。</td></tr>
+        <tr><th>暫定モデル</th><td>Neutron-XL、104,000 parameters。代表評価32本で32-class 30/32、14-class 32/32。追加データ待ちの参考値。</td></tr>
+        <tr><th>UNO Q ONNX</th><td>ONNX Runtime 1.30.0、load 194.83 ms、warm mean 1.394 ms、p95 1.659 ms、計測時RSS 61.8 MiB。予算内。</td></tr>
+        <tr><th>Bridge</th><td>プロバイダ内の同期再入を廃止し、EXEC要求をキュー化してメインループで処理。</td></tr>
+        <tr><th>未完了</th><td>ホワイトノイズ音量の実機校正、systemd音響workerの有効化、all-closed baseline 3本の収録、32状態評価。</td></tr>
+      </tbody>
+    </table>
+    <h3 id="test-result-2026-09-09">実機結果 — 2026-09-09 20:50 JST（表示・入力・サーボ・音響プローブ／過去記録）</h3>
     <table>
       <tbody>
         <tr><th>ボード識別</th><td>既知のUSB serial <code>2261748543</code>。試験時はUSBを切断し、Wi-Fiホスト<code>unoQ4G</code>（192.168.50.160）経由で操作。</td></tr>
         <tr><th>ソフトウェア</th><td>UNO Q Debian 13、kernel <code>6.16.7-g0dd6551ae96b</code>、Arduino App CLI 0.8.2。STM32U585 program 27,488 bytes、global RAM 6,588 bytes。</td></tr>
         <tr><th>表示・入力</th><td>ILI9341のセルフテスト、状態表示、バックライトとD3–D8のボタンをユーザー目視で確認。ログでもWIN_A、WIN_B、WIN_C、DOOR_AB、DOOR_BC、EXECの6入力すべての変化を確認。EXEC押下後に既知の同期Bridge timeoutを再現。</td></tr>
         <tr><th>サーボ</th><td>PCA9685 <code>0x40</code>を検出。SG90 ch 0–4をそれぞれ閉=180°→開=0°→閉=180°で実行し、全15指令が結果0。最終状態は全閉、各指令後にPWM解放。</td></tr>
-        <tr><th>音響接続</th><td>INMP441はL/R=GND、WS=GPIO99、SCK=GPIO98、SD=GPIO100、VDD=1.8 V、GND共通。MAX98357AブレイクアウトはLRC=GPIO99、BCLK=GPIO98、DIN=GPIO101、GAIN=GND、SD=未接続、GND共通、VIN=5 V。信号割当と電圧は正本に一致。実機のブレイクアウトは元IchiPingと同一品だが型番・SD–VIN間の基板上プルアップ値は未確認。SD未接続時のモードは回路確認または無通電抵抗測定後に確定する。</td></tr>
+        <tr><th>音響接続</th><td>INMP441はL/R=GND、WS=GPIO99、SCK=GPIO98、SD=GPIO100、VDD=1.8 V、GND共通。MAX98357AブレイクアウトはLRC=GPIO99、BCLK=GPIO98、DIN=GPIO101、GAIN=GND、SD=SOC_GPIO_28（JMISC pin 51、1.8 V）、GND共通、VIN=5 V。基板上1 MΩ→VINとIC内100 kΩを考慮し、SD–GND外付け10 kΩを必須とする。2026-09-11、アンプ接続・スピーカー切離しでSD Low約0–0.04 V、High約1.78–1.80 V、PCM中High約515.6 ms、停止後Lowを確認。現行テストDTは<code>sdmode-gpios</code>と8 ms遅延で制御する。詳細は<a href="../uno_q/audio/SDMODE_GPIO28.md">SD_MODE記録</a>。</td></tr>
         <tr><th>ALSA / Device Tree</th><td>card <code>Arduino-Imola-HPH-LOUT</code>、<code>PRI_MI2S_RX/TX</code> DAI、対応ミキサー制御を確認。ただし実行中Device Treeのsound nodeにはHPH、LineOut、HDMIとMultiMedia1–4のみがあり、PRI_MI2S DAI linkとGPIO98–101のPinMux参照がない。</td></tr>
         <tr><th>音響試験</th><td>48 kHz stereo S16_LE・約1%振幅の1 kHz音を1秒再生、および48 kHz stereo S32_LEを1秒録音しようとしたが、どちらもPCM open時に<code>EINVAL</code>。I2Sデータ転送は開始されず、試験後に両ミキサールートをOFFへ復帰。</td></tr>
         <tr><th>判定</th><td><b>表示 / GPIO / PCA9685 / SG90 PASS。MI2S0 audio BLOCKED。</b>次はPRI_MI2S用Device Tree DAI link、GPIO98–101 PinMux、ALSA routeを実装・再起動後に、低振幅再生、マイクRMS、16 kHz変換、同時再生録音の順で再試験する。</td></tr>
-        <tr><th>未接続・未完了</th><td>雨センサは未確認。音響は物理接続済みだがLinux経路未実装のため未合格。</td></tr>
+        <tr><th>未接続・未完了</th><td>雨センサは未確認。音響は物理接続とLinux bring-up経路まで実装済みだが、音質と録音品質は未合格。</td></tr>
       </tbody>
     </table>
     <h3 id="test-result">実機結果 — 2026-08-21 12:13 JST</h3>
@@ -171,7 +182,7 @@
     </table>
     <h3 id="test-result-2026-09-08-1121">再検証 — 2026-09-08 11:21 JST</h3>
     <p>USB serial <code>2261748543</code>（VID:PID 2341:0078）、Linux kernel 6.16.7。UNO Q内の保存済みLCD設定がCS=D10、RST=A0、DC=A1、BL=A2の旧配置だったため、ローカル正本のCS=A2、RST=A3、DC=A4、BL=A5を再配備した。以下の06:33の記録は、A5が実機で駆動されていた証拠としては扱わない。</p>
-    <p>コンパイル・STM32書き込み・アプリ起動に成功（program 25,220 bytes、global RAM 6,588 bytes）。Bridge応答は0x01、初期入力は窓a/b/c・扉AB/BCすべてLow（active=1）、EXECはHigh（active=0）。これは読み取り結果であり、6入力の押下・解放試験合格ではない。100 ms間隔の入力変化ログを有効化した。LCD送信シーケンスは完走、実表示とバックライトは目視待ち。サーボPWMは出力していない。PCA9685は未検出、雨・音声系は今回未検証。</p>
+    <p>当時の仮極性でコンパイル・STM32書き込み・アプリ起動に成功（program 25,220 bytes、global RAM 6,588 bytes）。Bridge応答は0x01、初期入力は窓a/b/c・扉AB/BCすべてLowをactive=1としていた。これは2026-09-12のオリジナル再監査前の過去記録で、現行はLow=閉(0)、High=開(1)へ修正済み。LCD送信シーケンスは完走、サーボPWMは出力していない。PCA9685は未検出、雨・音声系は今回未検証だった。</p>
     <p>Wi-Fiは指定済みプロファイルで接続、IP 192.168.101.14。既存プロファイルを残し自動接続優先度を-10へ変更してセカンダリ化。ゲートウェイ・外部IP・DNS・HTTPS疎通を確認済み。認証情報は記録しない。</p>
     <p><b>11:26 JST追試:</b> ユーザーがLCD動作を確認。ログでもWIN_A、WIN_B、WIN_C、DOOR_AB、DOOR_BC、EXECの6入力すべての変化を確認し、EXECは押下・解放を2回検出した。ただしEXEC通知処理内の同期<code>show_prediction</code>呼び出しが10秒でタイムアウトし、続いてunknown msgid警告が発生した。GPIO入力は確認済みだが、EXECから結果表示までの一連の処理は未合格。</p>
     <h3 id="test-result-2026-09-08">実機結果 — 2026-09-08 06:33 JST（上記の訂正を参照）</h3>

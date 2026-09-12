@@ -20,6 +20,9 @@
 			ichiping_max98357a: ichiping-max98357a {
 				compatible = "maxim,max98357a";
 				#sound-dai-cells = <0>;
+				/* GPIO28 is 1.8 V; external 10 kOhm SD-to-GND is mandatory. */
+				sdmode-gpios = <&tlmm 28 0>;
+				sdmode-delay = <8>;
 			};
 
 			/* INMP441 has no control bus; use the kernel's capture-only stub DAI. */

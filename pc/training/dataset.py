@@ -178,7 +178,17 @@ class IchiPingDataset(Dataset):
         feature_mode: str = "chirp",
         feature_transform=None,
         baseline_override_dir: Optional[Path] = None,
+        freq_warp: float = 0.0,
+        freq_warp_p: float = 0.8,
     ) -> None:
+        # Temperature augmentation (noise_diff_norm only, training only): the
+        # sample's log-PSD is warped along frequency by a random factor in
+        # [-freq_warp, +freq_warp] BEFORE the baseline is subtracted.  Room
+        # resonances scale with the speed of sound (~0.18 %/degC), so this
+        # mimics a baseline recorded at a different temperature (UNO Q
+        # 2026-09-12: evening drift fitted as a -2.15 % warp).
+        self.freq_warp = float(freq_warp)
+        self.freq_warp_p = float(freq_warp_p)
         if feature_mode not in FEATURE_FUNCS:
             raise ValueError(f"unknown feature_mode={feature_mode!r}, "
                              f"expected one of {list(FEATURE_FUNCS)}")
@@ -257,7 +267,14 @@ class IchiPingDataset(Dataset):
         elif self.feature_mode == "noise_diff_norm":
             root = self._resolve_root(ex.wav_path)
             baseline = self._baselines[root]
-            feats = samples_to_noise_diff_norm_features(samples, baseline)
+            if self.freq_warp > 0 and np.random.random() < self.freq_warp_p:
+                db = warp_logmag_psd(samples_to_logmag_psd(samples),
+                                     np.random.uniform(-self.freq_warp, self.freq_warp))
+                feats = db - baseline
+                feats = feats - feats.mean()
+                feats = (feats / (float(feats.std()) + 1e-6)).astype(np.float32)
+            else:
+                feats = samples_to_noise_diff_norm_features(samples, baseline)
         else:
             feats = self._feature_fn(samples)
         # 特徴量空間の augmentation (SpecAugment 系)。学習時のみ渡される。
@@ -304,6 +321,18 @@ class IchiPingDataset(Dataset):
             key = "s" + "".join(str(b) for b in ex.state)
             counts[key] = counts.get(key, 0) + 1
         return counts
+
+
+def warp_logmag_psd(db: np.ndarray, factor: float) -> np.ndarray:
+    """Scale every spectral feature's frequency by (1 + factor).
+
+    ``db`` is the 1024-bin log-PSD (bin k = (k+1) * fs / 2048).  The value
+    at frequency f is taken from f / (1 + factor), i.e. resonances move up
+    for factor > 0.  Edges are held (np.interp clamps).
+    """
+    n = db.shape[-1]
+    bins = np.arange(1, n + 1, dtype=np.float64)
+    return np.interp(bins / (1.0 + factor), bins, db).astype(np.float32)
 
 
 def split_indices(n: int, train: float = 0.7, val: float = 0.15,

@@ -19,6 +19,7 @@ env/
 # Arduino App Lab generated state
 uno_q/app/.cache/
 uno_q/app/**/.cache/
+uno_q/app/runtime/
 
 # Training artefacts — captures は raw audio で巨大なので除外、runs/ は学習済み
 # モデル + 解析図表を共有資産としてリポに含める方針。
@@ -89,3 +90,13 @@ board/*.lnk
 pc/environment-lock.yml
 pc/env-conda.yml
 pc/env-pip.txt
+
+# Superseded split-weight ONNX export from the 2026-09-11 retrain.  The
+# consolidated deploy_uno_q/model_fp32_4d.onnx is the packaged artifact.
+pc/runs/uno_q_retrain_representative_20260911/deploy4d/
+# UNO Q experiment runs (checkpoints, per-run reports): only the comparison
+# table and the aggregate evaluation JSON are published; the deployed model
+# is packaged in uno_q/app/models/.
+pc/runs/uno_q_*/
+pc/runs/original_neutron_v21_25_XL_uno_q/
+pc/runs/_eval_*

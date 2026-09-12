@@ -15,8 +15,8 @@ def prepare(data):
     if any(right != 0 for left, right in frames):
         raise ValueError('unused microphone slot is not zero')
     x = [left for left, right in frames]
-    if max(abs(v) for v in x) > 65:
-        raise ValueError('segment peak exceeds 0.2%FS review threshold')
+    if max(abs(v) for v in x) > round(32767 * .1):
+        raise ValueError('segment peak exceeds 10%FS review threshold')
     mean = sum(x) / len(x)
     x = [v - mean for v in x]
     power = sum(v*v for v in x) / len(x)
@@ -31,7 +31,7 @@ def prepare(data):
         raise ValueError('segment fails tone-dominance/harmonic review gate')
     peak = max(abs(v) for v in x)
     out = bytearray(4800 * 8)  # 100 ms silent clock warmup
-    target = math.floor((2**23 - 1) * .0001)
+    target = math.floor((2**23 - 1) * .006)
     for i, v in enumerate(x):
         envelope = min(1, i / 240, (len(x)-1-i) / 240)
         sample = round(v / peak * target * envelope) << 8

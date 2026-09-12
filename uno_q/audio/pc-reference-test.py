@@ -21,10 +21,10 @@ import wave
 
 ROOT = Path(__file__).resolve().parent
 RATE = 48000
-DURATION = .1
-AMPLITUDE = .0001
+DURATION = 5.0
+AMPLITUDE = .05
 FREQUENCY = 440
-PRE_ROLL = .030
+PRE_ROLL = .25
 
 
 def timing_check(data):
@@ -100,7 +100,8 @@ def play_child(wav_path):
         if (wav.getframerate(), wav.getnchannels(), wav.getsampwidth()) != (RATE, 2, 2):
             raise ValueError('unexpected playback format')
         data = wav.readframes(wav.getnframes())
-    if not 0 < duration <= DURATION or any(abs(v[0]) > 3 for v in struct.iter_unpack('<h', data)):
+    max_peak = round(32767 * AMPLITUDE)
+    if not 0 < duration <= DURATION or any(abs(v[0]) > max_peak for v in struct.iter_unpack('<h', data)):
         raise ValueError('PC reference exceeds duration/peak limit')
     try:
         winsound.PlaySound(str(wav_path), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
@@ -154,11 +155,11 @@ def execute(args, output, run_id, report):
         # Parent timeout kills the player if its own finally block hangs.
         report['pc_play_requested_host_monotonic'] = time.monotonic()
         subprocess.run([sys.executable, str(Path(__file__).resolve()), '--play-child',
-                        str(output / 'reference.wav')], check=True, timeout=.5)
+                        str(output / 'reference.wav')], check=True, timeout=DURATION + .5)
         report['pc_play_finished_host_monotonic'] = time.monotonic()
     finally:
         try:
-            proc.wait(timeout=3)
+            proc.wait(timeout=8)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(timeout=2)
@@ -209,11 +210,11 @@ def main():
               'status': 'prepared only; NO sound/SSH/board access',
               'reference_hz': FREQUENCY, 'reference_seconds': DURATION,
               'pre_roll_after_ready_seconds': PRE_ROLL,
-              'reference_peak_fs': 3/32768, 'host': args.host, 'expected_serial': args.serial,
+              'reference_peak_fs': AMPLITUDE, 'host': args.host, 'expected_serial': args.serial,
               'board_log': [], 'limitations': ['PC output uses current Windows default device and volume',
               'SSH/audio latency is not synchronized; overlap requires offline validation',
-              'Board zero PCM is not a hardware amplifier mute',
-              '500 ms software reset deadline is not a measured acoustic guarantee']}
+              'Board zero PCM raises SD during the bounded clock interval',
+              'The board cleanup returns routes off and SD_MODE Low without a routine reset']}
     try:
         if args.execute:
             execute(args, output, run_id, report)

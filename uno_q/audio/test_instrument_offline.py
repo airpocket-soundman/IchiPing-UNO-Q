@@ -1,4 +1,5 @@
 """Synthetic I2S tests; no measurement device, network or audio is opened."""
+import ast
 import csv
 import importlib.util
 from pathlib import Path
@@ -58,15 +59,22 @@ class InstrumentTests(unittest.TestCase):
         self.assertEqual(timing['final_logic_state']['bclk'], 0)
 
     def test_playback_only_safety_structure(self):
-        # Static regression only; does not simulate systemd, ALSA or a real reset.
+        # Static regression only; does not simulate ALSA or physical SD_MODE.
         script = Path(__file__).with_name('safe-audio-test.sh').read_text()
         branch = script.split('\tinstrument-playback)')[1].split(';;')[0]
         self.assertIn('playback-on', branch)
         self.assertNotIn('capture-on', branch)
         self.assertNotIn('arecord', branch)
-        self.assertLess(script.index('--on-active=500ms'), script.index('\tinstrument-playback)'))
-        self.assertLess(script.index('validate-native-replay'), script.index('--on-active=500ms'))
+        self.assertNotIn('systemctl reboot', script)
+        self.assertNotIn('systemd-run', script)
+        self.assertIn("trap 'stop_audio' EXIT", script)
         self.assertIn('ICHIPING_EXPECTED_USB_SERIAL:?', script)
+        self.assertIn('/sys/class/leds/green:user/brightness', script)
+        self.assertNotIn('/app/python/audio_marker.py', script)
+        self.assertNotIn('matrix_marker', script)
+        self.assertLess(script.index("printf '1\\n' > \"$marker\""), script.index('\tinstrument-playback)'))
+        stop = script.split('stop_audio() {', 1)[1].split('}', 1)[0]
+        self.assertIn("printf '0\\n' > \"$marker\"", stop)
 
     def test_rising_edge_changes_are_flagged(self):
         rows = waveform([0] * 5)
@@ -75,15 +83,48 @@ class InstrumentTests(unittest.TestCase):
         _, errors, _ = tool.decode(rows)
         self.assertGreater(errors['data_changes_on_rising_edge'], 0)
 
-    def test_duplex_measurement_keeps_reset_and_unique_capture(self):
+    def test_duplex_measurement_keeps_cleanup_and_unique_capture(self):
         script = Path(__file__).with_name('safe-audio-test.sh').read_text()
         branch = script.split('\tinstrument-duplex)')[1].split(';;')[0]
-        self.assertLess(script.index('--on-active=500ms'), script.index('\tinstrument-duplex)'))
-        self.assertIn('mktemp /var/tmp/ichiping-instrument-duplex-', script)
+        self.assertIn("trap 'stop_audio' EXIT", script)
+        self.assertIn('mktemp "$work"/ichiping-instrument-duplex-', script)
         self.assertIn('audio-cycle-test.sh', branch)
         self.assertNotIn('rm ', branch)
         cycle = Path(__file__).with_name('audio-cycle-test.sh').read_text()
         self.assertLess(cycle.index('state: RUNNING'), cycle.index('arecord -D'))
+
+    def test_sdmode_overlay_is_fail_safe_documented(self):
+        overlay = Path(__file__).with_name('ichiping-mi2s0.dtso').read_text(encoding='utf-8')
+        design = Path(__file__).with_name('SDMODE_GPIO28.md').read_text(encoding='utf-8')
+        self.assertIn('sdmode-gpios = <&tlmm 28 0>', overlay)
+        self.assertIn('sdmode-delay = <8>', overlay)
+        self.assertIn('10 kOhm', design)
+        self.assertIn('consumer=sdmode', design)
+        self.assertIn('GPIOD_OUT_LOW', design)
+
+    def test_scope_sdmode_cli_regression(self):
+        source = Path(__file__).with_name('owon-capture.py').read_text(encoding='utf-8')
+        tree = ast.parse(source)
+        options = {}
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == 'add_argument' and node.args
+                    and isinstance(node.args[0], ast.Constant)):
+                options[node.args[0].value] = {
+                    keyword.arg: ast.literal_eval(keyword.value)
+                    for keyword in node.keywords
+                    if keyword.arg in ('choices', 'default')
+                    and not isinstance(keyword.value, ast.Call)
+                }
+        self.assertIn('sdmode', options['--profile']['choices'])
+        self.assertEqual(options['--edge']['choices'], ('rise', 'fall'))
+        self.assertEqual(options['--sdmode-rate']['choices'], (2500, 5000, 250000))
+        self.assertIn('--force-static', options)
+        self.assertIn('--discard-frames', options)
+        self.assertIn("if args.discard_frames and not args.force_static:", source)
+        self.assertIn("f'discarded-{index + 1:02d}-adc.npz'", source)
+        self.assertIn("f'discarded-{index + 1:02d}-waveform.csv'", source)
+        self.assertIn("RISE if edge == 'rise' else FALL", source)
 
     def test_empty_capture_not_pass(self):
         samples, _, timing = tool.decode([])

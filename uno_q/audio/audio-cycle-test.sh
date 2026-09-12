@@ -12,7 +12,7 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # Establish valid playback data before capture starts shared BCLK/WS.
 # The outer wrapper's independent 500 ms reset is mandatory.
 aplay -D hw:0,0 -t raw -f "${ICHIPING_PLAYBACK_FORMAT:-S32_LE}" -c 2 -r 48000 \
-	--period-size=480 --buffer-size=1920 /var/tmp/ichiping-prepared-tone.raw &
+	--period-size=480 --buffer-size=1920 "${ICHIPING_AUDIO_WORKDIR:-/var/tmp}"/ichiping-prepared-tone.raw &
 playback_pid=$!
 ready=0
 for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do

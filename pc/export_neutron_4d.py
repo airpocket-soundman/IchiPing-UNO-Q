@@ -78,9 +78,10 @@ def export_onnx_4d(ckpt: Path, out_onnx: Path, size: str) -> None:
         deploy, dummy, str(out_onnx),
         input_names=["spectrum_4d"],
         output_names=["logits_4d"],
-        opset_version=13,
+        opset_version=18,
         do_constant_folding=True,
         dynamic_axes=None,
+        external_data=False,
     )
     print(f"  exported 4D ONNX (BN folded) -> {out_onnx} "
           f"({out_onnx.stat().st_size/1024:.1f} KB)")
@@ -175,7 +176,8 @@ def main():
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--captures", type=Path, nargs="+", required=True)
     ap.add_argument("--size", default="XL")
-    ap.add_argument("--backend", choices=("nxp", "pinto", "both"), default="both")
+    ap.add_argument("--backend", choices=("none", "nxp", "pinto", "both"), default="both",
+                    help="none exports FP32 ONNX only (UNO Q CPU deployment)")
     ap.add_argument("--n-calib", type=int, default=200, dest="n_calib")
     args = ap.parse_args()
 
@@ -185,17 +187,18 @@ def main():
     print("== 1. Export 4D ONNX (Reshape-free) ==")
     export_onnx_4d(args.ckpt, onnx_fp32, args.size)
 
-    print("\n== 2. Collect calibration data ==")
     calib_npy = args.out / "calib.npy"
     calib_dir = args.out / "calib_npy"
-    calib_dir.mkdir(exist_ok=True)
-    for old in calib_dir.glob("*.npy"):
-        old.unlink()
-    data = collect_calibration_4d(args.captures, args.n_calib, calib_npy)
-    # NXP path 用に個別 npy も書き出し
-    for i, arr in enumerate(data):
-        np.save(calib_dir / f"calib_{i:04d}.npy", arr[None, :, :, :])
-    print(f"  + {len(data)} npy files in {calib_dir}")
+    if args.backend != "none":
+        print("\n== 2. Collect calibration data ==")
+        calib_dir.mkdir(exist_ok=True)
+        for old in calib_dir.glob("*.npy"):
+            old.unlink()
+        data = collect_calibration_4d(args.captures, args.n_calib, calib_npy)
+        # NXP path 用に個別 npy も書き出し
+        for i, arr in enumerate(data):
+            np.save(calib_dir / f"calib_{i:04d}.npy", arr[None, :, :, :])
+        print(f"  + {len(data)} npy files in {calib_dir}")
 
     summary = {}
 

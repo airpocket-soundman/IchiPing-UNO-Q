@@ -5,9 +5,12 @@ the QRB2210 primary MI2S backend. It targets Arduino's
 `qcom-v6.16.7-unoq` kernel at commit
 `0dd6551ae96b78024086e72339fefbef6fcc604b`.
 
-The MAX98357A breakout is treated as Adafruit product 3006-equivalent: its SD
-pin is left open and the breakout's SD bias enables the amplifier. The Device
-Tree intentionally declares no `sdmode-gpios` property.
+The MAX98357A is treated as Adafruit product 3006-equivalent. Its SD node is
+controlled by 1.8 V GPIO28 and has a mandatory external 10 kOhm pulldown to GND.
+The running test Device Tree declares `sdmode-gpios` and an 8 ms delay. Loaded
+Low/High and bounded PCM start/stop were electrically verified with the speaker
+disconnected. A subsequent bounded generated-tone test passed by user listening. See
+[SDMODE_GPIO28.md](SDMODE_GPIO28.md).
 
 ## Wiring
 
@@ -19,6 +22,7 @@ Tree intentionally declares no `sdmode-gpios` property.
 | Playback DATA1 | GPIO101 / 38 / 52 | MAX98357A DIN |
 | Logic supply | 1.8 V | INMP441 VDD |
 | Amplifier supply | 5 V | MAX98357A VIN |
+| Amplifier shutdown | GPIO28 / JMISC 51 | MAX98357A SD + external 10 kOhm to GND |
 
 INMP441 L/R and MAX98357A GAIN are tied to GND. Grounds are common. These four
 MI2S signals are 1.8 V only.
@@ -33,8 +37,14 @@ Do not infer output safety from the GAIN=GND connection.
 - **Next environment:** [scope-only handoff and experiment plan](HANDOFF_SCOPE_TEST.md).
   Amplifier/microphone tests will run on another setup with an oscilloscope but
   no logic analyzer. Includes a two-channel scope sequence and explicit safety
-  gates. SD/start-stop fixes are still NOT implemented; diagnostics are not a
-  noise fix. Raw local captures are not included by Git pull.
+  gates. SD/start-stop control is implemented and electrically verified, but it
+  is not an acoustic fix. Raw local captures are not included by Git pull.
+
+- [GPIO28 SD_MODE control](SDMODE_GPIO28.md): specifies the required 10 kOhm
+  fail-safe pulldown, Device Tree properties, and staged scope acceptance
+  sequence. Loaded Low/High and driver-controlled start/stop passed with the
+  speaker disconnected. Do not connect a speaker until the remaining documented
+  gate and bounded low-level test are ready.
 
 - [2026-09-11 signal audit](reports/2026-09-11-i2s-signal-audit.md): unloaded,
   playback-only S32 test measured 3.072 MHz BCLK / 48 kHz WS and exact agreement
@@ -47,14 +57,14 @@ Do not infer output safety from the GAIN=GND connection.
   configuration; the earlier 16-channel/triggered acquisition had artifacts.
   `slogic-sr-to-csv.py` converts sample indices from SR files directly (numpy).
   The subsequent unloaded `instrument-duplex FILE` trial also matched all
-  reference PCM samples. It uses a unique recording file and retains the reset
-  timer; the timer is not a 500ms physical cutoff (clock span measured ~1.02s).
+  reference PCM samples. It uses a unique recording file. The earlier reset-timer
+  measurements remain historical evidence; routine tests no longer force reboot.
   See the audit for Windows capture warnings and an ADSP initialization failure.
 
 - [INSTRUMENT_TEST.md](INSTRUMENT_TEST.md): unloaded → amplifier → microphone
   measurement sequence, offline reference generator and I2S CSV decoder.
-  `instrument-playback` is a serial-checked playback-only test mode using the
-  existing 500ms reset request. One unloaded zero-PCM trial was run on 2026-09-10;
+  `instrument-playback` is a serial-checked playback-only test mode. One unloaded
+  zero-PCM trial was run on 2026-09-10;
   OWON single triggering did not complete, so no waveform verdict is available.
   ALSA card enumeration failed after reset. OWON API compensation capture and CSV
   export now work, but voltage is inconsistent across ranges; see
@@ -83,8 +93,8 @@ Do not infer output safety from the GAIN=GND connection.
   command that enables both routes together.
 - `safe-audio-test.sh` checks the actual ALSA card and starts with both routes off.
   The cycle enables both directions; standalone probes enable the requested one.
-  Signals and detected transfer failures stop processes/routes and request reset.
-  The independent reset remains armed if an unexpected shell exit bypasses cleanup.
+  Signals, detected transfer failures, and unexpected shell exit stop processes,
+  routes, SD_MODE and the diagnostic LED. Routine tests do not reboot the board.
 
 The overlay can be validated without changing boot state:
 
@@ -125,18 +135,28 @@ alignment for stereo. The cycle test uses stereo period_size=1920 and
 buffer_size=15360; the standalone mono probe uses 3840/30720. Both require the
 patched q6asm-dai module. Stereo acoustic validation is pending.
 The smoke test defaults to a 0.01%
-full-scale, 440 Hz sine for 0.5 seconds. It rejects durations above 0.5 seconds
-and amplitudes above 0.1%. This limits generated PCM duration only: audible
-shutdown is still unverified after observed persistent noise, even with routes
-off. Do not treat the software reset timer as a verified acoustic stop guarantee.
-`safe-audio-test.sh` requests route shutdown on normal completion and handled errors.
-The independent direct-reset timer is now 500 ms from BEFORE route enable,
-including capture clocks, not 2 seconds. Reset may interrupt capture and leave
-partial data; collect and label that data as partial. This is a software
-deadline, not a measured hard real-time acoustic guarantee.
+full-scale, 440 Hz sine for 0.5 seconds. After the SD hardware cutoff passed,
+the diagnostic ceiling was raised to 1.2%FS; it still rejects durations above
+0.5 seconds and amplitudes above 1.2%. The green user LED marks the bounded
+audio test and is cleared by every normal/error stop path. The onboard LED
+Matrix is not used by the production app.
+This limits generated PCM duration only: audible
+shutdown was historically unverified after observed persistent noise. GPIO28
+SD_MODE now provides the measured cutoff: `safe-audio-test.sh` kills transfers,
+turns routes off, verifies route state and clears its marker on normal completion,
+signals, handled errors and shell exit. After bounded 0.5-second tests repeatedly
+stopped cleanly, the user authorized removal of the forced-reboot safeguard on
+2026-09-11. A test failure must still leave SD_MODE Low before another attempt.
 
-All audible tests remain FAILED. See [INVESTIGATION.md](INVESTIGATION.md) for
-evidence, candidate clock-stop patch, and reset limitations. The offline
+Generated 440 Hz speaker playback passed user listening at 0.3%FS and again at
+0.6%FS on 2026-09-11; both stopped after 0.5 seconds without a board reset. This
+was followed by a speaker-to-INMP441 capture test at 0.6%FS and 1.2%FS. The
+recorded level scaled 1.985x for a 2x stimulus change, the best windows contained
+more than 99.98% 440 Hz power, and neither clipped. A reviewed segment was then
+replayed at 0.6%FS. See
+[reports/2026-09-11-speaker-pass.md](reports/2026-09-11-speaker-pass.md) and
+[reports/2026-09-11-microphone-pass.md](reports/2026-09-11-microphone-pass.md) and
+[INVESTIGATION.md](INVESTIGATION.md) for the evidence and earlier failures. The offline
 `analyze-capture.py` never plays audio. `arm-reset-watchdog.py` is an experimental
 reset-only probe, not an approved audio cutoff. At 0.01%FS S16_LE has only three
 peak counts; its quantization must be considered in spectral analysis.
@@ -147,4 +167,28 @@ Its 500 ms file has 100 ms leading/trailing silence and 5 ms fades, leaving a
 300 ms tone. Capture-only mode is refused because starting shared clocks without
 valid playback data reproduced loud noise. For a silent control use
 `sudo ICHIPING_TONE_AMPLITUDE=0 ./safe-audio-test.sh cycle`.
-The outer reset timer still starts before routing and is never extended.
+The generated playback duration remains capped at 0.5 seconds; there is no
+routine forced reboot after the 2026-09-11 SD_MODE acceptance.
+
+## White-noise level calibration
+
+The model-calibration path is separate from the 0.5-second diagnostic tone cap.
+It emits exactly five seconds of deterministic white noise inside a 6.5-second
+clocked file, records for six seconds, and uses the stable center two seconds for
+analysis. Run exactly one level, stop, inspect it, and only then select the next
+level. The initial level is 0.3%FS RMS and the analyzer permits at most a 2x
+increase per run, capped at 10%FS RMS.
+
+No sound is emitted by preparation or analysis. A live run requires the same
+serial identity gate as instrument tests:
+
+```sh
+sudo ICHIPING_EXPECTED_USB_SERIAL=2261748543 \
+  ICHIPING_NOISE_RMS=0.003 ./safe-audio-test.sh calibrate-noise RUN_ID_32_HEX
+python3 analyze-white-noise-calibration.py CAPTURE.raw \
+  --playback-rms 0.003 --output report.json
+```
+
+The target is 18–19%FS RMS in the recorded center crop with peak below 90%FS,
+matching the tracked training subset. This target is a recording-level target,
+not permission to jump directly to a high speaker level.

@@ -1,5 +1,5 @@
-name: IchiPing UNO Q Bring-up
+name: IchiPing UNO Q
 icon: "📡"
-description: IchiPing GPIO, PCA9685, Router Bridge, and ILI9341 TFT bring-up for Arduino UNO Q
+description: Safe MI2S0 capture, ONNX inference, servo control, and original ILI9341 UI for Arduino UNO Q
 
 bricks: []

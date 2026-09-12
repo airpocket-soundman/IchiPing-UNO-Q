@@ -1,0 +1,59 @@
+{
+  "model_file": "model_fp32_4d.onnx",
+  "model_sha256": "80dcc2d498c469f108693c77ecf11e070b58ce9d08c0c302ad1fb30359113405",
+  "input_name": "spectrum_4d",
+  "input_shape": [
+    1,
+    1,
+    1,
+    1024
+  ],
+  "output_name": "logits_4d",
+  "output_shape": [
+    1,
+    32,
+    1,
+    1
+  ],
+  "feature_mode": "noise_diff_norm",
+  "sample_rate_hz": 16000,
+  "frame_seconds": 2.0,
+  "state_bit_order": [
+    "window_a",
+    "window_b",
+    "window_c",
+    "door_AB",
+    "door_BC"
+  ],
+  "architecture": "IchiPingV1_32clsNeutron-XL (104k parameters)",
+  "excitation": "prbs16k: 2.0 s +-1 PRBS, amplitude 0.0088 FS, seed 20260912; S32_LE capture, x16 original-collector scale",
+  "baseline_policy": "live all-closed (s00000) baseline recorded on the device before inference",
+  "training_data": {
+    "sessions": [
+      "UNO Q 2026-09-12 sessions 1-6 (PRBS 0.0088)",
+      "UNO Q 2026-09-12 sessions 7-8 (PRBS 0.048, exported at x2.72)"
+    ],
+    "frames_per_session": 1650,
+    "recipe": "--aug-strong --spike-fix --feature-aug, cross-baseline over 8 sessions, ambient overlay (room + crowd), --freq-warp 0.03",
+    "start": "fine-tuned 20 epochs from the s1-8 model"
+  },
+  "evaluation": {
+    "note": "held-out UNO Q evaluation sessions; 32-state / 14-class accuracy",
+    "morning_0900": [
+      0.917,
+      1.0
+    ],
+    "evening_1935_warp_-2.15pct": [
+      0.819,
+      1.0
+    ],
+    "night_2044": [
+      0.747,
+      1.0
+    ],
+    "crowd_noise_2128": [
+      0.819,
+      1.0
+    ]
+  }
+}

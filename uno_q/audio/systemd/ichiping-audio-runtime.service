@@ -1,0 +1,14 @@
+[Unit]
+Description=Run one bounded IchiPing MI2S0 capture
+After=sound.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/ichiping-audio-runtime.conf
+ExecStart=/bin/sh -eu -c 'exec /usr/bin/python3 /opt/ichiping/audio/runtime-audio-worker.py --spool "$ICHIPING_APP_DIR/runtime/audio" --safe-script /opt/ichiping/audio/safe-audio-test.sh --serial "$ICHIPING_EXPECTED_USB_SERIAL" --playback-rms "$ICHIPING_NOISE_RMS"'
+NoNewPrivileges=true
+PrivateTmp=false
+ProtectSystem=strict
+ReadWritePaths=/home/arduino/ArduinoApps/ichiping-uno-q/runtime/audio /var/tmp /run /sys/class/leds/green:user /sys/devices/platform/soc/1c00000.gpio
+ProtectHome=read-only
+
