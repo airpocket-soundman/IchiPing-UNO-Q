@@ -67,6 +67,8 @@ IchiPing は、最初は NXP FRDM-MCXN947 で作りました。UNO Q に移し�
 
 ### 回路図と配線
 
+![IchiPing UNO Q の配線：3.3 V の UNO ヘッダーにスイッチ・EXEC・PCA9685・TFT、1.8 V の MI2S0 にマイクとアンプ](../img/unoq_wiring_en.png)
+
 | 信号 | UNO Q | 接続先 |
 |---|---|---|
 | BCLK / WS | SoC GPIO 98 / 99 | MAX98357A BCLK/LRC、INMP441 SCK/WS |

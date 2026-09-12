@@ -65,6 +65,8 @@ Software: Arduino App Lab, Arduino Router Bridge, Debian ALSA, Python 3 with Num
 
 ### Schematics and wiring
 
+![IchiPing UNO Q wiring: switches, EXEC, PCA9685 and TFT on the 3.3 V UNO header; microphone and amplifier on the 1.8 V MI2S0 bus](../img/unoq_wiring_en.png)
+
 | Signal | UNO Q | Device |
 |---|---|---|
 | BCLK / WS | SoC GPIO 98 / 99 | MAX98357A BCLK/LRC, INMP441 SCK/WS |
