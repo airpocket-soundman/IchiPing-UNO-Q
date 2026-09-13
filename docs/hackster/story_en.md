@@ -71,6 +71,8 @@ Sketch, Python runtime and model ship together as one **App Lab app**. A small h
 | 5 + 1 | toggle switches + push button | D3–D7 and EXEC on D8 |
 | 1 | 5 V supply | servos and amplifier, common GND |
 | 1 | model apartment | three rooms, three windows, two doors |
+| as needed | pipe material | frame / supports for the model house |
+| as needed | 3D-printed brackets | hold the acrylic panels |
 
 Software: Arduino App Lab, Arduino Router Bridge, Debian ALSA, Python 3 with NumPy and ONNX Runtime; PyTorch on a PC for training.
 

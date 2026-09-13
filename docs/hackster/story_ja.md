@@ -73,6 +73,8 @@ UNO Ping の前身 IchiPing は、最初は NXP FRDM-MCXN947 で作りました�
 | 5 + 1 | トグルスイッチ ＋ 押しボタン | D3〜D7 と、D8 の EXEC |
 | 1 | 5 V 電源 | サーボとアンプ用、GND 共通 |
 | 1 | 模型の家 | 部屋3つ、窓3つ、扉2つ |
+| 適宜 | パイプ材 | 模型の家のフレーム・支柱 |
+| 適宜 | 3D プリントのブラケット | アクリル板の固定用 |
 
 ソフトウェア：Arduino App Lab、Arduino Router Bridge、Debian の ALSA、Python 3（NumPy、ONNX Runtime）。学習は PC の PyTorch で行います。
 
