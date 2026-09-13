@@ -62,8 +62,6 @@ Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file
 
 **INSERT IMAGE: board/easyeda-screen.png** — IchiPing AUDIO shield in EasyEDA Pro: 1.8 V I²S headers for the amplifier and the microphone.
 
-**INSERT PHOTO: wiring close-up — UNO Q, Breakout Carrier, PCA9685, TFT, microphone and amplifier.**
-
 ## 5. How the acoustic sensing works
 
 1. **Excite.** The speaker plays a 2.0 s ±1 PRBS, band-limited to 8 kHz.

@@ -47,8 +47,6 @@ Servo angles: 0° (PCA9685 tick 102) = OPEN, 180° (tick 553) = CLOSE. Servo pow
 
 The pin-level wiring diagram (switches, EXEC, PCA9685, TFT and the 5 V rail) is in [gpio_wiring.html](../gpio_wiring.html).
 
-[PHOTO: wiring close-up — UNO Q with the Breakout Carrier, PCA9685, TFT and the audio boards]
-
 ## Linux side (MI2S0 audio, 1.8 V)
 
 The QRB2210 primary MI2S bus runs at 48 kHz, stereo, 32-bit slots (24 significant bits). It is reached through JMISC or the UNO Breakout Carrier.

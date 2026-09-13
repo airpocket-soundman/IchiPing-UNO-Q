@@ -43,7 +43,6 @@
 <p>ピン単位の配線図はドキュメントのサイト（<code>docs/gpio_wiring.html</code>）にあります。UNO Q 用のシールド基板2枚（音声と TFT）を EasyEDA Pro で設計しました。プロジェクトファイル、BOM、ピン対応表を添付しています。</p>
 <blockquote><p><strong>シールド基板について。</strong> このシールド基板は、テストとして AI に設計させたものです。そのため回路図の表記はあまり上手ではなく、読みやすくはありません。ただし回路としては正しく、実際に基板を製作・実装して、ここで紹介しているシステム全体が動作しています。</p></blockquote>
 <p><img src="../../board/easyeda-screen.png" alt="EasyEDA Pro で設計した IchiPing AUDIO シールド：アンプ（LRC、BCLK、DIN、GAIN、SD、VIN）とマイク（SD、CK、WS、LR）用の 1.8 V I²S 端子" loading="lazy"></p>
-<p class="placeholder">[PHOTO: 配線の近接写真 — UNO Q、Breakout Carrier、PCA9685、TFT、マイク、アンプ]</p>
 <h2 id="5-音で状態を読む仕組み">5. 音で状態を読む仕組み</h2>
 <ol><li><strong>鳴らす。</strong> スピーカーが、8 kHz 以下に帯域制限した ±1 の PRBS を 2.0 秒鳴らします。</li><li><strong>録る。</strong> INMP441 で 3 秒を 48 kHz、24 bit で録音します。PRBS との相互相関で発音の開始位置に合わせ、16 kHz に間引きます。</li><li><strong>比べる。</strong> 1024 点の対数パワースペクトルから、ボード上で録った<strong>全閉の baseline</strong> を引き、フレームごとに正規化します。</li><li><strong>判定する。</strong> パラメータ 10.4 万個の CNN が、32 通りのどれかを出力します。</li></ol>
 <p><img src="../img/hackster_fft_diff_en.png" alt="全閉の baseline とのスペクトル差" loading="lazy"></p>

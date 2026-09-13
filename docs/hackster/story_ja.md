@@ -96,8 +96,6 @@ UNO Ping の前身 IchiPing は、最初は NXP FRDM-MCXN947 で作りました�
 
 ![EasyEDA Pro で設計した IchiPing AUDIO シールド：アンプ（LRC、BCLK、DIN、GAIN、SD、VIN）とマイク（SD、CK、WS、LR）用の 1.8 V I²S 端子](../../board/easyeda-screen.png)
 
-[PHOTO: 配線の近接写真 — UNO Q、Breakout Carrier、PCA9685、TFT、マイク、アンプ]
-
 ## 5. 音で状態を読む仕組み
 
 1. **鳴らす。** スピーカーが、8 kHz 以下に帯域制限した ±1 の PRBS を 2.0 秒鳴らします。

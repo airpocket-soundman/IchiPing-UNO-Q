@@ -94,8 +94,6 @@ The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.htm
 
 ![IchiPing AUDIO shield in EasyEDA Pro: 1.8 V I²S headers for the amplifier (LRC, BCLK, DIN, GAIN, SD, VIN) and the microphone (SD, CK, WS, LR)](../../board/easyeda-screen.png)
 
-[PHOTO: wiring close-up — UNO Q, Breakout Carrier, PCA9685, TFT, microphone and amplifier]
-
 ## 5. How the acoustic sensing works
 
 1. **Excite.** The speaker plays a 2.0 s ±1 PRBS, band-limited to 8 kHz.
