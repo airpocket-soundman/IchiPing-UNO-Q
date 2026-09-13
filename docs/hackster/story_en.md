@@ -105,6 +105,12 @@ The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.htm
 
 ![Spectrum difference against the all-closed baseline](../img/hackster_fft_diff_en.png)
 
+**Why learn the difference to the baseline.** The raw spectra of two states look almost the same, because the room's own resonances and the speaker and microphone responses dominate them. Subtracting the all-closed baseline cancels everything that does not change, so only the effect of the opening is left. The network learns that change directly, as a strong and clean feature, instead of searching for it inside a large fixed spectrum.
+
+**How to read a 1-D heatmap.** The bottom strip ("diff band") shows the same difference as colour: each vertical line is one frequency bin, red is louder than the baseline, blue is quieter and white is unchanged. The mock-up below uses synthetic data so the pattern is easy to see; real measurements show the same kind of stripes, only smaller and more numerous. Stacking one strip per state gives the class map in Section 8.
+
+![How to read a diff band — synthetic mock-up for illustration, not measured data](../img/fftdiff_band_MOCK.png)
+
 **A porting detail that mattered.** The original model scored only 20.8 % on the UNO Q at first. The original firmware converted each I²S word with `>> 12`; ALSA 16-bit capture corresponds to `>> 16`. Reproducing the original scale exactly (×16 from the 24-bit capture) plus the original PRBS level matched the original dataset's recording energy within 0.02 dB. Without it, 39 % of the spectrum bins sat on the −80 dB floor.
 
 ## 6. The observability concept
@@ -115,7 +121,9 @@ One microphone in room A cannot hear every opening equally. With door **AB** clo
 - **B1–B4** — AB open, BC closed: a, b and AB observable; c hidden.
 - **C1–C8** — AB and BC open: all five observable.
 
-![Observability model](../img/hackster_observability_en.png)
+The figure shows the three cases. With door AB closed only window a can be heard, so the 16 configurations of b, c and BC collapse into 2 distinguishable states. With AB open and BC closed, windows a and b are audible and 8 configurations collapse into 4. With both doors open all rooms are coupled and each of the 8 configurations is distinguishable: 2 + 4 + 8 = **14 observable classes** out of 32 states.
+
+![Observability: when a door closes, the far side becomes inaudible](../img/observability_rot180_en.png)
 
 The TFT colours each digit as observable (bright) or hidden (dark) and shows **Complete Success** (blue, all 32-state bits right), **Conditional Success** (green, the observable part right) or **Failure** (red). The user always knows what the system guarantees and what is a best guess.
 
@@ -140,6 +148,10 @@ The result we are most proud of: with enough real data and the right augmentatio
 2. **The original recipe.** Strong augmentation and **cross-baseline** training: each recording is also expressed against every other session's baseline, so the model stops depending on one reference.
 3. **Real ambient noise.** Room noise and crowd noise recorded through the same microphone, mixed in at 0–35 dB SNR.
 4. **Temperature augmentation (new).** In the evening every model got worse. The cause was the room itself: as the air conditioner cooled it, all resonances shifted by up to **−2.15 %** (the speed of sound changes by about 0.18 %/°C). Warping the sample spectrum by a random ±3 % *before* subtracting the baseline teaches the model this effect.
+
+**What the model sees.** The map below stacks the difference-to-baseline strips of all 32 states, sorted by the 14 observable classes (A1 … C8; after the `h`, the bits are c BC b AB a). Between classes the stripe patterns differ clearly — for example, the B rows share a strong red band near 650 Hz that the A rows lack — so the 14-class task is easy. Inside a class the rows look almost identical: the eight A1 rows differ only in the hidden windows b and c and door BC. Telling those apart is the hard 32-class task. Even so, with more sessions and the augmentations above, the model learned these faint differences well enough to reach 82.5 % on all 32 states.
+
+![FFT difference from the all-closed baseline for all 32 states, sorted by the 14 observable classes](../img/fft_diff_heatmap_by_class.png)
 
 | Model | 09:00 stable | 19:35 (−2.15 % drift) | 20:44 | 21:28 + crowd noise | Mean 32-state |
 |---|---|---|---|---|---|
