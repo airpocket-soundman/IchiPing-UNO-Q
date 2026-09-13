@@ -15,7 +15,7 @@ class OriginalUiContractTests(unittest.TestCase):
 
     def test_original_landscape_ui_labels_order_and_verdicts(self):
         self.assertIn("{0xE8}", self.display)
-        self.assertIn('"IchiPing infer"', self.display)
+        self.assertIn('"UNO Ping infer"', self.display)
         self.assertIn('"inf"', self.display)
         self.assertIn('"act"', self.display)
         self.assertIn("order[5] = {2, 4, 1, 3, 0}", self.display)

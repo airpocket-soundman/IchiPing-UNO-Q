@@ -254,7 +254,7 @@ void Ili9341Display::ensureFrame() {
   if (frameDrawn_) return;
   fillScreen(kBlack);
   fillRect(0, 0, 320, 28, kNavy);
-  drawString(6, 7, "IchiPing infer", kWhite, kNavy, 2);
+  drawString(6, 7, "UNO Ping infer", kWhite, kNavy, 2);
   drawString(6, 50, "inf", kWhite, kBlack, 2);
   drawString(6, 110, "act", kWhite, kBlack, 2);
   frameDrawn_ = true;
