@@ -22,3 +22,4 @@ uno_q/audio/*.sh text eol=lf
 uno_q/audio/*.py text eol=lf
 uno_q/audio/*.dtso text eol=lf
 uno_q/audio/*.patch text eol=lf whitespace=-blank-at-eol,-space-before-tab
+*.stl binary
