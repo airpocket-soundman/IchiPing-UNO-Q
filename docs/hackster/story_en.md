@@ -39,7 +39,7 @@ Sound from room A reaches room C only through both doors. This series layout is 
 ![Model house: three rooms in a row, one speaker and one microphone in room A, windows a, b, c and doors AB, BC](../img/house_en.png)
 
 [PHOTO: the physical model apartment from above, with labels a, b, c, AB, BC]
-[VIDEO: 30–60 s demo — flip a switch, the servo opens a window, press EXEC, the TFT shows "Complete Success"]
+**Demo video:** https://youtu.be/zuyN1PZhsxc — the switches drive the servos, the red button runs one inference, and the TFT shows the inferred state (top) against the actual state (bottom), including openings outside the observable range.
 
 ## 3. Why the Arduino UNO Q: two brains in one App Lab app
 

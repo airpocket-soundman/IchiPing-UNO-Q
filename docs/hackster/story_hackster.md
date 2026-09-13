@@ -30,7 +30,9 @@ Sound from room A reaches room C only through both doors. This series layout is 
 
 **INSERT PHOTO: the physical model apartment from above, labelled a, b, c, AB, BC.**
 
-**INSERT VIDEO: 30–60 s demo — flip a switch, the servo opens a window, press EXEC, the TFT shows "Complete Success".**
+*Demo video: the switches drive the servos, the red button runs one inference, and the TFT shows the inferred state (top) against the actual state (bottom) — including openings outside the observable range.*
+
+**EMBED VIDEO: https://youtu.be/zuyN1PZhsxc**
 
 ## 3. Why the Arduino UNO Q: two brains in one App Lab app
 
