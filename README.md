@@ -2,7 +2,7 @@
 
 **One speaker, one microphone, every window and door.** UNO Ping plays a 2-second noise "ping" into a home and classifies which of five windows and doors are open from the way the rooms filter that sound. This repository is the **Arduino UNO Q** port: real-time I/O on the STM32U585, audio and a 1D CNN on the Qualcomm QRB2210 Linux side, all in one Arduino App Lab app.
 
-![One ping, 32 states](docs/img/hackster_one_ping_comic_en.png)
+![UNO Ping — one ping, 32 states](docs/img/hackster_uno_ping_comic_en.png)
 
 - Contest article (Hackster, Home Automation): [docs/hackster/story_en.md](docs/hackster/story_en.md) — Japanese review copy: [docs/hackster/story_ja.md](docs/hackster/story_ja.md)
 - Documentation site (GitHub Pages): https://airpocket-soundman.github.io/IchiPing-UNO-Q/

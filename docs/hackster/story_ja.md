@@ -18,7 +18,7 @@ UNO Ping は、別の問いから出発しました。**家そのものをセン
 
 > 「UNO」は「1」。1つのスピーカー、1つのマイク、1回の ping を、1枚の Arduino UNO Q で。名前は前身のプロジェクト IchiPing（「Ichi」は日本語の「1」）を受け継いでいます。
 
-![One ping, 32 states — 使いどころ](../img/hackster_one_ping_comic_en.png)
+![UNO Ping — 32 通りの状態：使いどころ](../img/hackster_uno_ping_comic_en.png)
 
 ## 2. できること
 

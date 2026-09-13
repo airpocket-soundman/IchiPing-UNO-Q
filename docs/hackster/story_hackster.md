@@ -8,7 +8,7 @@ UNO Ping asks a different question: **can the home itself be the sensor?** A spe
 
 > "UNO" means "one": one speaker, one microphone, one ping — on one Arduino UNO Q. The name continues the original project, IchiPing ("ichi" is Japanese for "one").
 
-**INSERT IMAGE: docs/img/hackster_one_ping_comic_en.png** — One ping, 32 states: the use case.
+**INSERT IMAGE: docs/img/hackster_uno_ping_comic_en.png** — UNO Ping — 32 states: the use case.
 
 ## 2. What it does
 

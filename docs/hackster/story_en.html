@@ -18,7 +18,7 @@
 <p>You are on the train when the rain starts, and you wonder whether a window is still open. Or you notice the air conditioner has been cooling the house all afternoon with a window wide open. The usual fix is a contact sensor on every window and door: one sensor, one battery and one pairing per opening.</p>
 <p>UNO Ping asks a different question: <strong>can the home itself be the sensor?</strong> A speaker plays a short, known noise signal. Every open or closed window and door changes how the rooms filter that sound. One microphone records it, and a small neural network reads the state of all openings at once.</p>
 <blockquote><p>"UNO" means "one": one speaker, one microphone, one ping — on one Arduino UNO Q. The name continues the original project, IchiPing ("ichi" is Japanese for "one").</p></blockquote>
-<p><img src="../img/hackster_one_ping_comic_en.png" alt="One ping, 32 states — the use case" loading="lazy"></p>
+<p><img src="../img/hackster_uno_ping_comic_en.png" alt="UNO Ping — 32 states: the use case" loading="lazy"></p>
 <h2 id="2-what-it-does">2. What it does</h2>
 <ul><li>Recognises all <strong>32 combinations</strong> of five openings in a model apartment: windows <strong>a, b, c</strong> and inner doors <strong>AB, BC</strong>.</li><li>One 2-second PRBS excitation per measurement; the TFT shows the answer about 5 seconds after pressing EXEC.</li><li>Runs entirely on the Arduino UNO Q: no cloud and no PC at inference time.</li><li>Knows its limits: it separates what is <strong>acoustically observable</strong> from what is only faintly audible (Section 6).</li></ul>
 <h3 id="the-model-house">The model house</h3>

@@ -19,7 +19,7 @@
 <p>電車に乗っているときに雨が降り出して、窓を閉めたか不安になる。あるいは、窓を開けたまま午後じゅうエアコンが家を冷やしていたことに気づく。よくある対策は、窓や扉ごとに開閉センサーを付けることです。開口部が1か所増えるたびに、センサー、電池、ペアリングが1つずつ増えます。</p>
 <p>UNO Ping は、別の問いから出発しました。<strong>家そのものをセンサーにできないか？</strong> スピーカーが、決まった短いノイズを鳴らします。窓や扉が開いているか閉まっているかで、部屋を通る音の響き方が変わります。それを1つのマイクで録音し、小さなニューラルネットワークがすべての開口部の状態を一度に読み取ります。</p>
 <blockquote><p>「UNO」は「1」。1つのスピーカー、1つのマイク、1回の ping を、1枚の Arduino UNO Q で。名前は前身のプロジェクト IchiPing（「Ichi」は日本語の「1」）を受け継いでいます。</p></blockquote>
-<p><img src="../img/hackster_one_ping_comic_en.png" alt="One ping, 32 states — 使いどころ" loading="lazy"></p>
+<p><img src="../img/hackster_uno_ping_comic_en.png" alt="UNO Ping — 32 通りの状態：使いどころ" loading="lazy"></p>
 <h2 id="2-できること">2. できること</h2>
 <ul><li>模型の家の5か所（窓 <strong>a、b、c</strong> と、部屋の間の扉 <strong>AB、BC</strong>）の開閉、<strong>32通り</strong>の組み合わせを判定します。</li><li>1回の測定で PRBS を2秒鳴らし、EXEC ボタンを押してから約5秒で TFT に答えが出ます。</li><li>すべて Arduino UNO Q の中で動きます。推論にクラウドも PC も使いません。</li><li>自分の限界を知っています。<strong>音響的に観測できる</strong>ものと、かすかにしか聞こえないものを区別します（6章）。</li></ul>
 <h3 id="模型の家">模型の家</h3>
