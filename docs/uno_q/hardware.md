@@ -21,8 +21,7 @@ UNO Ping uses one speaker and one microphone to classify five openings of a mode
 | 1 | Push button | EXEC (start one inference) |
 | 1 | 5 V supply for servos and amplifier | common GND with the UNO Q |
 | 1 | Model apartment | three rooms in a row, three windows, two inner doors |
-| as needed | Pipe material | frame / supports for the model house |
-| as needed | 3D-printed brackets | hold the acrylic panels of the model house |
+| 1 set | 3D-printed parts for the model house | printable data will be published separately |
 
 ## Wiring diagram
 
