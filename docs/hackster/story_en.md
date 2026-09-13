@@ -89,7 +89,7 @@ Software: Arduino App Lab, Arduino Router Bridge, Debian ALSA, Python 3 with Num
 | SPI TFT | D11, D13, A2 CS, A3 RST, A4 DC, A5 BL | ILI9341 |
 | Inputs | D3–D7, D8 | switches, EXEC |
 
-The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.html`). Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs and pin maps are attached.
+The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.html`). Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs, pin maps and Gerber files for both boards (`board/Gerber_*.zip`) are attached.
 
 > **A note on the shield boards.** As an experiment, the shields were designed by an AI assistant. Their schematic drawings are not very tidy or easy to read, but the circuits are electrically correct: the boards were manufactured, assembled and run the whole system shown here.
 

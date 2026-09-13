@@ -58,7 +58,7 @@ Important details:
 - The amplifier's SD pin is driven by SoC GPIO 28 and pulled to GND with **10 kΩ**, so the amplifier stays off whenever audio is not running.
 - Servos and amplifier run from an external 5 V supply with a common ground; never power the servos from 3V3.
 
-Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs and pin maps are attached.
+Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs, pin maps and Gerber files for both boards (`board/Gerber_*.zip`) are attached.
 
 > **A note on the shield boards.** As an experiment, the shields were designed by an AI assistant. Their schematic drawings are not very tidy or easy to read, but the circuits are electrically correct: the boards were manufactured, assembled and run the whole system shown here.
 
