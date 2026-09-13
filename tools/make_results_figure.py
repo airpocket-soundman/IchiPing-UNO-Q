@@ -25,7 +25,7 @@ ROWS = [
 def main() -> None:
     fig, ax = plt.subplots(figsize=(12, 4.2))
     ax.axis("off")
-    ax.set_title("IchiPing UNO Q — accuracy on held-out evaluation sessions (32-state / 14-class, %)",
+    ax.set_title("UNO Ping — accuracy on held-out evaluation sessions (32-state / 14-class, %)",
                  fontsize=13, fontweight="bold", pad=12)
     table = ax.table(cellText=[r[1] for r in ROWS], rowLabels=[r[0] for r in ROWS], colLabels=COLUMNS,
                      cellLoc="center", rowLoc="left", loc="center")

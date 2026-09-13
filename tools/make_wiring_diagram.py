@@ -1,4 +1,4 @@
-"""Draw the IchiPing UNO Q wiring diagram (SVG for the docs, PNG for Hackster).
+"""Draw the UNO Ping wiring diagram (SVG for the docs, PNG for Hackster).
 
 usage: python tools/make_wiring_diagram.py
 Writes docs/img/unoq_wiring_en.svg and docs/img/unoq_wiring_en.png.
@@ -63,7 +63,7 @@ def main() -> None:
     ax.set_xlim(0, 17)
     ax.set_ylim(0, 11)
     ax.axis("off")
-    ax.text(8.5, 10.65, "IchiPing UNO Q — wiring", ha="center", fontsize=19, fontweight="bold")
+    ax.text(8.5, 10.65, "UNO Ping — wiring", ha="center", fontsize=19, fontweight="bold")
     ax.text(8.5, 10.25, "blue = 3.3 V UNO header (STM32U585)     orange = 1.8 V MI2S0 audio (QRB2210, JMISC / "
             "UNO Breakout Carrier)     green = 5 V supply     all grounds common",
             ha="center", fontsize=10, color=C_NOTE)

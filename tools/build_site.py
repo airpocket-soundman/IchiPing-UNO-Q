@@ -18,13 +18,13 @@ REPO = Path(__file__).resolve().parents[1]
 
 # markdown source -> (html output, page title, language)
 PAGES = {
-    "README.md": ("index.html", "IchiPing UNO Q", "en"),
+    "README.md": ("index.html", "UNO Ping", "en"),
     "docs/uno_q/hardware.md": ("docs/uno_q/hardware.html", "Hardware and wiring", "en"),
     "docs/uno_q/software.md": ("docs/uno_q/software.html", "Software architecture", "en"),
     "docs/uno_q/signal_and_model.md": ("docs/uno_q/signal_and_model.html", "Acoustic sensing and model", "en"),
     "docs/uno_q/data_and_training.md": ("docs/uno_q/data_and_training.html", "Data collection and training", "en"),
     "docs/uno_q/results.md": ("docs/uno_q/results.html", "Results", "en"),
-    "docs/uno_q/reproduce.md": ("docs/uno_q/reproduce.html", "Reproduce IchiPing UNO Q", "en"),
+    "docs/uno_q/reproduce.md": ("docs/uno_q/reproduce.html", "Reproduce UNO Ping", "en"),
     "pc/runs/model_comparison_20260912.md": ("pc/runs/model_comparison_20260912.html", "Model comparison", "en"),
     "docs/hackster/story_en.md": ("docs/hackster/story_en.html", "Hackster story (English)", "en"),
     "docs/hackster/story_ja.md": ("docs/hackster/story_ja.html", "Hackster 記事（日本語版）", "ja"),
@@ -166,7 +166,7 @@ def build(src: str, dst: str, title: str, lang: str) -> None:
 <link rel="stylesheet" href="{rel('docs/site.css', dst)}">
 </head>
 <body>
-<header class="site-header"><a class="brand" href="{rel('index.html', dst)}">IchiPing UNO Q</a><nav>{nav}</nav></header>
+<header class="site-header"><a class="brand" href="{rel('index.html', dst)}">UNO Ping</a><nav>{nav}</nav></header>
 <main class="content">
 {body}
 </main>

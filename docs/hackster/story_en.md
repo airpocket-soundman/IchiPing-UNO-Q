@@ -1,4 +1,4 @@
-# IchiPing UNO Q — One Speaker, One Microphone, Every Window and Door
+# UNO Ping — One Speaker, One Microphone, Every Window and Door
 
 **Category:** Home Automation
 
@@ -12,9 +12,9 @@
 
 You are on the train when the rain starts, and you wonder whether a window is still open. Or you notice the air conditioner has been cooling the house all afternoon with a window wide open. The usual fix is a contact sensor on every window and door: one sensor, one battery and one pairing per opening.
 
-IchiPing asks a different question: **can the home itself be the sensor?** A speaker plays a short, known noise signal. Every open or closed window and door changes how the rooms filter that sound. One microphone records it, and a small neural network reads the state of all openings at once.
+UNO Ping asks a different question: **can the home itself be the sensor?** A speaker plays a short, known noise signal. Every open or closed window and door changes how the rooms filter that sound. One microphone records it, and a small neural network reads the state of all openings at once.
 
-> "Ichi" (一) is Japanese for "one": one speaker, one microphone, one ping.
+> "UNO" means "one": one speaker, one microphone, one ping — on one Arduino UNO Q. The name continues the original project, IchiPing ("ichi" is Japanese for "one").
 
 ![One ping, 32 states — the use case](../img/hackster_one_ping_comic_en.png)
 
@@ -25,14 +25,25 @@ IchiPing asks a different question: **can the home itself be the sensor?** A spe
 - Runs entirely on the Arduino UNO Q: no cloud and no PC at inference time.
 - Knows its limits: it separates what is **acoustically observable** from what is only faintly audible (Section 6).
 
-![Model apartment: three rooms, three windows, two doors; speaker and microphone in room A](../img/house.png)
+### The model house
+
+The test bed is a model house with three rooms in a row, **C | B | A**:
+
+- **Room A** holds the only speaker and the only microphone.
+- Each room has one observed window: **a**, **b** and **c**.
+- Two inner doors connect the rooms: **AB** between A and B, **BC** between B and C.
+- These five openings, each open or closed, give **2⁵ = 32 states**. A servo moves each opening, so the rig can reproduce any state automatically.
+
+Sound from room A reaches room C only through both doors. This series layout is what makes the problem interesting: a closed door AB acoustically hides everything behind it (Section 6).
+
+![Model house: three rooms in a row, one speaker and one microphone in room A, windows a, b, c and doors AB, BC](../img/house_en.png)
 
 [PHOTO: the physical model apartment from above, with labels a, b, c, AB, BC]
 [VIDEO: 30–60 s demo — flip a switch, the servo opens a window, press EXEC, the TFT shows "Complete Success"]
 
 ## 3. Why the Arduino UNO Q: two brains in one App Lab app
 
-IchiPing started on an NXP FRDM-MCXN947. Moving it to the UNO Q put each half of the problem where it fits best:
+UNO Ping grew out of IchiPing, which started on an NXP FRDM-MCXN947. Moving it to the UNO Q put each half of the problem where it fits best:
 
 | Brain | Code | Job |
 |---|---|---|
@@ -65,7 +76,7 @@ Software: Arduino App Lab, Arduino Router Bridge, Debian ALSA, Python 3 with Num
 
 ### Schematics and wiring
 
-![IchiPing UNO Q wiring: switches, EXEC, PCA9685 and TFT on the 3.3 V UNO header; microphone and amplifier on the 1.8 V MI2S0 bus](../img/unoq_wiring_en.png)
+![UNO Ping wiring: switches, EXEC, PCA9685 and TFT on the 3.3 V UNO header; microphone and amplifier on the 1.8 V MI2S0 bus](../img/unoq_wiring_en.png)
 
 | Signal | UNO Q | Device |
 |---|---|---|
@@ -96,7 +107,7 @@ The pin-level wiring diagram is on the documentation site (`docs/gpio_wiring.htm
 
 ## 6. The observability concept
 
-One microphone in room A cannot hear every opening equally. With door **AB** closed, the rooms behind it are acoustically shadowed: opening window b or c changes the sound at the microphone only a little. IchiPing therefore groups the 32 states into **14 observable classes**:
+One microphone in room A cannot hear every opening equally. With door **AB** closed, the rooms behind it are acoustically shadowed: opening window b or c changes the sound at the microphone only a little. UNO Ping therefore groups the 32 states into **14 observable classes**:
 
 - **A1 / A2** — door AB closed: only window a is observable.
 - **B1–B4** — AB open, BC closed: a, b and AB observable; c hidden.

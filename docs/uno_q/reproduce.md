@@ -1,4 +1,4 @@
-# Reproduce IchiPing UNO Q
+# Reproduce UNO Ping
 
 This guide assumes the parts in [Hardware and wiring](hardware.md) and a UNO Q reachable over SSH.
 

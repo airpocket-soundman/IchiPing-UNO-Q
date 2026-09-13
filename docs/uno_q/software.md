@@ -1,6 +1,6 @@
 # Software architecture
 
-IchiPing UNO Q is one **Arduino App Lab app** (`uno_q/app/`) plus a small host-side audio worker (`uno_q/audio/`).
+UNO Ping is one **Arduino App Lab app** (`uno_q/app/`) plus a small host-side audio worker (`uno_q/audio/`).
 
 ![UNO Q architecture: MCU, Bridge, Linux, audio](../img/hackster_unoq_architecture.png)
 
