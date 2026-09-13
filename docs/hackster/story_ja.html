@@ -41,6 +41,7 @@
 <p><img src="../img/unoq_wiring_en.png" alt="UNO Ping の配線：3.3 V の UNO ヘッダーにスイッチ・EXEC・PCA9685・TFT、1.8 V の MI2S0 にマイクとアンプ" loading="lazy"></p>
 <div class="table-wrap"><table><thead><tr><th>信号</th><th>UNO Q</th><th>接続先</th></tr></thead><tbody><tr><td>BCLK / WS</td><td>SoC GPIO 98 / 99</td><td>MAX98357A BCLK/LRC、INMP441 SCK/WS</td></tr><tr><td>マイクのデータ</td><td>SoC GPIO 100（DATA0）</td><td>INMP441 SD</td></tr><tr><td>アンプのデータ</td><td>SoC GPIO 101（DATA1）</td><td>MAX98357A DIN</td></tr><tr><td>アンプの停止</td><td>SoC GPIO 28</td><td>MAX98357A SD（GND へ 10 kΩ）</td></tr><tr><td>I²C</td><td>D20 / D21</td><td>PCA9685</td></tr><tr><td>SPI TFT</td><td>D11、D13、A2 CS、A3 RST、A4 DC、A5 BL</td><td>ILI9341</td></tr><tr><td>入力</td><td>D3〜D7、D8</td><td>スイッチ、EXEC</td></tr></tbody></table></div>
 <p>ピン単位の配線図はドキュメントのサイト（<code>docs/gpio_wiring.html</code>）にあります。UNO Q 用のシールド基板2枚（音声と TFT）を EasyEDA Pro で設計しました。プロジェクトファイル、BOM、ピン対応表を添付しています。</p>
+<blockquote><p><strong>シールド基板について。</strong> このシールド基板は、テストとして AI に設計させたものです。そのため回路図の表記はあまり上手ではなく、読みやすくはありません。ただし回路としては正しく、実際に基板を製作・実装して、ここで紹介しているシステム全体が動作しています。</p></blockquote>
 <p><img src="../../board/easyeda-screen.png" alt="EasyEDA Pro で設計した IchiPing AUDIO シールド：アンプ（LRC、BCLK、DIN、GAIN、SD、VIN）とマイク（SD、CK、WS、LR）用の 1.8 V I²S 端子" loading="lazy"></p>
 <p class="placeholder">[PHOTO: 配線の近接写真 — UNO Q、Breakout Carrier、PCA9685、TFT、マイク、アンプ]</p>
 <h2 id="5-音で状態を読む仕組み">5. 音で状態を読む仕組み</h2>

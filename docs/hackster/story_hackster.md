@@ -58,6 +58,8 @@ Important details:
 
 Two UNO Q shields (audio and TFT) were designed in EasyEDA Pro; the project file, BOMs and pin maps are attached.
 
+> **A note on the shield boards.** As an experiment, the shields were designed by an AI assistant. Their schematic drawings are not very tidy or easy to read, but the circuits are electrically correct: the boards were manufactured, assembled and run the whole system shown here.
+
 **INSERT IMAGE: board/easyeda-screen.png** — IchiPing AUDIO shield in EasyEDA Pro: 1.8 V I²S headers for the amplifier and the microphone.
 
 **INSERT PHOTO: wiring close-up — UNO Q, Breakout Carrier, PCA9685, TFT, microphone and amplifier.**

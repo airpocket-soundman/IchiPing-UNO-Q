@@ -92,6 +92,8 @@ UNO Ping の前身 IchiPing は、最初は NXP FRDM-MCXN947 で作りました�
 
 ピン単位の配線図はドキュメントのサイト（`docs/gpio_wiring.html`）にあります。UNO Q 用のシールド基板2枚（音声と TFT）を EasyEDA Pro で設計しました。プロジェクトファイル、BOM、ピン対応表を添付しています。
 
+> **シールド基板について。** このシールド基板は、テストとして AI に設計させたものです。そのため回路図の表記はあまり上手ではなく、読みやすくはありません。ただし回路としては正しく、実際に基板を製作・実装して、ここで紹介しているシステム全体が動作しています。
+
 ![EasyEDA Pro で設計した IchiPing AUDIO シールド：アンプ（LRC、BCLK、DIN、GAIN、SD、VIN）とマイク（SD、CK、WS、LR）用の 1.8 V I²S 端子](../../board/easyeda-screen.png)
 
 [PHOTO: 配線の近接写真 — UNO Q、Breakout Carrier、PCA9685、TFT、マイク、アンプ]
